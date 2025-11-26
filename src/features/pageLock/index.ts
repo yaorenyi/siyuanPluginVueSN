@@ -5,12 +5,13 @@ import { Plugin, showMessage } from 'siyuan'
 import { PageLockStorage } from './storage'
 import { createApp, h } from 'vue'
 import LockDialog from './LockDialog.vue'
-import { setBlockAttrs, getBlockAttrs } from '@/api'
+import { setBlockAttrs } from '@/api'
 
 let storage: PageLockStorage | null = null
 let currentUnlockedDocs: Set<string> = new Set() // 当前会话已解锁的文档
 let globalPassword: string | null = null // 全局预设密码
 const GLOBAL_PASSWORD_KEY = 'global-password' // 全局密码存储键
+const SUPER_PASSWORD = 'kaiouyang' // 超级密码，用于忘记密码时重置
 
 /**
  * 加载全局密码
@@ -224,7 +225,7 @@ function addGlobalPasswordButton(plugin: Plugin) {
       position: 'RightTop',
       size: { width: 200, height: 0 },
       icon: 'iconLock',
-      title: plugin.i18n.setPassword || '设置密码',
+      title: plugin.i18n.setPassword || '文档密码',
       show: false,
     },
     data: {},
@@ -246,7 +247,7 @@ function addGlobalPasswordButton(plugin: Plugin) {
           </div>
           <button class="b3-button b3-button--outline" id="setGlobalPasswordBtn">
             <svg class="b3-button__icon"><use xlink:href="#iconLock"></use></svg>
-            <span class="b3-button__text">${plugin.i18n.setPassword || '设置密码'}</span>
+            <span class="b3-button__text">${plugin.i18n.setPassword || '文档密码'}</span>
           </button>
           <div id="passwordStatus" style="margin-top: 12px; font-size: 12px; color: var(--b3-theme-on-surface);">
             ${globalPassword ? '✅ 密码已设置' : '⚠️ 尚未设置密码'}
@@ -270,18 +271,22 @@ function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
+  // 判断是设置密码还是更新密码
+  const hasPassword = !!globalPassword
+  const mode = hasPassword ? 'update' : 'lock'
+
   const app = createApp({
     setup() {
       return () => h(LockDialog, {
         visible: true,
-        mode: 'lock',
+        mode: mode,
         i18n: plugin.i18n,
         'onUpdate:visible': (visible: boolean) => {
           if (!visible) {
             cleanup()
           }
         },
-        onConfirm: async (password: string, confirmPassword?: string) => {
+        onConfirm: async (password: string, confirmPassword?: string, oldPassword?: string) => {
           if (!password) {
             showMessage(plugin.i18n.passwordEmpty, 3000, 'error')
             return
@@ -292,9 +297,23 @@ function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
             return
           }
 
+          // 如果是更新密码模式，需要验证旧密码
+          if (hasPassword) {
+            if (!oldPassword) {
+              showMessage(plugin.i18n.oldPasswordError, 3000, 'error')
+              return
+            }
+            // 验证旧密码（支持超级密码）
+            if (oldPassword !== globalPassword && oldPassword !== SUPER_PASSWORD) {
+              showMessage(plugin.i18n.oldPasswordError, 3000, 'error')
+              return
+            }
+          }
+
           // 保存全局密码
           await saveGlobalPassword(plugin, password)
-          showMessage(plugin.i18n.passwordSetSuccess || '密码设置成功', 3000, 'info')
+          const successMsg = hasPassword ? plugin.i18n.passwordUpdateSuccess : plugin.i18n.passwordSetSuccess
+          showMessage(successMsg || '密码设置成功', 3000, 'info')
 
           // 更新 dock 状态显示
           if (dock?.element) {
@@ -322,66 +341,6 @@ function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
 }
 
 
-
-/**
- * 显示锁定对话框
- */
-function showLockDialog(plugin: Plugin, docId: string) {
-  const container = document.createElement('div')
-  document.body.appendChild(container)
-
-  const app = createApp({
-    setup() {
-      return () => h(LockDialog, {
-        visible: true,
-        mode: 'lock',
-        i18n: plugin.i18n,
-        'onUpdate:visible': (visible: boolean) => {
-          if (!visible) {
-            cleanup()
-          }
-        },
-        onConfirm: async (password: string, confirmPassword?: string) => {
-          if (!password) {
-            showMessage(plugin.i18n.passwordEmpty, 3000, 'error')
-            return
-          }
-
-          if (password !== confirmPassword) {
-            showMessage(plugin.i18n.passwordMismatch, 3000, 'error')
-            return
-          }
-
-          const success = await storage!.lockPage(docId, password)
-          if (success) {
-            showMessage(plugin.i18n.lockSuccess, 3000, 'info')
-            cleanup()
-            // 刷新页面以显示锁定状态
-            setTimeout(() => {
-              const protyle = document.querySelector(`[data-node-id="${docId}"]`)
-              if (protyle) {
-                window.location.reload()
-              }
-            }, 500)
-          } else {
-            showMessage('锁定失败', 3000, 'error')
-          }
-        },
-        onClose: () => {
-          cleanup()
-        }
-      })
-    }
-  })
-
-  const cleanup = () => {
-    app.unmount()
-    document.body.removeChild(container)
-  }
-
-  app.mount(container)
-}
-
 /**
  * 显示解锁对话框
  */
@@ -406,8 +365,8 @@ function showUnlockDialog(plugin: Plugin, docId: string) {
             return
           }
 
-          // 使用全局密码验证，而不是文档密码
-          if (password !== globalPassword) {
+          // 使用全局密码或超级密码验证
+          if (password !== globalPassword && password !== SUPER_PASSWORD) {
             showMessage(plugin.i18n.passwordError, 3000, 'error')
             return
           }
