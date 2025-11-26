@@ -1,22 +1,51 @@
 <template>
   <div class="plugin-app-main">
-
-
+    <!-- 设置面板 -->
+    <SettingPanel
+      v-if="showSettings"
+      :settings="pluginSettings"
+      :i18n="plugin.i18n"
+      @save="onSaveSettings"
+      @cancel="onCancelSettings"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { usePlugin } from '@/main'
 import { onMounted, ref, watchEffect } from 'vue'
+import SettingPanel from '@/components/SettingPanel.vue'
+import { showMessage } from 'siyuan'
+import type { PluginSettings } from '@/config/settings'
+import type PluginSample from '@/index'
 
+const plugin = usePlugin() as PluginSample
+const showSettings = ref(false)
+const pluginSettings = ref<PluginSettings>(plugin.settings)
 
+console.log('plugin is ', plugin)
 
 const openSetting = () => {
-  alert('Need open plugin setting.')
+  showSettings.value = true
+  // 同步最新配置
+  pluginSettings.value = { ...plugin.settings }
 }
 
-const plugin = usePlugin()
-console.log('plugin is ', plugin)
+const onSaveSettings = async (settings: PluginSettings) => {
+  const success = await plugin.updateSettings(settings)
+  if (success) {
+    showMessage(plugin.i18n.saveSettingsSuccess || '配置保存成功,请重启插件生效', 3000, 'info')
+    showSettings.value = false
+    // 更新本地配置副本
+    pluginSettings.value = { ...settings }
+  } else {
+    showMessage(plugin.i18n.saveSettingsFailed || '配置保存失败', 3000, 'error')
+  }
+}
+
+const onCancelSettings = () => {
+  showSettings.value = false
+}
 
 
 

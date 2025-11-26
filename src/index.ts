@@ -6,6 +6,7 @@ import "@/index.scss";
 import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
 import { registerWordCountMenu, registerPageLock, registerTableOfContents } from '@/features'
+import { loadSettings, saveSettings, type PluginSettings } from '@/config/settings'
 
 let PluginInfo = {
   version: '',
@@ -32,6 +33,8 @@ export default class PluginSample extends Plugin {
   public isInWindow: boolean
   public platform: SyFrontendTypes
   public readonly version = version
+  // 插件配置
+  public settings: PluginSettings
 
   async onload() {
     const frontEnd = getFrontend();
@@ -53,6 +56,10 @@ export default class PluginSample extends Plugin {
 
     console.log('Plugin loaded, the plugin is ', this)
 
+    // 加载配置
+    this.settings = await loadSettings(this)
+    console.log('插件配置已加载:', this.settings)
+
     // 注册功能模块
     this.registerFeatures()
 
@@ -71,11 +78,30 @@ export default class PluginSample extends Plugin {
    * 注册所有功能模块
    */
   private registerFeatures() {
-    // 注册字数统计功能
-    registerWordCountMenu(this)
-    // 注册页面锁定功能
-    registerPageLock(this)
-    // 注册目录插件功能
-    registerTableOfContents(this)
+    // 根据配置注册功能模块
+    if (this.settings.enableWordCount) {
+      console.log('注册字数统计功能')
+      registerWordCountMenu(this)
+    }
+    if (this.settings.enablePageLock) {
+      console.log('注册页面锁定功能')
+      registerPageLock(this)
+    }
+    if (this.settings.enableTableOfContents) {
+      console.log('注册目录插件功能')
+      registerTableOfContents(this)
+    }
+  }
+
+  /**
+   * 更新插件配置
+   */
+  async updateSettings(newSettings: PluginSettings) {
+    this.settings = newSettings
+    const success = await saveSettings(this, newSettings)
+    if (success) {
+      console.log('配置已更新:', this.settings)
+    }
+    return success
   }
 }
