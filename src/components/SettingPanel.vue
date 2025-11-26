@@ -135,13 +135,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 10001;
   pointer-events: auto;
 }
 
 .settings-panel {
-  padding: 16px 24px;
-  max-width: 600px;
+  padding: 8px 16px;
+  max-width: 520px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -154,38 +154,41 @@ onMounted(() => {
 }
 
 .settings-header {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .settings-title {
-  margin: 0 0 8px 0;
-  font-size: 20px;
+  margin: 0 0 4px 0;
+  font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
 }
 
 .settings-desc {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   color: #666666;
+  line-height: 1.3;
 }
 
 .settings-content {
-  padding: 16px 0;
+  padding: 8px 0;
 }
 
 .setting-item {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 
   .fn__flex-1 {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 500;
     color: #1a1a1a;
   }
 
   .b3-label__text {
-    font-size: 13px;
+    font-size: 11px;
     color: #666666;
+    line-height: 1.4;
+    margin-top: 1px;
   }
 
   &:last-child {
@@ -196,25 +199,25 @@ onMounted(() => {
 .settings-footer {
   display: flex;
   align-items: center;
-  padding: 16px 0;
-  gap: 8px;
+  padding: 8px 0 4px;
+  gap: 6px;
 }
 
 .settings-notice {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  margin-top: 16px;
+  gap: 4px;
+  padding: 6px 8px;
+  margin-top: 6px;
   background: #f5f5f5;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 11px;
   color: #666666;
-  line-height: 1.6;
+  line-height: 1.4;
 
   .icon {
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
     color: #1890ff;
   }
