@@ -5,7 +5,7 @@ import {
 import "@/index.scss";
 import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
-import { registerPageLock, registerTableOfContents, registerImageCompressor, registerDocNavigation, registerShortcut } from '@/features'
+import { registerPageLock, registerTableOfContents, registerImageCompressor, registerDocNavigation, registerShortcut, registerWordQuery } from '@/features'
 import { loadSettings, saveSettings, type PluginSettings } from '@/config/settings'
 
 let PluginInfo = {
@@ -98,6 +98,10 @@ export default class PluginSample extends Plugin {
     if (this.settings.enableShortcuts) {
       console.log('注册快捷键模块')
       await registerShortcut(this)
+    }
+    if (this.settings.enableWordQuery) {
+      console.log('注册单词查询功能')
+      registerWordQuery(this)
     }
   }
 
