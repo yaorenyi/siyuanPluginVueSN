@@ -9,9 +9,9 @@
             {{ i18n.fontFamily || '字体族' }}
           </label>
           <div class="font-input-container">
-            <input 
-              v-model="settings.fontFamily" 
-              type="text" 
+            <input
+              v-model="settings.fontFamily"
+              type="text"
               :placeholder="i18n.fontFamilyPlaceholder || '输入字体名称'"
               class="font-input"
             />
@@ -40,18 +40,18 @@
             {{ i18n.fontSize || '字号' }}
           </label>
           <div class="range-control">
-            <input 
-              v-model.number="settings.fontSize" 
-              type="number" 
-              min="8" 
+            <input
+              v-model.number="settings.fontSize"
+              type="number"
+              min="8"
               max="72"
               class="number-input"
             />
             <div class="slider-container">
-              <input 
-                v-model="fontSizePreview" 
-                type="range" 
-                min="8" 
+              <input
+                v-model="fontSizePreview"
+                type="range"
+                min="8"
                 max="72"
                 class="range-slider"
               />
@@ -70,20 +70,20 @@
             {{ i18n.lineHeight || '行高' }}
           </label>
           <div class="range-control">
-            <input 
-              v-model.number="settings.lineHeight" 
-              type="number" 
-              min="1" 
-              max="3" 
+            <input
+              v-model.number="settings.lineHeight"
+              type="number"
+              min="1"
+              max="3"
               step="0.1"
               class="number-input"
             />
             <div class="slider-container">
-              <input 
-                v-model="lineHeightPreview" 
-                type="range" 
-                min="1" 
-                max="3" 
+              <input
+                v-model="lineHeightPreview"
+                type="range"
+                min="1"
+                max="3"
                 step="0.1"
                 class="range-slider"
               />
@@ -260,7 +260,7 @@ function loadSettings() {
       settings.value = { ...DEFAULT_SETTINGS, ...parsed }
       fontSizePreview.value = settings.value.fontSize
       lineHeightPreview.value = settings.value.lineHeight
-      
+
       // 初始化滑块进度
       nextTick(() => {
         updateSliderProgress('fontSize', settings.value.fontSize, 8, 72)
@@ -276,10 +276,10 @@ function loadSettings() {
 function updateSliderProgress(type: string, value: number, min: number, max: number) {
   const progress = ((value - min) / (max - min)) * 100
   nextTick(() => {
-    const slider = type === 'fontSize' ? 
+    const slider = type === 'fontSize' ?
       document.querySelector('.range-slider') as HTMLInputElement :
       document.querySelectorAll('.range-slider')[1] as HTMLInputElement
-    
+
     if (slider) {
       slider.style.setProperty('--progress', `${progress}%`)
     }
@@ -440,10 +440,10 @@ defineExpose({
   width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: linear-gradient(to right, 
-    var(--b3-theme-primary) 0%, 
-    var(--b3-theme-primary) var(--progress, 50%), 
-    var(--b3-theme-surface-variant) var(--progress, 50%), 
+  background: linear-gradient(to right,
+    var(--b3-theme-primary) 0%,
+    var(--b3-theme-primary) var(--progress, 50%),
+    var(--b3-theme-surface-variant) var(--progress, 50%),
     var(--b3-theme-surface-variant) 100%);
   outline: none;
   cursor: pointer;
@@ -666,31 +666,31 @@ defineExpose({
   .font-settings {
     padding: 12px;
   }
-  
+
   .numeric-settings {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .font-input-container {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .font-select {
     min-width: 100%;
   }
-  
+
   .action-buttons {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .preview-info {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .settings-container {
     gap: 16px;
   }
@@ -700,18 +700,18 @@ defineExpose({
   .font-settings {
     padding: 8px;
   }
-  
+
   .setting-label {
     font-size: 12px;
   }
-  
+
   .font-input,
   .font-select,
   .weight-select {
     font-size: 12px;
     padding: 6px 10px;
   }
-  
+
   .save-btn,
   .reset-btn {
     padding: 10px 16px;
@@ -724,7 +724,7 @@ defineExpose({
   .preview-content {
     padding: 12px;
   }
-  
+
   .preview-box {
     padding: 12px;
     min-height: 60px;

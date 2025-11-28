@@ -3,11 +3,11 @@
     <div class="settings-header">
       <h3>{{ i18n.generalSettings || '通用设置' }}</h3>
     </div>
-    
+
     <!-- 模块选项卡 -->
     <div class="module-tabs">
-      <button 
-        v-for="module in modules" 
+      <button
+        v-for="module in modules"
         :key="module.id"
         :class="['tab-btn', { active: activeModule === module.id }]"
         @click="switchModule(module.id)"
@@ -19,8 +19,8 @@
 
     <!-- 模块内容 -->
     <div class="module-content">
-      <component 
-        :is="activeModuleComponent" 
+      <component
+        :is="activeModuleComponent"
         :i18n="i18n"
         @change="handleModuleChange"
       />
@@ -31,8 +31,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import FontSettings from './components/FontSettings.vue'
-// import AppearanceSettings from './modules/AppearanceSettings.vue'
-// import { ModuleManager } from './modules/ModuleManager'
+import GeneralActions from './components/GeneralActions.vue'
 
 interface Props {
   i18n?: any
@@ -53,12 +52,19 @@ const modules = ref([
     component: FontSettings,
     order: 1
   },
+  {
+    id: 'actions',
+    name: props.i18n.generalActions || '通用操作',
+    icon: '🚀',
+    component: GeneralActions,
+    order: 2
+  },
   // {
   //   id: 'appearance',
   //   name: props.i18n.appearanceSettings || '外观设置',
   //   icon: '🎨',
   //   component: AppearanceSettings,
-  //   order: 2
+  //   order: 3
   // },
   // 未来可以轻松添加更多模块
   // {
@@ -66,7 +72,7 @@ const modules = ref([
   //   name: '行为设置',
   //   icon: '⚙️',
   //   component: BehaviorSettings,
-  //   order: 3
+  //   order: 4
   // }
 ])
 
@@ -217,11 +223,11 @@ defineExpose({
     padding: 6px 8px;
     min-width: 60px;
   }
-  
+
   .settings-header {
     padding: 8px 12px;
   }
-  
+
   .settings-header h3 {
     font-size: 14px;
   }
