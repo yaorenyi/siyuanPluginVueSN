@@ -108,20 +108,13 @@ const errorCorrection = ref<'L' | 'M' | 'Q' | 'H'>('M')
 const qrcodeContainer = ref<HTMLDivElement>()
 const isGenerating = ref(false)
 const errorMessage = ref('')
+let lastGeneratedContent = ''
 
 // 监听props变化
 watch(() => props.content, (newContent) => {
-  if (newContent) {
+  if (newContent && newContent !== lastGeneratedContent) {
     inputContent.value = newContent
-    nextTick(() => {
-      regenerateQRCode()
-    })
-  }
-})
-
-// 监听visible变化，重新生成二维码
-watch(() => props.visible, (visible) => {
-  if (visible && inputContent.value) {
+    lastGeneratedContent = newContent
     nextTick(() => {
       regenerateQRCode()
     })
