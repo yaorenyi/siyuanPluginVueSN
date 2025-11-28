@@ -15,6 +15,15 @@
       :i18n="(plugin.i18n as any).imageCompressor || {}"
       @close="onCloseImageViewer"
     />
+
+    <!-- 二维码对话框 -->
+    <QRCodeDialog
+      :visible="showQRCodeDialog"
+      :content="qrcodeContent"
+      :i18n="plugin.i18n"
+      @update:visible="onQRCodeDialogVisibleChange"
+      @close="onCloseQRCodeDialog"
+    />
   </div>
 </template>
 
@@ -23,6 +32,7 @@ import { usePlugin } from '@/main'
 import { onMounted, ref, watchEffect } from 'vue'
 import SettingPanel from '@/components/SettingPanel.vue'
 import ImageViewer from '@/features/imageCompressor/ImageViewer.vue'
+import QRCodeDialog from '@/features/qrCode/QRCodeDialog.vue'
 import { showMessage } from 'siyuan'
 import type { PluginSettings } from '@/config/settings'
 import type PluginSample from '@/index'
@@ -30,6 +40,8 @@ import type PluginSample from '@/index'
 const plugin = usePlugin() as PluginSample
 const showSettings = ref(false)
 const showImageViewer = ref(false)
+const showQRCodeDialog = ref(false)
+const qrcodeContent = ref('')
 const pluginSettings = ref<PluginSettings>(plugin.settings)
 
 console.log('plugin is ', plugin)
@@ -64,6 +76,21 @@ const openImageCompressor = () => {
 // 关闭图片压缩器
 const onCloseImageViewer = () => {
   showImageViewer.value = false
+}
+
+// 二维码对话框控制
+const onQRCodeDialogVisibleChange = (visible: boolean) => {
+  showQRCodeDialog.value = visible
+}
+
+const onCloseQRCodeDialog = () => {
+  showQRCodeDialog.value = false
+}
+
+// 公开方法，纲projuct可以通过事件打开二维码对话框
+const openQRCodeDialog = (content: string) => {
+  qrcodeContent.value = content
+  showQRCodeDialog.value = true
 }
 
 
@@ -106,6 +133,16 @@ onMounted(() => {
 onMounted(() => {
   window._sy_plugin_sample = {}
   window._sy_plugin_sample.openSetting = openSetting
+  window._sy_plugin_sample.openQRCodeDialog = openQRCodeDialog
+
+  // 监听打开二维码对话框事件
+  window.addEventListener('openQRCodeDialog', ((event: any) => {
+    const content = event.detail?.content
+    if (content) {
+      qrcodeContent.value = content
+      showQRCodeDialog.value = true
+    }
+  }) as EventListener)
 
   // 监听打开图片压缩器事件
   window.addEventListener('openImageCompressor', openImageCompressor)

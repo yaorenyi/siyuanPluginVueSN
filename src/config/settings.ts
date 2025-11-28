@@ -14,8 +14,9 @@ export interface PluginSettings {
   enableShortcuts: boolean       // 是否启用快捷键面板功能
   enableWordQuery: boolean       // 是否启用单词查询功能
   enableGeneralSettings: boolean // 是否启用通用设置功能
+  enableQRCode: boolean          // 是否启用二维码生成功能
   wordQueryApiKey: string        // 单词查询API密钥
-  compactMode: boolean           // 是否启用全局紧凑模式
+  compactMode: boolean           // 是否启用全局紧洛模式
 }
 
 /**
@@ -39,6 +40,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   enableShortcuts: true,
   enableWordQuery: true,
   enableGeneralSettings: true,
+  enableQRCode: true,
   wordQueryApiKey: 'sk-fae27cc50015409fb2524b0970d3f0b0',
   compactMode: true,
 }

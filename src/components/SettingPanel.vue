@@ -114,6 +114,21 @@
         <div class="b3-label__text">{{ i18n.enableGeneralSettingsDesc || '在右侧边栏提供字体设置等通用配置功能' }}</div>
       </div>
 
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.qrcodeGenerate || '二维码生成' }}
+          </span>
+          <span class="fn__space"></span>
+          <input
+            type="checkbox"
+            class="b3-switch fn__flex-center"
+            v-model="localSettings.enableQRCode"
+          />
+        </div>
+        <div class="b3-label__text">{{ i18n.qrcodeDesc || '右键选中文本生成二维码，支持复制和下载' }}</div>
+      </div>
+
 
     </div>
 
@@ -193,13 +208,13 @@ const onReset = () => {
 onMounted(() => {
   // 确保本地配置与传入的配置同步
   localSettings.value = { ...props.settings }
-  
+
   // 确保设置面板在最上层
   const overlay = document.querySelector('.settings-overlay') as HTMLElement
   if (overlay) {
     // 使用更高的z-index确保在集市之上
     overlay.style.zIndex = '30000'
-    
+
     // 添加事件监听，确保焦点始终在设置面板上
     const focusTimer = setInterval(() => {
       if (document.activeElement && document.activeElement !== document.body) {
@@ -213,7 +228,7 @@ onMounted(() => {
         }
       }
     }, 200)
-    
+
     // 存储定时器ID以便清理
     ;(overlay as any)._focusTimer = focusTimer
   }
