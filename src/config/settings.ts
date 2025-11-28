@@ -15,6 +15,7 @@ export interface PluginSettings {
   enableWordQuery: boolean       // 是否启用单词查询功能
   enableGeneralSettings: boolean // 是否启用通用设置功能
   enableQRCode: boolean          // 是否启用二维码生成功能
+  enableUnitConverter: boolean   // 是否启用单位转换功能
   wordQueryApiKey: string        // 单词查询API密钥
   compactMode: boolean           // 是否启用全局紧洛模式
 }
@@ -41,6 +42,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   enableWordQuery: true,
   enableGeneralSettings: true,
   enableQRCode: true,
+  enableUnitConverter: true,
   wordQueryApiKey: 'sk-fae27cc50015409fb2524b0970d3f0b0',
   compactMode: true,
 }

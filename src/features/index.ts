@@ -9,3 +9,4 @@ export { registerShortcut, addCustomShortcut, addCustomShortcuts, getShortcutMan
 export { registerWordQuery } from './wordQuery'
 export { registerGeneralSettings } from './generalSettings'
 export { registerQRCode } from './qrCode'
+export { registerUnitConverter } from './unitConverter'

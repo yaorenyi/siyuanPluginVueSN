@@ -5,7 +5,7 @@ import {
 import "@/index.scss";
 import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
-import { registerPageLock, registerTableOfContents, registerImageCompressor, registerDocNavigation, registerShortcut, registerWordQuery, registerGeneralSettings, registerQRCode } from '@/features'
+import { registerPageLock, registerTableOfContents, registerImageCompressor, registerDocNavigation, registerShortcut, registerWordQuery, registerGeneralSettings, registerQRCode, registerUnitConverter } from '@/features'
 import { loadSettings, saveSettings, type PluginSettings } from '@/config/settings'
 
 let PluginInfo = {
@@ -110,6 +110,10 @@ export default class PluginSample extends Plugin {
     if (this.settings.enableQRCode) {
       console.log('注册二维码生成功能')
       registerQRCode(this)
+    }
+    if (this.settings.enableUnitConverter) {
+      console.log('注册单位转换功能')
+      registerUnitConverter(this)
     }
   }
 

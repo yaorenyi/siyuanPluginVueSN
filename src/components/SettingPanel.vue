@@ -129,6 +129,21 @@
         <div class="b3-label__text">{{ i18n.qrcodeDesc || '右键选中文本生成二维码，支持复制和下载' }}</div>
       </div>
 
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.unitConverter || '单位转换' }}
+          </span>
+          <span class="fn__space"></span>
+          <input
+            type="checkbox"
+            class="b3-switch fn__flex-center"
+            v-model="localSettings.enableUnitConverter"
+          />
+        </div>
+        <div class="b3-label__text">{{ i18n.unitConverterDesc || '在右侧边栏提供长度、面积、体积、质量、功率、时间、速度、数据存储、进制、ASCII等转换功能' }}</div>
+      </div>
+
 
     </div>
 

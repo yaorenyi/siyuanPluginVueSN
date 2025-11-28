@@ -141,6 +141,9 @@
   "enableGeneralSettingsDesc": "Provide font settings and other general configuration features in the right sidebar",
   "qrcodeGenerate": "QR Code Generator",
   "qrcodeDesc": "Generate QR codes from selected text with copy and download options",
+  "unitConverter": "Unit Converter",
+  "unitConverterDesc": "Provide unit conversion for length, area, volume, mass, power, time, speed, data storage, base, ASCII in the right sidebar",
+
   "fontSettings": "Font Settings",
   "fontFamily": "Font Family",
   "fontFamilyPlaceholder": "Enter font name, e.g.: Microsoft YaHei, Arial",
