@@ -3,8 +3,9 @@ import {
 } from "siyuan";
 import { createApp } from 'vue'
 import App from './App.vue'
+import type PluginSample from '@/index'
 
-let plugin = null
+let plugin: Plugin | null = null
 export function usePlugin(pluginProps?: Plugin): Plugin {
   console.log('usePlugin', pluginProps, plugin)
   if (pluginProps) {
@@ -13,18 +14,24 @@ export function usePlugin(pluginProps?: Plugin): Plugin {
   if (!plugin && !pluginProps) {
     console.error('need bind plugin')
   }
-  return plugin;
+  return plugin as Plugin;
 }
 
 
 let app = null
-export function init(plugin: Plugin) {
+export function init(pluginInstance: Plugin) {
   // bind plugin hook
-  usePlugin(plugin);
+  usePlugin(pluginInstance);
+
+  // 初始化时应用紧凑模式
+  const pluginSample = pluginInstance as PluginSample
+  if (pluginSample.settings?.compactMode) {
+    document.documentElement.classList.add('siyuan-compact-mode')
+  }
 
   const div = document.createElement('div')
   div.classList.toggle('siyuan-plugin-vite-vue-sn-app')
-  div.id = this.name
+  div.id = pluginInstance.name
   app = createApp(App)
   app.mount(div)
   document.body.appendChild(div)

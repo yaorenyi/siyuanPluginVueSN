@@ -199,5 +199,8 @@
   "version": "Version",
   "platform": "Platform",
   "currentTime": "Current Time",
-  "actionFailed": "Action failed"
+  "actionFailed": "Action failed",
+  "compactMode": "Compact Mode",
+  "compactModeEnabled": "Compact mode enabled",
+  "compactModeDisabled": "Compact mode disabled"
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="general-actions">
+  <div class="general-actions compact-mode">
     <div class="settings-container">
       <!-- 页面操作区域 -->
       <div class="action-section">
@@ -69,6 +69,8 @@
 import { showMessage } from 'siyuan'
 import { ref, onMounted } from 'vue'
 import * as api from '@/api'
+import { usePlugin } from '@/main'
+import type PluginSample from '@/index'
 
 interface Props {
   i18n?: any
@@ -84,6 +86,7 @@ const props = withDefaults(defineProps<Props>(), {
   i18n: () => ({})
 })
 
+const plugin = usePlugin() as PluginSample
 const isLoading = ref(false)
 const systemInfo = ref<SystemInfo | null>(null)
 
@@ -564,4 +567,193 @@ defineExpose({
 .general-actions::-webkit-scrollbar-thumb:hover {
   background: var(--b3-theme-primary);
 }
+
+/* ========== 紧凑模式样式 ========== */
+.general-actions.compact-mode {
+  padding: 12px 8px;
+}
+
+.general-actions.compact-mode .settings-container {
+  gap: 12px;
+}
+
+.general-actions.compact-mode .action-section,
+.general-actions.compact-mode .info-section {
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.general-actions.compact-mode .action-section:hover,
+.general-actions.compact-mode .info-section:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-0.5px);
+}
+
+.general-actions.compact-mode .section-header {
+  padding: 10px 12px;
+  gap: 6px;
+}
+
+.general-actions.compact-mode .section-icon {
+  font-size: 16px;
+}
+
+.general-actions.compact-mode .section-header h4 {
+  font-size: 14px;
+  text-shadow: none;
+}
+
+.general-actions.compact-mode .action-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 8px;
+}
+
+.general-actions.compact-mode .action-btn {
+  padding: 10px;
+  gap: 8px;
+  border: 1px solid var(--b3-theme-outline);
+  border-radius: 8px;
+}
+
+.general-actions.compact-mode .action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.general-actions.compact-mode .btn-icon {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  border-radius: 6px;
+}
+
+.general-actions.compact-mode .btn-content {
+  gap: 2px;
+}
+
+.general-actions.compact-mode .btn-title {
+  font-size: 12px;
+}
+
+.general-actions.compact-mode .btn-desc {
+  font-size: 10px;
+  -webkit-line-clamp: 1;
+}
+
+.general-actions.compact-mode .btn-arrow {
+  font-size: 14px;
+  opacity: 0.5;
+}
+
+.general-actions.compact-mode .action-btn:hover .btn-arrow {
+  opacity: 0.8;
+}
+
+.general-actions.compact-mode .info-grid {
+  gap: 6px;
+  padding: 10px 8px;
+}
+
+.general-actions.compact-mode .info-item {
+  padding: 8px;
+  border-left-width: 2px;
+  border-radius: 6px;
+}
+
+.general-actions.compact-mode .info-label {
+  font-size: 11px;
+}
+
+.general-actions.compact-mode .info-value {
+  font-size: 11px;
+}
+
+/* 紧凑模式响应式设计 */
+@media (max-width: 480px) {
+  .general-actions {
+    padding: 12px;
+  }
+
+  .general-actions.compact-mode {
+    padding: 10px 6px;
+  }
+
+  .general-actions.compact-mode .action-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px 6px;
+  }
+
+  .general-actions.compact-mode .action-btn {
+    padding: 9px;
+    gap: 8px;
+  }
+
+  .general-actions.compact-mode .btn-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .general-actions.compact-mode .btn-title {
+    font-size: 11px;
+  }
+
+  .general-actions.compact-mode .btn-desc {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 320px) {
+  .general-actions.compact-mode {
+    padding: 8px 4px;
+  }
+
+  .general-actions.compact-mode .settings-container {
+    gap: 10px;
+  }
+
+  .general-actions.compact-mode .section-header {
+    padding: 8px 10px;
+  }
+
+  .general-actions.compact-mode .section-header h4 {
+    font-size: 12px;
+  }
+
+  .general-actions.compact-mode .section-icon {
+    font-size: 14px;
+  }
+
+  .general-actions.compact-mode .action-btn {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .general-actions.compact-mode .btn-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  .general-actions.compact-mode .btn-arrow {
+    font-size: 12px;
+  }
+
+  .general-actions.compact-mode .info-item {
+    padding: 6px;
+    font-size: 10px;
+  }
+
+  .general-actions.compact-mode .info-label {
+    font-size: 10px;
+  }
+
+  .general-actions.compact-mode .info-value {
+    font-size: 10px;
+  }
+}
+
+
 </style>

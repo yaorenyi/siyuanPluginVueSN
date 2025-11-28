@@ -1,0 +1,121 @@
+/* ========== 全局紧凑模式样式 ========== */
+
+/* 当整个思源应用处于紧凑模式时 */
+html.siyuan-compact-mode {
+  /* 减少全局间距 */
+  --siyuan-compact-padding: 8px;
+  --siyuan-compact-gap: 8px;
+  --siyuan-compact-border-radius: 6px;
+  --siyuan-compact-font-size-reduction: 0.9;
+
+  /* 编辑器工具栏紧凑 */
+  .toolbar {
+    gap: 4px;
+    padding: 4px 8px;
+  }
+
+  /* 侧边栏紧凑 */
+  .sidebar {
+    font-size: 13px;
+  }
+
+  .dock-item {
+    padding: 6px;
+  }
+
+  /* 文件树紧凑 */
+  .file-tree {
+    font-size: 12px;
+  }
+
+  .b3-list-item {
+    padding: 4px 8px;
+    min-height: 24px;
+  }
+
+  /* 编辑区紧凑 */
+  .protyle-content {
+    padding: 8px;
+  }
+
+  /* 标签紧凑 */
+  .tabs {
+    height: 28px;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* 对话框紧凑 */
+  .b3-dialog {
+    padding: 12px;
+  }
+
+  .b3-dialog__header {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .b3-dialog__body {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  /* 按钮紧凑 */
+  .b3-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  /* 输入框紧凑 */
+  .b3-text-field,
+  .b3-input {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  /* 下拉框紧凑 */
+  .b3-select {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .b3-menu {
+    padding: 4px 0;
+  }
+
+  .b3-menu__item {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 24px;
+  }
+
+  /* 块编辑器紧凑 */
+  .bq,
+  .li,
+  .p {
+    line-height: 1.4;
+    margin: 4px 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 4px 0;
+    padding: 4px 0;
+  }
+
+  /* 代码块紧凑 */
+  .hljs {
+    padding: 8px;
+  }
+
+  /* 表格紧凑 */
+  table {
+    padding: 4px;
+  }
+
+  td, th {
+    padding: 4px 8px;
+  }
+}

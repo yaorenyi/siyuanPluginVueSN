@@ -199,5 +199,8 @@
   "version": "版本",
   "platform": "平台",
   "currentTime": "当前时间",
-  "actionFailed": "操作失败"
+  "actionFailed": "操作失败",
+  "compactMode": "紧凑模式",
+  "compactModeEnabled": "紧凑模式已启用",
+  "compactModeDisabled": "紧凑模式已禁用"
 }
