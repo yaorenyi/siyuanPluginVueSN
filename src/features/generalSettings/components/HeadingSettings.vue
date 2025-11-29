@@ -23,6 +23,24 @@
         </div>
       </div>
 
+      <!-- 标题层级显示设置 -->
+      <div class="setting-row">
+        <div class="setting-item">
+          <label class="setting-label">
+            <span class="label-icon">🔢</span>
+            {{ i18n.headingLevelDisplay || '标题层级显示' }}
+          </label>
+          <select v-model="levelDisplayStyle" class="style-select" @change="applyLevelDisplay">
+            <option value="none">{{ i18n.levelDisplayNone || '不显示' }}</option>
+            <option value="number">{{ i18n.levelDisplayNumber || '数字标记' }}</option>
+            <option value="roman">{{ i18n.levelDisplayRoman || '罗马数字' }}</option>
+            <option value="chinese">{{ i18n.levelDisplayChinese || '中文数字' }}</option>
+            <option value="dots">{{ i18n.levelDisplayDots || '圆点标记' }}</option>
+            <option value="tag">{{ i18n.levelDisplayTag || '标签样式' }}</option>
+          </select>
+        </div>
+      </div>
+
       <!-- 标题颜色设置 -->
       <div class="heading-colors">
         <div v-for="level in 6" :key="level" class="color-item">
@@ -113,6 +131,7 @@ const emit = defineEmits<Emits>()
 const selectedStyle = ref('default')
 const showPreview = ref(false)
 const headingColors = ref<HeadingColors>({ ...props.initialSettings })
+const levelDisplayStyle = ref('none')
 
 // 预设风格
 const styles: Record<string, HeadingColors> = {
@@ -223,8 +242,8 @@ function applyToDocument() {
   const style = document.getElementById('heading-colors-style') || document.createElement('style')
   style.id = 'heading-colors-style'
 
-  // 只应用颜色样式
-  const css = Object.entries(headingColors.value)
+  // 颜色样式
+  const colorCss = Object.entries(headingColors.value)
     .map(([level, color]) => {
       return `
         .protyle-wysiwyg [data-node-id].${level},
@@ -236,11 +255,59 @@ function applyToDocument() {
     })
     .join('\n')
 
-  style.textContent = css
+  // 层级显示样式
+  let levelCss = ''
+  if (levelDisplayStyle.value !== 'none') {
+    levelCss = generateLevelDisplayCss(levelDisplayStyle.value)
+    console.log('生成的层级CSS:', levelCss)
+  }
+
+  style.textContent = colorCss + '\n' + levelCss
 
   if (!style.parentElement) {
     document.head.appendChild(style)
   }
+
+  console.log('CSS已应用到文档,层级显示样式:', levelDisplayStyle.value)
+}
+
+// 生成层级显示 CSS
+function generateLevelDisplayCss(style: string): string {
+  const levelMappings: Record<string, string[]> = {
+    number: ['1', '2', '3', '4', '5', '6'],
+    roman: ['I', 'II', 'III', 'IV', 'V', 'VI'],
+    chinese: ['一', '二', '三', '四', '五', '六'],
+    dots: ['•', '••', '•••', '••••', '•••••', '••••••'],
+    tag: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+  }
+
+  const levels = levelMappings[style] || levelMappings.number
+
+  return levels.map((label, index) => {
+    const level = index + 1
+    const tagStyles = style === 'tag'
+      ? 'background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.15); padding: 2px 6px; border-radius: 4px; font-weight: 600; opacity: 0.7;'
+      : '';
+
+    return `
+      .protyle-wysiwyg div[data-subtype="h${level}"][data-node-id]:not([type]) > div[contenteditable]:first-child::after,
+      .protyle-wysiwyg div[data-subtype="h${level}"][data-node-id] > div.h${level}[contenteditable]::after {
+        content: "  ${label}";
+        font-size: 0.7em;
+        opacity: 0.4;
+        margin-left: 6px;
+        vertical-align: middle;
+        ${tagStyles}
+      }
+    `
+  }).join('\n')
+}
+
+// 应用层级显示
+function applyLevelDisplay() {
+  console.log('应用层级显示样式:', levelDisplayStyle.value)
+  applyToDocument()
+  autoSave()
 }
 
 function togglePreview() {
@@ -252,9 +319,9 @@ function autoSave() {
   try {
     localStorage.setItem('general-heading-settings', JSON.stringify({
       style: selectedStyle.value,
-      colors: headingColors.value
+      colors: headingColors.value,
+      levelDisplay: levelDisplayStyle.value
     }))
-    applyToDocument()
   } catch (error) {
     console.error('保存失败:', error)
   }
@@ -268,6 +335,7 @@ function loadSettings() {
       const parsed = JSON.parse(saved)
       selectedStyle.value = parsed.style || 'default'
       headingColors.value = { ...styles.default, ...parsed.colors }
+      levelDisplayStyle.value = parsed.levelDisplay || 'none'
       applyToDocument()
     }
   } catch (error) {
@@ -286,6 +354,13 @@ watch(headingColors, (newColors) => {
 
 // 监听风格变化,自动保存
 watch(selectedStyle, () => {
+  autoSave()
+})
+
+// 监听层级显示变化,自动保存并应用
+watch(levelDisplayStyle, (newValue, oldValue) => {
+  console.log('levelDisplayStyle 变化:', oldValue, '->', newValue)
+  applyToDocument()
   autoSave()
 })
 

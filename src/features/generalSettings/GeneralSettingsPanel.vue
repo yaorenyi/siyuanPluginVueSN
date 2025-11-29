@@ -27,7 +27,6 @@
       <!-- 标题配置区域 -->
       <div class="setting-section">
         <div class="section-title">
-          <span class="section-icon">📝</span>
           <span>{{ i18n.headingSettings || '标题配置' }}</span>
         </div>
         <HeadingSettings :i18n="i18n" @change="handleHeadingChange" />
