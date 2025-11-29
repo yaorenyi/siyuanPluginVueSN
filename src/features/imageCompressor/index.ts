@@ -9,16 +9,6 @@ import { Plugin, showMessage } from 'siyuan'
 export function registerImageCompressor(plugin: Plugin) {
   console.log('注册图片压缩功能')
 
-  // 添加顶部图标
-  plugin.addTopBar({
-    icon: 'iconImage',
-    title: (plugin.i18n as any).imageCompressor?.title || '图片压缩',
-    position: 'right',
-    callback: () => {
-      openImageCompressor(plugin)
-    }
-  })
-
   // 添加快捷键命令
   plugin.addCommand({
     langKey: 'openImageCompressor',
