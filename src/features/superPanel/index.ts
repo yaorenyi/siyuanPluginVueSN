@@ -79,6 +79,9 @@ function openSuperPanel(plugin: Plugin) {
     },
     onRefresh: async () => {
       await handleRefresh(plugin)
+    },
+    onUpdateAiSettings: async (aiSettings: { provider: string; apiKey: string; customEndpoint: string }) => {
+      await handleUpdateAiSettings(plugin, aiSettings)
     }
   })
 
@@ -203,5 +206,32 @@ function handleFeatureAction(_plugin: Plugin, action: string) {
 
     default:
       showMessage('功能开发中...', 2000, 'info')
+  }
+}
+
+/**
+ * 处理AI配置更新
+ */
+async function handleUpdateAiSettings(
+  plugin: Plugin,
+  aiSettings: { provider: string; apiKey: string; customEndpoint: string }
+) {
+  const pluginSample = plugin as any
+
+  const newSettings = {
+    ...pluginSample.settings,
+    aiApiProvider: aiSettings.provider,
+    aiApiKey: aiSettings.apiKey,
+    aiCustomEndpoint: aiSettings.customEndpoint
+  }
+
+  const success = await pluginSample.updateSettings(newSettings)
+  if (success) {
+    // 通知相关功能模块更新配置
+    if (pluginSample.__wordQuery) {
+      pluginSample.__wordQuery.updateApiConfig(aiSettings.provider, aiSettings.apiKey, aiSettings.customEndpoint)
+    }
+  } else {
+    showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
   }
 }

@@ -19,6 +19,13 @@
         </div>
         <div class="header-actions">
           <button
+            class="super-panel-settings"
+            :title="i18n.aiSettings || 'AI配置'"
+            @click="toggleAiSettings"
+          >
+            <IconWrapper name="settings" :size="16" />
+          </button>
+          <button
             class="super-panel-refresh"
             :title="i18n.refresh || '刷新'"
             :disabled="isRefreshing"
@@ -31,6 +38,59 @@
           <button class="super-panel-close" :title="i18n.close || '关闭'" @click="handleClose">
             <IconWrapper name="close" :size="16" />
           </button>
+        </div>
+      </div>
+
+      <!-- AI配置区域 -->
+      <div class="ai-settings-panel" v-if="showAiSettings">
+        <div class="ai-settings-header">
+          <span>🤖 {{ i18n.aiSettings || 'AI大模型配置' }}</span>
+          <button class="settings-close-btn" @click="toggleAiSettings">
+            <IconWrapper name="close" :size="14" />
+          </button>
+        </div>
+        <div class="ai-settings-content">
+          <!-- API供应商选择 -->
+          <div class="setting-group">
+            <label class="setting-label">{{ i18n.apiProvider || 'API供应商' }}</label>
+            <select v-model="localAiProvider" class="setting-select" @change="handleProviderChange">
+              <option value="tongyi">{{ i18n.tongyiQianwen || '通义千问' }}</option>
+              <option value="openai">{{ i18n.openAI || 'OpenAI' }}</option>
+              <option value="deepseek">{{ i18n.deepSeek || 'DeepSeek' }}</option>
+              <option value="custom">{{ i18n.customApi || '自定义API' }}</option>
+            </select>
+          </div>
+
+          <!-- API密钥输入 -->
+          <div class="setting-group">
+            <label class="setting-label">{{ i18n.apiKey || 'API密钥' }}</label>
+            <div class="setting-input-wrapper">
+              <input
+                v-model="localAiApiKey"
+                :type="apiKeyVisible ? 'text' : 'password'"
+                class="setting-input"
+                :placeholder="getApiKeyPlaceholder()"
+                @input="handleApiKeyChange"
+              />
+              <button class="toggle-visibility-btn" @click="apiKeyVisible = !apiKeyVisible">
+                <IconWrapper :name="apiKeyVisible ? 'eye' : 'eyeOff'" :size="14" />
+              </button>
+            </div>
+            <div class="setting-desc">{{ getApiKeyDescription() }}</div>
+          </div>
+
+          <!-- 自定义API端点 -->
+          <div class="setting-group" v-if="localAiProvider === 'custom'">
+            <label class="setting-label">{{ i18n.customEndpoint || 'API端点' }}</label>
+            <input
+              v-model="localAiCustomEndpoint"
+              type="text"
+              class="setting-input"
+              placeholder="https://api.example.com/v1/chat/completions"
+              @input="handleEndpointChange"
+            />
+            <div class="setting-desc">自定义API端点URL，用于连接自定义API服务</div>
+          </div>
         </div>
       </div>
 
@@ -50,10 +110,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import IconWrapper from '@/components/IconWrapper.vue'
 import FeatureCard from './components/FeatureCard.vue'
 import type { Feature } from './types'
+import { showMessage } from 'siyuan'
 
 interface Props {
   visible: boolean
@@ -66,6 +127,7 @@ interface Emits {
   (e: 'action', action: string): void
   (e: 'toggleFeature', featureId: string, enabled: boolean): void
   (e: 'refresh'): Promise<void>
+  (e: 'updateAiSettings', settings: { provider: string; apiKey: string; customEndpoint: string }): Promise<void>
 }
 
 const props = defineProps<Props>()
@@ -73,6 +135,72 @@ const emit = defineEmits<Emits>()
 
 // 刷新加载状态
 const isRefreshing = ref(false)
+
+// AI配置状态
+const showAiSettings = ref(false)
+const apiKeyVisible = ref(false)
+const localAiProvider = ref(props.settings.aiApiProvider || 'tongyi')
+const localAiApiKey = ref(props.settings.aiApiKey || '')
+const localAiCustomEndpoint = ref(props.settings.aiCustomEndpoint || '')
+
+// 切换AI配置面板
+const toggleAiSettings = () => {
+  showAiSettings.value = !showAiSettings.value
+}
+
+// 获取API密钥占位符
+const getApiKeyPlaceholder = () => {
+  const placeholders: Record<string, string> = {
+    tongyi: props.i18n.tongyiQianwenPlaceholder || '请输入通义千问API密钥',
+    openai: props.i18n.openAIPlaceholder || '请输入OpenAI API密钥',
+    deepseek: props.i18n.deepSeekPlaceholder || '请输入DeepSeek API密钥',
+    custom: props.i18n.customApiPlaceholder || '请输入自定义API密钥'
+  }
+  return placeholders[localAiProvider.value] || '请输入API密钥'
+}
+
+// 获取API密钥描述
+const getApiKeyDescription = () => {
+  const descriptions: Record<string, string> = {
+    tongyi: `${props.i18n.tongyiQianwen || '通义千问'} API密钥，用于所有AI功能`,
+    openai: `${props.i18n.openAI || 'OpenAI'} API密钥，用于所有AI功能`,
+    deepseek: `${props.i18n.deepSeek || 'DeepSeek'} API密钥，用于所有AI功能`,
+    custom: `${props.i18n.customApi || '自定义API'} 密钥，用于所有AI功能`
+  }
+  return descriptions[localAiProvider.value] || 'API密钥，用于所有AI功能'
+}
+
+// 处理供应商变更
+const handleProviderChange = async () => {
+  await saveAiSettings()
+  showMessage('供应商已更新', 2000, 'info')
+}
+
+// 处理API密钥变更
+const handleApiKeyChange = async () => {
+  await saveAiSettings()
+}
+
+// 处理端点变更
+const handleEndpointChange = async () => {
+  await saveAiSettings()
+}
+
+// 保存AI配置
+const saveAiSettings = async () => {
+  await emit('updateAiSettings', {
+    provider: localAiProvider.value,
+    apiKey: localAiApiKey.value,
+    customEndpoint: localAiCustomEndpoint.value
+  })
+}
+
+// 监听settings变化，同步本地状态
+watch(() => props.settings, (newSettings) => {
+  localAiProvider.value = newSettings.aiApiProvider || 'tongyi'
+  localAiApiKey.value = newSettings.aiApiKey || ''
+  localAiCustomEndpoint.value = newSettings.aiCustomEndpoint || ''
+}, { deep: true })
 
 // 功能列表配置
 const features = computed<Feature[]>(() => [
@@ -264,6 +392,7 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
   gap: 8px;
 }
 
+.super-panel-settings,
 .super-panel-refresh,
 .super-panel-close {
   width: 32px;
@@ -351,5 +480,140 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
       background: var(--b3-theme-on-surface);
     }
   }
+}
+
+/* AI配置面板样式 */
+.ai-settings-panel {
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-surface-lighter);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--b3-theme-on-surface);
+  background: var(--b3-theme-surface);
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+}
+
+.settings-close-btn {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--b3-theme-on-surface);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--b3-theme-error-lighter);
+    transform: rotate(90deg);
+  }
+}
+
+.ai-settings-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--b3-theme-on-surface);
+}
+
+.setting-select,
+.setting-input {
+  padding: 8px 12px;
+  border: 2px solid var(--b3-theme-surface-light);
+  border-radius: 6px;
+  background: var(--b3-theme-background);
+  color: var(--b3-theme-on-background);
+  outline: none;
+  font-size: 13px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--b3-theme-primary-lighter);
+  }
+
+  &:focus {
+    border-color: var(--b3-theme-primary);
+    box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.1);
+  }
+}
+
+.setting-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667' d='M6 9L2 5h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.setting-input-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.setting-input-wrapper .setting-input {
+  flex: 1;
+  border-radius: 6px 0 0 6px;
+}
+
+.toggle-visibility-btn {
+  padding: 8px 12px;
+  background: var(--b3-theme-surface);
+  border: 2px solid var(--b3-theme-surface-light);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--b3-theme-on-surface);
+
+  &:hover {
+    background: var(--b3-theme-primary);
+    border-color: var(--b3-theme-primary);
+    color: var(--b3-theme-on-primary);
+  }
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: var(--b3-theme-on-surface);
+  opacity: 0.7;
+  line-height: 1.4;
 }
 </style>

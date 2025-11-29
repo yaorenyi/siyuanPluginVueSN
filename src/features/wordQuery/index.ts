@@ -13,82 +13,43 @@ import WordQueryPanel from './WordQueryPanel.vue';
 export class WordQuery {
   private plugin: Plugin;
   private currentProvider: string = 'tongyi';
+  private apiKey: string = '';
   private customApiEndpoint: string = '';
 
   constructor(plugin: Plugin) {
     this.plugin = plugin;
-    // 初始化时获取API配置
-    this.currentProvider = this.getApiProvider();
-    this.customApiEndpoint = this.getCustomApiEndpoint();
+    // 从插件配置中初始化API配置
+    const settings = (plugin as any).settings;
+    this.currentProvider = settings.aiApiProvider || 'tongyi';
+    this.apiKey = settings.aiApiKey || 'sk-fae27cc50015409fb2524b0970d3f0b0';
+    this.customApiEndpoint = settings.aiCustomEndpoint || '';
+  }
+
+  /**
+   * 更新API配置（由超级面板调用）
+   */
+  public updateApiConfig(provider: string, apiKey: string, customEndpoint: string) {
+    this.currentProvider = provider;
+    this.apiKey = apiKey;
+    this.customApiEndpoint = customEndpoint;
+    console.log('Word Query API配置已更新:', { provider, customEndpoint });
   }
 
   /**
    * 获取API Key
    */
   private getApiKey(): string {
-    // 尝试从本地存储中获取对应供应商的API Key
-    try {
-      const providerKey = `word-query-api-key-${this.currentProvider}`;
-      const savedKey = localStorage.getItem(providerKey);
-      if (savedKey) {
-        return savedKey;
-      }
-    } catch (error) {
-      console.error('Failed to get API key from localStorage:', error);
-    }
-
-    // 如果是通义千问且没有设置密钥，使用默认值
-    if (this.currentProvider === 'tongyi') {
-      return 'sk-fae27cc50015409fb2524b0970d3f0b0';
-    }
-
-    return '';
-  }
-
-  /**
-   * 获取API供应商
-   */
-  private getApiProvider(): string {
-    try {
-      const savedProvider = localStorage.getItem('word-query-api-provider');
-      if (savedProvider) {
-        return savedProvider;
-      }
-    } catch (error) {
-      console.error('Failed to get API provider from localStorage:', error);
-    }
-    return 'tongyi';
+    return this.apiKey || 'sk-fae27cc50015409fb2524b0970d3f0b0';
   }
 
   /**
    * 获取自定义API端点
    */
   private getCustomApiEndpoint(): string {
-    try {
-      const savedEndpoint = localStorage.getItem('word-query-custom-endpoint');
-      if (savedEndpoint) {
-        return savedEndpoint;
-      }
-    } catch (error) {
-      console.error('Failed to get custom API endpoint from localStorage:', error);
-    }
-    return '';
+    return this.customApiEndpoint;
   }
 
-  /**
-   * 设置API供应商
-   */
-  public setApiProvider(provider: string) {
-    this.currentProvider = provider;
-    this.customApiEndpoint = this.getCustomApiEndpoint(); // 重新获取自定义端点
-  }
 
-  /**
-   * 设置API Key
-   */
-  public setApiKey(_apiKey: string) {
-    // API密钥现在按供应商分别存储，这个方法主要用于通知更新
-  }
 
   /**
    * 初始化单词查询功能
@@ -125,12 +86,6 @@ export class WordQuery {
               i18n: self.plugin.i18n,
               onQuery: async (word: string) => {
                 return await self.queryWord(word);
-              },
-              onApiKeyChange: (apiKey: string) => {
-                self.setApiKey(apiKey);
-              },
-              onProviderChange: (provider: string) => {
-                self.setApiProvider(provider);
               }
             });
           }
@@ -249,7 +204,7 @@ export class WordQuery {
       // 对于混合输入或其他情况，尝试智能判断
       const hasChinese = /[\u4e00-\u9fa5]/.test(word);
       const hasEnglish = /[a-zA-Z]/.test(word);
-      
+
       if (hasChinese && !hasEnglish) {
         // 主要为中文，按中文处理
         return `请为中文词语 "${word}" 生成详细信息，要求：
@@ -438,7 +393,7 @@ export class WordQuery {
     }
 
     const data = await response.json();
-    
+
     if (data.choices && data.choices.length > 0) {
       return data.choices[0].message.content;
     } else {
@@ -483,7 +438,7 @@ export class WordQuery {
     }
 
     const data = await response.json();
-    
+
     if (data.choices && data.choices.length > 0) {
       return data.choices[0].message.content;
     } else {
@@ -497,7 +452,7 @@ export class WordQuery {
   private async callCustomAPI(prompt: string): Promise<string> {
     const apiKey = this.getApiKey();
     const apiUrl = this.customApiEndpoint;
-    
+
     if (!apiUrl) {
       throw new Error('自定义API端点未设置');
     }
@@ -534,7 +489,7 @@ export class WordQuery {
     }
 
     const data = await response.json();
-    
+
     // 尝试多种响应格式
     if (data.choices && data.choices.length > 0) {
       return data.choices[0].message.content;

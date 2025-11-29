@@ -189,6 +189,12 @@ export const COMMON_ICONS = {
   },
   help: {
     icon: 'mdi:help-circle',
+  },
+  eye: {
+    icon: 'mdi:eye',
+  },
+  eyeOff: {
+    icon: 'mdi:eye-off',
   }
 } as const
 

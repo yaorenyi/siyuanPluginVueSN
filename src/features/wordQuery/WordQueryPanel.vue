@@ -29,80 +29,6 @@
         <button class="settings-btn" @click="toggleAdvancedOptions" :title="i18n.advancedOptions || '高级选项'">
           <IconWrapper name="generalSettings" :size="18" />
         </button>
-        <button class="settings-btn" @click="toggleApiKeySettings" :title="i18n.apiKeySettings || 'API配置'">
-          <IconWrapper name="settings" :size="18" />
-        </button>
-      </div>
-    </div>
-
-    <!-- API配置设置区域 -->
-    <div class="api-key-settings" v-if="showApiKeySettings">
-      <div class="api-key-header">
-        <span>{{ i18n.apiKeySettings || 'API配置设置' }}</span>
-        <button class="close-btn" @click="toggleApiKeySettings">
-          <svg class="close-icon"><use xlink:href="#iconClose"></use></svg>
-        </button>
-      </div>
-      <div class="api-key-content">
-        <!-- API供应商选择 -->
-        <div class="input-group">
-          <label>{{ i18n.apiProvider || 'API供应商' }}</label>
-          <div class="provider-select-wrapper">
-            <select
-              v-model="apiProvider"
-              class="provider-select"
-              @change="onProviderChange"
-            >
-              <option value="" disabled>{{ i18n.apiProviderPlaceholder || '选择API供应商' }}</option>
-              <option value="tongyi">{{ i18n.tongyiQianwen || '通义千问' }}</option>
-              <option value="openai">{{ i18n.openAI || 'OpenAI' }}</option>
-              <option value="deepseek">{{ i18n.deepSeek || 'DeepSeek' }}</option>
-              <option value="custom">{{ i18n.customApi || '自定义API' }}</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- API密钥输入 -->
-        <div class="input-group">
-          <label>{{ i18n.wordQueryApiKey || 'API密钥' }}</label>
-          <div class="api-input-wrapper">
-            <input
-              v-model="apiKey"
-              :type="apiKeyVisible ? 'text' : 'password'"
-              class="api-key-input"
-              :placeholder="getApiKeyPlaceholder()"
-              @input="saveApiKey"
-            />
-            <button class="toggle-visibility" @click="toggleApiKeyVisibility">
-              <svg class="visibility-icon" v-if="apiKeyVisible">
-                <use xlink:href="#iconEye"></use>
-              </svg>
-              <svg class="visibility-icon" v-else>
-                <use xlink:href="#iconEyeOff"></use>
-              </svg>
-            </button>
-          </div>
-          <div class="api-key-desc">
-            {{ getApiKeyDescription() }}
-          </div>
-        </div>
-
-        <!-- 自定义API端点（仅在选择自定义API时显示） -->
-        <div class="input-group" v-if="apiProvider === 'custom'">
-          <label>API端点</label>
-          <div class="api-input-wrapper">
-            <input
-              v-model="customApiEndpoint"
-              type="text"
-              class="api-key-input"
-              placeholder="请输入自定义API端点URL"
-              @input="saveCustomApiEndpoint"
-            />
-          </div>
-          <div class="api-key-desc">
-            自定义API端点URL，用于连接自定义API服务
-          </div>
-        </div>
       </div>
     </div>
 
@@ -298,8 +224,6 @@ import IconWrapper from '@/components/IconWrapper.vue';
 interface Props {
   i18n: any;
   onQuery: (word: string) => Promise<string>;
-  onApiKeyChange?: (apiKey: string) => void;
-  onProviderChange?: (provider: string) => void;
 }
 
 const props = defineProps<Props>();
@@ -325,11 +249,6 @@ const queryResult = ref('');
 const isLoading = ref(false);
 const errorMessage = ref('');
 const showCopyOptions = ref(false);
-const showApiKeySettings = ref(false);
-const apiKey = ref('');
-const apiKeyVisible = ref(false);
-const apiProvider = ref('tongyi');
-const customApiEndpoint = ref('');
 const autoQueryTimer = ref<NodeJS.Timeout | null>(null);
 
 // 新增功能状态
@@ -740,131 +659,6 @@ const toggleCopyOptions = () => {
   showCopyOptions.value = !showCopyOptions.value;
 };
 
-// 切换API密钥设置区域
-const toggleApiKeySettings = () => {
-  showApiKeySettings.value = !showApiKeySettings.value;
-  if (showApiKeySettings.value) {
-    // 打开时从本地存储加载API密钥
-    loadApiKey();
-    showCopyOptions.value = false; // 关闭复制选项
-  }
-};
-
-// 切换API密钥可见性
-const toggleApiKeyVisibility = () => {
-  apiKeyVisible.value = !apiKeyVisible.value;
-};
-
-// 保存API密钥到本地存储
-const saveApiKey = async () => {
-  if (apiKey.value) {
-    try {
-      const providerKey = `word-query-api-key-${apiProvider.value}`;
-      localStorage.setItem(providerKey, apiKey.value);
-      // 通知父组件API密钥已更新
-      if (props.onApiKeyChange) {
-        props.onApiKeyChange(apiKey.value);
-      }
-    } catch (error) {
-      console.error('Failed to save API key:', error);
-    }
-  }
-};
-
-// 获取API密钥占位符
-const getApiKeyPlaceholder = () => {
-  const placeholders: Record<string, string> = {
-    tongyi: props.i18n.tongyiQianwenPlaceholder || '请输入通义千问API密钥',
-    openai: props.i18n.openAIPlaceholder || '请输入OpenAI API密钥',
-    deepseek: props.i18n.deepSeekPlaceholder || '请输入DeepSeek API密钥',
-    custom: props.i18n.customApiPlaceholder || '请输入自定义API密钥'
-  };
-  return placeholders[apiProvider.value] || '请输入API密钥';
-};
-
-// 获取API密钥描述
-const getApiKeyDescription = () => {
-  const descriptions: Record<string, string> = {
-    tongyi: `${props.i18n.tongyiQianwen || '通义千问'} API密钥，用于单词查询功能`,
-    openai: `${props.i18n.openAI || 'OpenAI'} API密钥，用于单词查询功能`,
-    deepseek: `${props.i18n.deepSeek || 'DeepSeek'} API密钥，用于单词查询功能`,
-    custom: `${props.i18n.customApi || '自定义API'} 密钥，用于单词查询功能`
-  };
-  return descriptions[apiProvider.value] || 'API密钥，用于单词查询功能';
-};
-
-// 供应商变更处理
-const onProviderChange = () => {
-  saveApiProvider();
-  // 清空当前API密钥，让用户重新输入
-  apiKey.value = '';
-  // 通知父组件供应商已变更
-  if (props.onProviderChange) {
-    props.onProviderChange(apiProvider.value);
-  }
-};
-
-// 保存API供应商到本地存储
-const saveApiProvider = async () => {
-  try {
-    localStorage.setItem('word-query-api-provider', apiProvider.value);
-  } catch (error) {
-    console.error('Failed to save API provider:', error);
-  }
-};
-
-// 加载API供应商
-const loadApiProvider = () => {
-  try {
-    const savedProvider = localStorage.getItem('word-query-api-provider');
-    if (savedProvider) {
-      apiProvider.value = savedProvider;
-    }
-  } catch (error) {
-    console.error('Failed to load API provider:', error);
-  }
-};
-
-// 保存自定义API端点
-const saveCustomApiEndpoint = async () => {
-  try {
-    localStorage.setItem('word-query-custom-endpoint', customApiEndpoint.value);
-  } catch (error) {
-    console.error('Failed to save custom API endpoint:', error);
-  }
-};
-
-// 加载自定义API端点
-const loadCustomApiEndpoint = () => {
-  try {
-    const savedEndpoint = localStorage.getItem('word-query-custom-endpoint');
-    if (savedEndpoint) {
-      customApiEndpoint.value = savedEndpoint;
-    }
-  } catch (error) {
-    console.error('Failed to load custom API endpoint:', error);
-  }
-};
-
-// 从本地存储加载API密钥
-const loadApiKey = () => {
-  try {
-    const providerKey = `word-query-api-key-${apiProvider.value}`;
-    const savedKey = localStorage.getItem(providerKey);
-    if (savedKey) {
-      apiKey.value = savedKey;
-    } else if (apiProvider.value === 'tongyi') {
-      // 通义千问的默认密钥
-      apiKey.value = 'sk-fae27cc50015409fb2524b0970d3f0b0';
-    }
-  } catch (error) {
-    console.error('Failed to load API key:', error);
-    if (apiProvider.value === 'tongyi') {
-      apiKey.value = 'sk-fae27cc50015409fb2524b0970d3f0b0';
-    }
-  }
-};
-
 // 复制结果
 const copyResult = async (type: string = 'all') => {
   let textToCopy = '';
@@ -938,10 +732,6 @@ watch([pronunciationType, autoPlayPronunciation, showRelatedWords], () => {
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('click', handleClickOutside);
-  // 初始化时加载API配置
-  loadApiProvider();
-  loadCustomApiEndpoint();
-  loadApiKey();
   // 加载历史记录和收藏
   loadHistory();
   loadFavorites();
@@ -1424,345 +1214,6 @@ onUnmounted(() => {
   color: #795548;
 }
 
-/* API配置设置相关样式 */
-.settings-btn {
-  padding: 8px;
-  background: transparent;
-  border: none;
-  color: var(--b3-theme-on-surface);
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.settings-btn:hover {
-  background: var(--b3-theme-surface-light);
-  transform: scale(1.05);
-}
-
-.settings-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.api-key-settings {
-  border-bottom: 1px solid var(--b3-theme-surface-lighter);
-  background: var(--b3-theme-surface-lighter);
-  animation: slideDown 0.3s ease-out;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.api-key-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  font-weight: 600;
-  color: var(--b3-theme-on-surface);
-  background: var(--b3-theme-surface);
-  border-bottom: 1px solid var(--b3-theme-surface-lighter);
-}
-
-.close-btn {
-  padding: 6px;
-  background: transparent;
-  border: none;
-  color: var(--b3-theme-on-surface);
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: var(--b3-theme-primary);
-  color: var(--b3-theme-on-primary);
-  transform: rotate(90deg);
-}
-
-.close-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.api-key-content {
-  padding: 12px;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.input-group {
-  margin-bottom: 12px;
-  width: 100%;
-}
-
-.input-group:last-child {
-  margin-bottom: 0;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 0.9em;
-  font-weight: 500;
-  color: var(--b3-theme-on-surface);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.provider-select-wrapper {
-  position: relative;
-}
-
-.provider-select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 2px solid var(--b3-theme-surface-light);
-  border-radius: 8px;
-  background: var(--b3-theme-background);
-  color: var(--b3-theme-on-background);
-  outline: none;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667' d='M6 9L2 5h8z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-}
-
-.provider-select:hover {
-  border-color: var(--b3-theme-primary);
-}
-
-.provider-select:focus {
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.1);
-}
-
-.api-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.api-key-input {
-  flex: 1;
-  padding: 8px 10px;
-  border: 2px solid var(--b3-theme-surface-light);
-  border-radius: 6px 0 0 6px;
-  background: var(--b3-theme-background);
-  color: var(--b3-theme-on-background);
-  outline: none;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 0.8em;
-  transition: all 0.2s ease;
-  min-width: 0;
-}
-
-.api-key-input:hover {
-  border-color: var(--b3-theme-primary);
-}
-
-.api-key-input:focus {
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.1);
-}
-
-.toggle-visibility {
-  padding: 8px 10px;
-  background: var(--b3-theme-surface);
-  border: 2px solid var(--b3-theme-surface-light);
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.toggle-visibility:hover {
-  background: var(--b3-theme-primary);
-  border-color: var(--b3-theme-primary);
-  color: var(--b3-theme-on-primary);
-}
-
-.visibility-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--b3-theme-on-surface);
-  transition: transform 0.2s ease;
-}
-
-.toggle-visibility:hover .visibility-icon {
-  transform: scale(1.1);
-}
-
-.api-key-desc {
-  margin-top: 6px;
-  font-size: 0.8em;
-  color: var(--b3-theme-on-surface);
-  opacity: 0.75;
-  line-height: 1.3;
-  padding-left: 2px;
-  word-break: break-word;
-}
-
-/* 响应式设计 */
-@media (max-width: 400px) {
-  .query-header {
-    padding: 8px;
-    gap: 6px;
-  }
-
-  .input-wrapper {
-    gap: 6px;
-    margin-right: 6px;
-  }
-
-  .query-input {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-
-  .query-btn {
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-
-  .api-key-header {
-    padding: 6px 10px;
-  }
-
-  .api-key-content {
-    padding: 8px 10px 10px;
-  }
-
-  .api-key-input {
-    font-size: 0.75em;
-    padding: 6px 8px;
-  }
-
-  .toggle-visibility {
-    padding: 6px 8px;
-  }
-
-  .query-content {
-    padding: 8px;
-  }
-
-  .result-content {
-    padding: 12px;
-    margin-bottom: 8px;
-  }
-
-  .result-actions {
-    gap: 4px;
-  }
-
-  .action-btn {
-    padding: 4px 8px;
-    font-size: 10px;
-    gap: 4px;
-  }
-
-  .dropdown-menu {
-    min-width: 80px;
-    max-width: 120px;
-  }
-
-  .dropdown-item {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-}
-
-@media (max-width: 320px) {
-  .query-header {
-    padding: 6px;
-  }
-
-  .query-input {
-    padding: 4px 6px;
-    font-size: 11px;
-  }
-
-  .query-btn {
-    padding: 4px 6px;
-    font-size: 10px;
-  }
-
-  .result-content {
-    padding: 8px;
-  }
-
-  .action-btn {
-    padding: 3px 6px;
-    font-size: 9px;
-  }
-}
-
-@media (max-height: 500px) {
-  .empty-icon {
-    font-size: 32px;
-    margin-bottom: 8px;
-  }
-
-  .loading-spinner-large {
-    width: 16px;
-    height: 16px;
-    margin-bottom: 8px;
-  }
-
-  .result-content {
-    padding: 8px;
-    margin-bottom: 6px;
-  }
-
-  .api-key-header {
-    padding: 4px 8px;
-  }
-
-  .api-key-content {
-    padding: 6px 8px 6px;
-  }
-
-  .api-key-input {
-    padding: 4px 6px;
-    font-size: 0.7em;
-  }
-
-  .toggle-visibility {
-    padding: 4px 6px;
-  }
-
-  .input-group {
-    margin-bottom: 8px;
-  }
-}
-
 /* 新增功能样式 */
 
 /* 面板通用样式 */
@@ -2037,5 +1488,124 @@ onUnmounted(() => {
 .settings-icon {
   width: 18px;
   height: 18px;
+}
+
+.close-btn {
+  padding: 6px;
+  background: transparent;
+  border: none;
+  color: var(--b3-theme-on-surface);
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
+  transform: rotate(90deg);
+}
+
+.close-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 400px) {
+  .query-header {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .input-wrapper {
+    gap: 6px;
+    margin-right: 6px;
+  }
+
+  .query-input {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .query-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .query-content {
+    padding: 8px;
+  }
+
+  .result-content {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  .result-actions {
+    gap: 4px;
+  }
+
+  .action-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .dropdown-menu {
+    min-width: 80px;
+    max-width: 120px;
+  }
+
+  .dropdown-item {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .query-header {
+    padding: 6px;
+  }
+
+  .query-input {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .query-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .result-content {
+    padding: 8px;
+  }
+
+  .action-btn {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+}
+
+@media (max-height: 500px) {
+  .empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .loading-spinner-large {
+    width: 16px;
+    height: 16px;
+    margin-bottom: 8px;
+  }
+
+  .result-content {
+    padding: 8px;
+    margin-bottom: 6px;
+  }
 }
 </style>
