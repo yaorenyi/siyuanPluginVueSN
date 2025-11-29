@@ -32,6 +32,7 @@
 import { ref, computed } from 'vue'
 import FontSettings from './components/FontSettings.vue'
 import GeneralActions from './components/GeneralActions.vue'
+import PasswordSettings from './components/PasswordSettings.vue'
 
 interface Props {
   i18n?: any
@@ -53,18 +54,25 @@ const modules = ref([
     order: 1
   },
   {
+    id: 'password',
+    name: props.i18n.passwordSetting || '密码设置',
+    icon: '�',
+    component: PasswordSettings,
+    order: 2
+  },
+  {
     id: 'actions',
     name: props.i18n.generalActions || '通用操作',
     icon: '🚀',
     component: GeneralActions,
-    order: 2
+    order: 3
   },
   // {
   //   id: 'appearance',
   //   name: props.i18n.appearanceSettings || '外观设置',
   //   icon: '🎨',
   //   component: AppearanceSettings,
-  //   order: 3
+  //   order: 4
   // },
   // 未来可以轻松添加更多模块
   // {
@@ -72,7 +80,7 @@ const modules = ref([
   //   name: '行为设置',
   //   icon: '⚙️',
   //   component: BehaviorSettings,
-  //   order: 4
+  //   order: 5
   // }
 ])
 

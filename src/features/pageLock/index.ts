@@ -53,7 +53,7 @@ function getProtyleByDocId(docId: string): any {
 /**
  * 刷新protyle编辑器（关闭并重新打开标签页）
  */
-async function reloadProtyle(plugin: Plugin, protyle: any, docId: string) {
+async function reloadProtyle(_plugin: Plugin, protyle: any, docId: string) {
   // 根据思源的机制，加锁/解锁后需要关闭并重新打开文档才能看到标识
   // 但DOM状态（遮罩层/按钮）已经更新，不需要关闭页面
   // 只需要刷新文档树的图标即可
@@ -111,8 +111,10 @@ export function registerPageLock(plugin: Plugin) {
 
   console.log('页面锁定功能已注册')
 
-  // 添加全局密码设置到右侧侧边栏
-  addGlobalPasswordButton(plugin)
+  // 监听来自通用设置的密码对话框打开事件
+  window.addEventListener('open-password-dialog', () => {
+    showGlobalPasswordDialog(plugin)
+  })
 }
 
 /**
@@ -217,57 +219,9 @@ async function lockPageWithGlobalPassword(plugin: Plugin, docId: string) {
 }
 
 /**
- * 添加密码设置 Dock
- */
-function addGlobalPasswordButton(plugin: Plugin) {
-  const dock = plugin.addDock({
-    config: {
-      position: 'RightTop',
-      size: { width: 200, height: 0 },
-      icon: 'iconLock',
-      title: plugin.i18n.setPassword || '文档密码',
-      show: false,
-    },
-    data: {},
-    type: 'page-lock-password-dock',
-    init(dock) {
-      // 创建密码设置界面
-      dock.element.innerHTML = `
-        <div class="fn__flex-1 fn__flex-column" style="padding: 16px;">
-          <div class="b3-label" style="margin-bottom: 16px;">
-            <div class="fn__flex">
-              <span class="fn__flex-1">
-                ${plugin.i18n.passwordSetting || '密码设置'}
-              </span>
-            </div>
-            <div class="fn__hr" style="margin: 8px 0;"></div>
-            <span class="b3-label__text">
-              ${plugin.i18n.passwordSettingDesc || '设置全局加密密码，用于锁定文档'}
-            </span>
-          </div>
-          <button class="b3-button b3-button--outline" id="setGlobalPasswordBtn">
-            <svg class="b3-button__icon"><use xlink:href="#iconLock"></use></svg>
-            <span class="b3-button__text">${plugin.i18n.setPassword || '文档密码'}</span>
-          </button>
-          <div id="passwordStatus" style="margin-top: 12px; font-size: 12px; color: var(--b3-theme-on-surface);">
-            ${globalPassword ? '✅ 密码已设置' : '⚠️ 尚未设置密码'}
-          </div>
-        </div>
-      `
-
-      // 绑定按钮事件
-      const btn = dock.element.querySelector('#setGlobalPasswordBtn')
-      btn?.addEventListener('click', () => {
-        showGlobalPasswordDialog(plugin, dock)
-      })
-    },
-  })
-}
-
-/**
  * 显示全局密码设置对话框
  */
-function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
+function showGlobalPasswordDialog(plugin: Plugin) {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -292,9 +246,12 @@ function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
             return
           }
 
-          if (password !== confirmPassword) {
-            showMessage(plugin.i18n.passwordMismatch, 3000, 'error')
-            return
+          // 验证两次密码是否一致（仅在设置或更新模式下）
+          if (mode === 'lock' || mode === 'update') {
+            if (password !== confirmPassword) {
+              showMessage(plugin.i18n.passwordMismatch, 3000, 'error')
+              return
+            }
           }
 
           // 如果是更新密码模式，需要验证旧密码
@@ -315,13 +272,9 @@ function showGlobalPasswordDialog(plugin: Plugin, dock?: any) {
           const successMsg = hasPassword ? plugin.i18n.passwordUpdateSuccess : plugin.i18n.passwordSetSuccess
           showMessage(successMsg || '密码设置成功', 3000, 'info')
 
-          // 更新 dock 状态显示
-          if (dock?.element) {
-            const statusElement = dock.element.querySelector('#passwordStatus')
-            if (statusElement) {
-              statusElement.innerHTML = '✅ 密码已设置'
-            }
-          }
+          // 触发密码更新事件，通知通用设置更新状态
+          const event = new CustomEvent('password-updated')
+          window.dispatchEvent(event)
 
           cleanup()
         },
