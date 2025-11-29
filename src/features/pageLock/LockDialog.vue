@@ -189,14 +189,14 @@ const handleConfirm = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   pointer-events: auto;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes fadeIn {
@@ -211,55 +211,69 @@ const handleConfirm = () => {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .page-lock-dialog {
   background: var(--b3-theme-background);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  width: 400px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  width: 420px;
   max-width: 90vw;
   overflow: hidden;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .page-lock-dialog__header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, var(--b3-theme-surface), var(--b3-theme-surface-variant));
-  border-bottom: 2px solid var(--b3-theme-primary);
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--b3-theme-surface) 0%, var(--b3-theme-surface-variant) 100%);
+  border-bottom: 1px solid var(--b3-border-color);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 24px;
+    right: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--b3-theme-primary) 0%, transparent 100%);
+    opacity: 0.6;
+  }
 
   .header-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: var(--b3-theme-primary);
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--b3-theme-primary) 0%, var(--b3-theme-primary-light) 100%);
+    border-radius: 12px;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
 
     .icon {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       color: var(--b3-theme-on-primary);
     }
   }
 
   h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--b3-theme-on-background);
     flex: 1;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -267,46 +281,52 @@ const handleConfirm = () => {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--b3-theme-on-background);
-  opacity: 0.6;
-  transition: all 0.2s;
-  border-radius: 6px;
+  opacity: 0.5;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
 
   &:hover {
     opacity: 1;
     background: var(--b3-theme-surface-variant);
+    transform: rotate(90deg);
+  }
+
+  &:active {
+    transform: rotate(90deg) scale(0.9);
   }
 
   .icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
 }
 
 .page-lock-dialog__content {
-  padding: 20px;
+  padding: 24px;
 }
 
 .page-lock-dialog__hint {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  background: var(--b3-theme-primary-container);
-  border-radius: 8px;
-  border-left: 3px solid var(--b3-theme-primary);
-  font-size: 12px;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--b3-theme-primary-container) 0%, var(--b3-theme-primary-lighter) 100%);
+  border-radius: 10px;
+  border-left: 4px solid var(--b3-theme-primary);
+  font-size: 13px;
   color: var(--b3-theme-on-surface);
-  line-height: 1.5;
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
   .icon {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
     margin-top: 2px;
     color: var(--b3-theme-primary);
@@ -316,50 +336,53 @@ const handleConfirm = () => {
 .page-lock-dialog__form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .page-lock-dialog__field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 
   .field-label {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
+    gap: 7px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--b3-theme-on-surface);
+    letter-spacing: -0.01em;
 
     .icon {
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       color: var(--b3-theme-primary);
     }
   }
 }
 
 .page-lock-dialog__input {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 2px solid var(--b3-border-color);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--b3-theme-surface);
   color: var(--b3-theme-on-surface);
   font-size: 14px;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
+  font-family: inherit;
 
   &:focus {
     border-color: var(--b3-theme-primary);
     background: var(--b3-theme-background);
-    box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1);
+    box-shadow: 0 0 0 4px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.12);
+    transform: translateY(-1px);
   }
 
   &::placeholder {
     color: var(--b3-theme-on-surface-variant);
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   &:hover:not(:focus) {
@@ -371,29 +394,30 @@ const handleConfirm = () => {
 .page-lock-dialog__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 20px;
-  background: var(--b3-theme-surface-variant);
+  gap: 12px;
+  padding: 20px 24px;
+  background: var(--b3-theme-surface);
   border-top: 1px solid var(--b3-border-color);
 }
 
 .page-lock-dialog__btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 8px;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
   outline: none;
   white-space: nowrap;
+  letter-spacing: -0.01em;
 
   .icon {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
   }
 
   &--cancel {
@@ -404,28 +428,29 @@ const handleConfirm = () => {
     &:hover {
       background: var(--b3-theme-background);
       border-color: var(--b3-theme-on-surface-variant);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     &:active {
       transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
   }
 
   &--confirm {
-    background: var(--b3-theme-primary);
+    background: linear-gradient(135deg, var(--b3-theme-primary) 0%, var(--b3-theme-primary-light) 100%);
     color: var(--b3-theme-on-primary);
-    box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+    box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.35);
 
     &:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.45);
     }
 
     &:active {
       transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
     }
   }
 }

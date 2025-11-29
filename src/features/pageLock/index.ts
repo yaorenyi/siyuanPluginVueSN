@@ -135,13 +135,16 @@ async function updatePageLockButton(plugin: Plugin, protyle: any) {
 
   // 创建锁定按钮
   const lockButton = document.createElement('button')
-  lockButton.className = 'page-lock-button b3-button b3-button--outline'
+  lockButton.className = 'page-lock-button block__icon b3-tooltips b3-tooltips__sw'
+  lockButton.setAttribute('aria-label', isLocked ? plugin.i18n.unlockPage : plugin.i18n.lockPage)
   lockButton.innerHTML = `
-    <svg class="icon"><use xlink:href="#icon${isLocked ? 'Unlock' : 'Lock'}"></use></svg>
-    <span>${isLocked ? plugin.i18n.unlockPage : plugin.i18n.lockPage}</span>
+    <svg class="icon-lock ${isLocked ? 'icon-lock--locked' : ''}">
+      <use xlink:href="#icon${isLocked ? 'Lock' : 'Unlock'}"></use>
+    </svg>
   `
 
-  lockButton.addEventListener('click', () => {
+  lockButton.addEventListener('click', (e) => {
+    e.stopPropagation()
     if (isLocked) {
       showUnlockDialog(plugin, docId)
     } else {
@@ -154,28 +157,19 @@ async function updatePageLockButton(plugin: Plugin, protyle: any) {
     }
   })
 
-  // 插入到编辑器顶部
-  const protyleTop = protyle.element?.querySelector('.protyle-top')
-  if (protyleTop) {
-    // 如果已有 protyle-top，检查是否已有锁定按钮容器
-    let lockButtonContainer = protyle.element?.querySelector('.page-lock-button-container')
-    if (!lockButtonContainer) {
-      lockButtonContainer = document.createElement('div')
-      lockButtonContainer.className = 'page-lock-button-container'
-      protyle.element?.appendChild(lockButtonContainer)
-    }
-    lockButtonContainer.innerHTML = ''
-    lockButtonContainer.appendChild(lockButton)
-  } else {
-    // 如果没有 protyle-top，也使用固定定位的容器
-    let lockButtonContainer = protyle.element?.querySelector('.page-lock-button-container')
-    if (!lockButtonContainer) {
-      lockButtonContainer = document.createElement('div')
-      lockButtonContainer.className = 'page-lock-button-container'
-      protyle.element?.appendChild(lockButtonContainer)
-    }
-    lockButtonContainer.innerHTML = ''
-    lockButtonContainer.appendChild(lockButton)
+  // 查找标题栏右侧的工具栏区域
+  const protyleTitle = protyle.element?.querySelector('.protyle-title')
+  const titleIconsRight = protyleTitle?.querySelector('.protyle-title__icons--right')
+  
+  if (titleIconsRight) {
+    // 插入到标题栏右侧工具栏的第一个位置
+    titleIconsRight.insertBefore(lockButton, titleIconsRight.firstChild)
+  } else if (protyleTitle) {
+    // 如果没有右侧工具栏，创建一个
+    const iconsRight = document.createElement('div')
+    iconsRight.className = 'protyle-title__icons protyle-title__icons--right'
+    iconsRight.appendChild(lockButton)
+    protyleTitle.appendChild(iconsRight)
   }
 
   // 注入样式
@@ -514,44 +508,56 @@ function injectButtonStyles() {
   const style = document.createElement('style')
   style.id = styleId
   style.textContent = `
+    /* 锁定按钮样式 - 融入思源原生UI */
     .page-lock-button {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 3px;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      margin: 0 2px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.2s;
-      background: var(--b3-theme-background);
-      border: 1px solid var(--b3-border-color);
+      transition: all 0.15s ease;
       color: var(--b3-theme-on-background);
-      white-space: nowrap;
-      height: 22px;
-      box-sizing: border-box;
+      opacity: 0.68;
     }
 
     .page-lock-button:hover {
-      background: var(--b3-theme-background-light);
-      border-color: var(--b3-theme-primary);
+      background: var(--b3-theme-surface-lighter);
+      opacity: 1;
     }
 
-    .page-lock-button .icon {
-      width: 13px;
-      height: 13px;
+    .page-lock-button:active {
+      background: var(--b3-theme-surface);
+      transform: scale(0.95);
     }
 
-    .page-lock-button span {
-      line-height: 1;
+    .page-lock-button .icon-lock {
+      width: 18px;
+      height: 18px;
+      transition: all 0.2s ease;
     }
 
-    .page-lock-button-container {
-      position: absolute;
-      bottom: 8px;
-      left: 8px;
-      z-index: 1000;
-      display: inline-flex;
+    /* 锁定状态的图标样式 */
+    .page-lock-button .icon-lock--locked {
+      color: var(--b3-theme-primary);
+      opacity: 1;
+    }
+
+    /* 悬停时的动画效果 */
+    .page-lock-button:hover .icon-lock {
+      transform: scale(1.1);
+    }
+
+    /* 确保标题栏右侧工具栏存在 */
+    .protyle-title__icons--right {
+      display: flex;
       align-items: center;
+      gap: 2px;
     }
   `
 
