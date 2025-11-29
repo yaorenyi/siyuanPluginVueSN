@@ -209,7 +209,7 @@ const handleFeatureAction = (action: string) => {
   position: fixed;
   top: 0;
   right: 0;
-  width: 360px;
+  width: 720px;
   height: 100vh;
   background: var(--b3-theme-background);
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
@@ -259,6 +259,10 @@ const handleFeatureAction = (action: string) => {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-content: start;
 
   /* 滚动条样式 */
   &::-webkit-scrollbar {

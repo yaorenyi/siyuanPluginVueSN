@@ -280,7 +280,8 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -289,15 +290,15 @@ onBeforeUnmount(() => {
 }
 
 .settings-panel {
-  padding: 12px 16px;
-  max-width: 580px;
+  padding: 0;
+  max-width: 1080px;
   width: 90%;
   max-height: 85vh;
-  background: #ffffff;
+  background: var(--b3-theme-background);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   pointer-events: auto;
-  color: #333333;
+  color: var(--b3-theme-on-background);
   font-size: 14px;
   display: flex;
   flex-direction: column;
@@ -305,22 +306,25 @@ onBeforeUnmount(() => {
 }
 
 .settings-header {
-  margin-bottom: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-surface);
   flex-shrink: 0;
 }
 
 .settings-title {
   margin: 0 0 4px 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--b3-theme-on-background);
 }
 
 .settings-desc {
   margin: 0;
   font-size: 13px;
-  color: #666666;
+  color: var(--b3-theme-on-surface);
   line-height: 1.4;
+  opacity: 0.7;
 }
 
 .settings-content {
@@ -334,79 +338,79 @@ onBeforeUnmount(() => {
 .settings-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 4px;
-  margin: 0 -4px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-content: start;
 
   &::-webkit-scrollbar {
     width: 6px;
   }
 
   &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
+    background: transparent;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+    background: var(--b3-theme-surface-lighter);
     border-radius: 3px;
 
     &:hover {
-      background: #a8a8a8;
+      background: var(--b3-theme-on-surface);
     }
   }
 }
 
 .setting-item {
-  margin-bottom: 12px;
-  padding: 10px;
-  background: #fafafa;
+  margin-bottom: 0;
+  padding: 12px;
+  background: var(--b3-theme-surface);
   border-radius: 6px;
+  border: 1px solid var(--b3-theme-surface-lighter);
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f5f5f5;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: var(--b3-theme-surface-light);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .fn__flex-1 {
     font-size: 14px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--b3-theme-on-background);
   }
 
   .b3-label__text {
     font-size: 12px;
-    color: #666666;
+    color: var(--b3-theme-on-surface);
     line-height: 1.5;
     margin-top: 4px;
-  }
-
-  &:last-child {
-    margin-bottom: 0;
+    opacity: 0.8;
   }
 }
 
 .settings-footer {
   display: flex;
   align-items: center;
-  padding: 12px 0 8px;
+  padding: 16px 20px;
   gap: 8px;
   flex-shrink: 0;
-  border-top: 1px solid #e8e8e8;
-  margin-top: 12px;
+  border-top: 1px solid var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-surface);
 }
 
 .settings-notice {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 10px;
-  margin-top: 8px;
-  background: #e6f7ff;
-  border: 1px solid #91d5ff;
-  border-radius: 4px;
+  padding: 10px 12px;
+  margin: 0 20px 16px;
+  background: var(--b3-theme-primary-lighter);
+  border: 1px solid var(--b3-theme-primary-light);
+  border-radius: 6px;
   font-size: 12px;
-  color: #0050b3;
+  color: var(--b3-theme-primary);
   line-height: 1.5;
   flex-shrink: 0;
 
@@ -414,13 +418,13 @@ onBeforeUnmount(() => {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    color: #1890ff;
+    color: var(--b3-theme-primary);
   }
 }
 
 .fn__hr {
-  margin: 8px 0;
+  margin: 0;
   border: none;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid var(--b3-theme-surface-lighter);
 }
 </style>
