@@ -141,18 +141,6 @@
           </div>
         </transition>
       </div>
-
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <button @click="save" class="save-btn">
-          <span class="btn-icon">💾</span>
-          {{ i18n.save || '保存' }}
-        </button>
-        <button @click="reset" class="reset-btn">
-          <span class="btn-icon">🔄</span>
-          {{ i18n.reset || '重置' }}
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -212,11 +200,17 @@ watch(lineHeightPreview, (val) => {
   updateSliderProgress('lineHeight', val, 1, 3)
 })
 
-// 监听设置变化
+// 监听设置变化,自动保存
 watch(settings, (newSettings) => {
   fontSizePreview.value = newSettings.fontSize
   lineHeightPreview.value = newSettings.lineHeight
   emit('change', newSettings)
+  // 自动保存到 localStorage
+  try {
+    localStorage.setItem('general-font-settings', JSON.stringify(newSettings))
+  } catch (error) {
+    console.error('自动保存失败:', error)
+  }
 }, { deep: true })
 
 const previewStyle = computed(() => ({
@@ -228,27 +222,6 @@ const previewStyle = computed(() => ({
 
 function togglePreview() {
   showPreview.value = !showPreview.value
-}
-
-function save() {
-  try {
-    localStorage.setItem('general-font-settings', JSON.stringify(settings.value))
-    showMessage(props.i18n.settingsSaved || '已保存', 3000, 'info')
-  } catch (error) {
-    showMessage(props.i18n.saveFailed || '保存失败', 3000, 'error')
-  }
-}
-
-function reset() {
-  settings.value = { ...DEFAULT_SETTINGS }
-  fontSizePreview.value = DEFAULT_SETTINGS.fontSize
-  lineHeightPreview.value = DEFAULT_SETTINGS.lineHeight
-  try {
-    localStorage.removeItem('general-font-settings')
-    showMessage(props.i18n.settingsReset || '已重置', 3000, 'info')
-  } catch (error) {
-    console.error('重置失败:', error)
-  }
 }
 
 // 加载保存的设置
@@ -292,8 +265,6 @@ loadSettings()
 // 暴露方法
 defineExpose({
   loadSettings,
-  save,
-  reset,
   settings
 })
 </script>
@@ -604,60 +575,7 @@ defineExpose({
   border: 1px solid var(--b3-theme-outline);
 }
 
-/* 操作按钮 */
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
 
-.save-btn,
-.reset-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.save-btn {
-  background: linear-gradient(135deg, var(--b3-theme-primary), var(--b3-theme-primary-container));
-  color: var(--b3-theme-on-primary);
-}
-
-.save-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.save-btn:active {
-  transform: translateY(0);
-}
-
-.reset-btn {
-  background: linear-gradient(135deg, var(--b3-theme-surface-variant), var(--b3-theme-outline));
-  color: var(--b3-theme-on-surface-variant);
-}
-
-.reset-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.reset-btn:active {
-  transform: translateY(0);
-}
-
-.btn-icon {
-  font-size: 14px;
-}
 
 /* 响应式设计 */
 @media (max-width: 400px) {
@@ -679,10 +597,7 @@ defineExpose({
     min-width: 100%;
   }
 
-  .action-buttons {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
+
 
   .preview-info {
     flex-direction: column;
@@ -710,11 +625,7 @@ defineExpose({
     padding: 6px 10px;
   }
 
-  .save-btn,
-  .reset-btn {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
+
 }
 
 /* 超小屏幕优化 */

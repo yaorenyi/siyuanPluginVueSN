@@ -346,11 +346,17 @@ defineExpose({
 }
 
 .workspace-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  background: linear-gradient(135deg,
+    rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1),
+    rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.15)
+  );
 }
 
 .close-tabs-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  background: linear-gradient(135deg,
+    var(--b3-theme-surface-variant),
+    var(--b3-theme-outline)
+  );
 }
 
 .cache-btn:hover:not(:disabled) {
