@@ -25,27 +25,6 @@
           ></textarea>
         </div>
 
-        <!-- 预设配置 -->
-        <div class="presets-section">
-          <div class="presets-header" @click="showPresets = !showPresets">
-            <span class="presets-title">{{ i18n.presetTemplates || '快速预设' }}</span>
-            <svg class="presets-toggle" :class="{ expanded: showPresets }" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
-            </svg>
-          </div>
-          <div v-if="showPresets" class="presets-grid">
-            <div
-              v-for="preset in presetConfigs"
-              :key="preset.name"
-              class="preset-card"
-              @click="applyPreset(preset)"
-            >
-              <div class="preset-icon">{{ preset.icon }}</div>
-              <div class="preset-name">{{ preset.name }}</div>
-            </div>
-          </div>
-        </div>
-
         <!-- 设置区 -->
         <div class="settings-section">
           <div class="settings-row">
@@ -369,118 +348,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-// 预设配置模板
-const presetConfigs = [
-  {
-    name: '简约GitHub',
-    icon: '📝',
-    config: {
-      contentType: 'code' as const,
-      style: 'github',
-      theme: 'light',
-      fontSize: 14,
-      enableWatermark: false,
-      enableAuthor: false,
-      enableTimestamp: false,
-      borderWidth: 1,
-      borderRadius: 8,
-      paddingSize: 16,
-      backgroundOpacity: 100,
-      shadowIntensity: 30
-    }
-  },
-  {
-    name: '炫彩霓虹',
-    icon: '✨',
-    config: {
-      contentType: 'code' as const,
-      style: 'neon',
-      theme: 'dark',
-      fontSize: 15,
-      enableWatermark: true,
-      enableAuthor: true,
-      enableTimestamp: true,
-      borderWidth: 2,
-      borderRadius: 12,
-      paddingSize: 20,
-      backgroundOpacity: 100,
-      shadowIntensity: 80
-    }
-  },
-  {
-    name: '卡通风格',
-    icon: '🎨',
-    config: {
-      contentType: 'code' as const,
-      style: 'cartoon',
-      theme: 'light',
-      fontSize: 14,
-      enableWatermark: false,
-      enableAuthor: true,
-      enableTimestamp: false,
-      borderWidth: 3,
-      borderRadius: 16,
-      paddingSize: 24,
-      backgroundOpacity: 100,
-      shadowIntensity: 60
-    }
-  },
-  {
-    name: '玻璃拟态',
-    icon: '💎',
-    config: {
-      contentType: 'code' as const,
-      style: 'glass',
-      theme: 'light',
-      fontSize: 14,
-      enableWatermark: true,
-      enableAuthor: false,
-      enableTimestamp: true,
-      borderWidth: 1,
-      borderRadius: 16,
-      paddingSize: 20,
-      backgroundOpacity: 85,
-      shadowIntensity: 40
-    }
-  },
-  {
-    name: '名言卡片',
-    icon: '💬',
-    config: {
-      contentType: 'text' as const,
-      style: 'quote',
-      theme: 'light',
-      fontSize: 16,
-      enableWatermark: false,
-      enableAuthor: true,
-      enableTimestamp: false,
-      borderWidth: 0,
-      borderRadius: 12,
-      paddingSize: 32,
-      backgroundOpacity: 100,
-      shadowIntensity: 50
-    }
-  },
-  {
-    name: '激励海报',
-    icon: '🚀',
-    config: {
-      contentType: 'text' as const,
-      style: 'poster',
-      theme: 'dark',
-      fontSize: 18,
-      enableWatermark: false,
-      enableAuthor: true,
-      enableTimestamp: false,
-      borderWidth: 0,
-      borderRadius: 16,
-      paddingSize: 40,
-      backgroundOpacity: 100,
-      shadowIntensity: 70
-    }
-  }
-]
-
 // 状态
 const contentType = ref<'code' | 'text'>('code')
 const codeContent = ref(props.content || '')
@@ -493,7 +360,6 @@ const codePreview = ref<HTMLDivElement>()
 
 // 装饰选项
 const showDecorations = ref(false)
-const showPresets = ref(false)
 const enableWatermark = ref(false)
 const watermarkText = ref('SiYuan Notes')
 const enableAuthor = ref(false)
@@ -554,26 +420,6 @@ const getLanguageDisplay = () => {
     bash: 'Bash'
   }
   return languageMap[selectedLanguage.value] || selectedLanguage.value
-}
-
-// 应用预设配置
-const applyPreset = (preset: typeof presetConfigs[0]) => {
-  const config = preset.config
-  contentType.value = config.contentType
-  selectedStyle.value = config.style
-  selectedTheme.value = config.theme
-  fontSize.value = config.fontSize
-  enableWatermark.value = config.enableWatermark
-  enableAuthor.value = config.enableAuthor
-  enableTimestamp.value = config.enableTimestamp
-  borderWidth.value = config.borderWidth
-  borderRadius.value = config.borderRadius
-  paddingSize.value = config.paddingSize
-  backgroundOpacity.value = config.backgroundOpacity
-  shadowIntensity.value = config.shadowIntensity
-
-  showMessage(`已应用「${preset.name}」预设`, 2000, 'info')
-  showPresets.value = false
 }
 
 // 当前时间
@@ -780,92 +626,6 @@ const closePanel = () => {
   }
 }
 
-/* 预设配置区域 */
-.presets-section {
-  margin-bottom: 8px;
-  border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.presets-header {
-  padding: 10px 12px;
-  background: var(--b3-theme-surface);
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  user-select: none;
-  transition: background 0.2s;
-
-  &:hover {
-    background: var(--b3-theme-surface-lighter);
-  }
-}
-
-.presets-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--b3-theme-on-surface);
-}
-
-.presets-toggle {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.2s;
-  color: var(--b3-theme-on-surface);
-
-  &.expanded {
-    transform: rotate(180deg);
-  }
-}
-
-.presets-grid {
-  padding: 12px;
-  background: var(--b3-theme-background);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.preset-card {
-  padding: 16px 12px;
-  background: var(--b3-theme-surface);
-  border: 2px solid var(--b3-theme-surface-lighter);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  user-select: none;
-
-  &:hover {
-    border-color: var(--b3-theme-primary);
-    background: var(--b3-theme-primary-lightest);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-.preset-icon {
-  font-size: 24px;
-  line-height: 1;
-}
-
-.preset-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--b3-theme-on-surface);
-  text-align: center;
-  white-space: nowrap;
-}
-
 .settings-section {
   display: flex;
   flex-direction: column;
@@ -1046,9 +806,9 @@ const closePanel = () => {
 
 /* 玻璃风格代码内容 - 增强对比度 */
 .style-glass.theme-light .code-content {
-  color: #1a1a1a;
+  color: #0a0a0a;
   background: rgba(255, 255, 255, 0.6);
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+  text-shadow: none;
 }
 
 .style-glass.theme-dark .code-content {
@@ -1179,7 +939,7 @@ const closePanel = () => {
 }
 
 .theme-light .window-title {
-  color: #586069;
+  color: #2c3e50;
 }
 
 .theme-dark .window-title {
@@ -1208,7 +968,7 @@ const closePanel = () => {
 }
 
 .theme-light .code-content {
-  color: #24292e;
+  color: #1a1a1a;
   background: #ffffff;
 }
 
@@ -1243,7 +1003,7 @@ const closePanel = () => {
 
 .watermark {
   font-size: 10px;
-  color: rgba(0, 0, 0, 0.3);
+  color: rgba(0, 0, 0, 0.5);
   font-weight: 500;
 }
 
@@ -1255,7 +1015,7 @@ const closePanel = () => {
   display: flex;
   gap: 12px;
   font-size: 11px;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .theme-dark .metadata {
@@ -1353,7 +1113,7 @@ const closePanel = () => {
 
 .text-style-note .text-body {
   font-family: 'Segoe Print', 'Comic Sans MS', cursive;
-  color: #555;
+  color: #2c3e50;
 }
 
 .text-style-note.theme-dark .text-body {
@@ -1410,7 +1170,7 @@ const closePanel = () => {
 
 .text-style-newspaper .text-body {
   font-family: 'Times New Roman', serif;
-  color: #2c2416;
+  color: #1a1410;
 }
 
 .text-style-newspaper.theme-dark .text-body {
