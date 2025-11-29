@@ -32,12 +32,45 @@
           </label>
           <select v-model="levelDisplayStyle" class="style-select" @change="applyLevelDisplay">
             <option value="none">{{ i18n.levelDisplayNone || '不显示' }}</option>
-            <option value="number">{{ i18n.levelDisplayNumber || '数字标记' }}</option>
-            <option value="roman">{{ i18n.levelDisplayRoman || '罗马数字' }}</option>
-            <option value="chinese">{{ i18n.levelDisplayChinese || '中文数字' }}</option>
-            <option value="dots">{{ i18n.levelDisplayDots || '圆点标记' }}</option>
-            <option value="tag">{{ i18n.levelDisplayTag || '标签样式' }}</option>
+            <option value="number">{{ i18n.levelDisplayNumber || '数字标记 (1-6)' }}</option>
+            <option value="roman">{{ i18n.levelDisplayRoman || '罗马数字 (I-VI)' }}</option>
+            <option value="chinese">{{ i18n.levelDisplayChinese || '中文数字 (一-六)' }}</option>
+            <option value="chineseUpper">{{ i18n.levelDisplayChineseUpper || '中文大写 (壹-陆)' }}</option>
+            <option value="dots">{{ i18n.levelDisplayDots || '圆点标记 (•)' }}</option>
+            <option value="emoji">{{ i18n.levelDisplayEmoji || '表情符号 (😀-😎)' }}</option>
+            <option value="star">{{ i18n.levelDisplayStar || '星级标记 (⭐)' }}</option>
+            <option value="arrow">{{ i18n.levelDisplayArrow || '箭头标记 (→)' }}</option>
+            <option value="tag">{{ i18n.levelDisplayTag || '标签样式 (H1-H6)' }}</option>
+            <option value="bracket">{{ i18n.levelDisplayBracket || '括号标记 [1-6]' }}</option>
+            <option value="custom">{{ i18n.levelDisplayCustom || '自定义...' }}</option>
           </select>
+          <div v-if="levelDisplayStyle !== 'none'" class="level-display-hint">
+            <span class="hint-icon">ℹ️</span>
+            <span class="hint-text">{{ i18n.levelDisplayHint || '注意:第三方主题可能会影响显示效果' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自定义层级标记设置 -->
+      <div v-if="levelDisplayStyle === 'custom'" class="setting-row">
+        <div class="setting-item">
+          <label class="setting-label">
+            <span class="label-icon">✏️</span>
+            {{ i18n.customLevelMarkers || '自定义标记' }}
+          </label>
+          <div class="custom-level-inputs">
+            <div v-for="level in 6" :key="level" class="custom-level-item">
+              <label class="custom-level-label">H{{ level }}</label>
+              <input
+                v-model="customLevelMarkers[level - 1]"
+                type="text"
+                class="custom-level-input"
+                :placeholder="`H${level}标记`"
+                maxlength="10"
+                @input="applyLevelDisplay"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -132,6 +165,7 @@ const selectedStyle = ref('default')
 const showPreview = ref(false)
 const headingColors = ref<HeadingColors>({ ...props.initialSettings })
 const levelDisplayStyle = ref('none')
+const customLevelMarkers = ref<string[]>(['1', '2', '3', '4', '5', '6'])
 
 // 预设风格
 const styles: Record<string, HeadingColors> = {
@@ -277,8 +311,14 @@ function generateLevelDisplayCss(style: string): string {
     number: ['1', '2', '3', '4', '5', '6'],
     roman: ['I', 'II', 'III', 'IV', 'V', 'VI'],
     chinese: ['一', '二', '三', '四', '五', '六'],
+    chineseUpper: ['壹', '贰', '叁', '肆', '伍', '陆'],
     dots: ['•', '••', '•••', '••••', '•••••', '••••••'],
-    tag: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+    emoji: ['😀', '😁', '😂', '🤣', '😊', '😎'],
+    star: ['⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐', '⭐⭐⭐⭐⭐⭐'],
+    arrow: ['→', '→→', '→→→', '→→→→', '→→→→→', '→→→→→→'],
+    tag: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'],
+    bracket: ['[1]', '[2]', '[3]', '[4]', '[5]', '[6]'],
+    custom: customLevelMarkers.value
   }
 
   const levels = levelMappings[style] || levelMappings.number
@@ -320,7 +360,8 @@ function autoSave() {
     localStorage.setItem('general-heading-settings', JSON.stringify({
       style: selectedStyle.value,
       colors: headingColors.value,
-      levelDisplay: levelDisplayStyle.value
+      levelDisplay: levelDisplayStyle.value,
+      customMarkers: customLevelMarkers.value
     }))
   } catch (error) {
     console.error('保存失败:', error)
@@ -336,6 +377,7 @@ function loadSettings() {
       selectedStyle.value = parsed.style || 'default'
       headingColors.value = { ...styles.default, ...parsed.colors }
       levelDisplayStyle.value = parsed.levelDisplay || 'none'
+      customLevelMarkers.value = parsed.customMarkers || ['1', '2', '3', '4', '5', '6']
       applyToDocument()
     }
   } catch (error) {
@@ -604,6 +646,78 @@ defineExpose({
 
 .preview-heading.h6 {
   font-size: 14px;
+}
+
+/* 层级显示提示 */
+.level-display-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.08);
+  border-left: 3px solid var(--b3-theme-primary);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--b3-theme-on-surface-variant);
+}
+
+.hint-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.hint-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* 自定义层级标记输入 */
+.custom-level-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.custom-level-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-level-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 28px;
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.custom-level-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 2px solid var(--b3-theme-outline);
+  border-radius: 6px;
+  background: var(--b3-theme-surface);
+  color: var(--b3-theme-on-surface);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.custom-level-input:focus {
+  outline: none;
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
+}
+
+.custom-level-input::placeholder {
+  color: var(--b3-theme-on-surface-variant);
+  opacity: 0.5;
 }
 
 
