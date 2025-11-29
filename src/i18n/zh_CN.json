@@ -412,14 +412,22 @@
   "lightTheme": "浅色",
   "darkTheme": "深色",
   "decorations": "装饰选项",
+  "metadataOptions": "信息标签",
+  "advancedStyle": "高级样式",
   "enableWatermark": "显示水印",
   "watermarkPlaceholder": "水印文字",
   "enableAuthor": "显示作者",
   "authorPlaceholder": "作者名称",
   "enableTimestamp": "显示时间",
+  "borderWidth": "边框宽度",
+  "borderRadius": "圆角大小",
+  "paddingSize": "内边距",
+  "backgroundOpacity": "背景透明度",
+  "shadowIntensity": "阴影强度",
   "copyImage": "复制图片",
   "downloadImage": "下载图片",
   "imageCopied": "图片已复制到剪贴板",
   "imageDownloaded": "图片已下载",
-  "generateFailed": "生成图片失败"
+  "generateFailed": "生成图片失败",
+  "presetTemplates": "快速预设"
 }

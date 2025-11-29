@@ -25,6 +25,27 @@
           ></textarea>
         </div>
 
+        <!-- 预设配置 -->
+        <div class="presets-section">
+          <div class="presets-header" @click="showPresets = !showPresets">
+            <span class="presets-title">{{ i18n.presetTemplates || '快速预设' }}</span>
+            <svg class="presets-toggle" :class="{ expanded: showPresets }" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/>
+            </svg>
+          </div>
+          <div v-if="showPresets" class="presets-grid">
+            <div
+              v-for="preset in presetConfigs"
+              :key="preset.name"
+              class="preset-card"
+              @click="applyPreset(preset)"
+            >
+              <div class="preset-icon">{{ preset.icon }}</div>
+              <div class="preset-name">{{ preset.name }}</div>
+            </div>
+          </div>
+        </div>
+
         <!-- 设置区 -->
         <div class="settings-section">
           <div class="settings-row">
@@ -128,35 +149,119 @@
               </svg>
             </div>
             <div v-if="showDecorations" class="decoration-options">
-              <div class="decoration-row">
-                <label class="decoration-checkbox">
-                  <input type="checkbox" v-model="enableWatermark" />
-                  <span>{{ i18n.enableWatermark || '显示水印' }}</span>
-                </label>
-                <input
-                  v-if="enableWatermark"
-                  v-model="watermarkText"
-                  class="decoration-input"
-                  :placeholder="i18n.watermarkPlaceholder || '水印文字'"
-                />
+              <!-- 水印、作者、时间 -->
+              <div class="decoration-group">
+                <div class="decoration-group-title">{{ i18n.metadataOptions || '信息标签' }}</div>
+                <div class="decoration-row">
+                  <label class="decoration-checkbox">
+                    <input type="checkbox" v-model="enableWatermark" />
+                    <span>{{ i18n.enableWatermark || '显示水印' }}</span>
+                  </label>
+                  <input
+                    v-if="enableWatermark"
+                    v-model="watermarkText"
+                    class="decoration-input"
+                    :placeholder="i18n.watermarkPlaceholder || '水印文字'"
+                  />
+                </div>
+                <div class="decoration-row">
+                  <label class="decoration-checkbox">
+                    <input type="checkbox" v-model="enableAuthor" />
+                    <span>{{ i18n.enableAuthor || '显示作者' }}</span>
+                  </label>
+                  <input
+                    v-if="enableAuthor"
+                    v-model="authorName"
+                    class="decoration-input"
+                    :placeholder="i18n.authorPlaceholder || '作者名称'"
+                  />
+                </div>
+                <div class="decoration-row">
+                  <label class="decoration-checkbox">
+                    <input type="checkbox" v-model="enableTimestamp" />
+                    <span>{{ i18n.enableTimestamp || '显示时间' }}</span>
+                  </label>
+                </div>
               </div>
-              <div class="decoration-row">
-                <label class="decoration-checkbox">
-                  <input type="checkbox" v-model="enableAuthor" />
-                  <span>{{ i18n.enableAuthor || '显示作者' }}</span>
-                </label>
-                <input
-                  v-if="enableAuthor"
-                  v-model="authorName"
-                  class="decoration-input"
-                  :placeholder="i18n.authorPlaceholder || '作者名称'"
-                />
-              </div>
-              <div class="decoration-row">
-                <label class="decoration-checkbox">
-                  <input type="checkbox" v-model="enableTimestamp" />
-                  <span>{{ i18n.enableTimestamp || '显示时间' }}</span>
-                </label>
+
+              <!-- 高级样式 -->
+              <div class="decoration-group">
+                <div class="decoration-group-title">{{ i18n.advancedStyle || '高级样式' }}</div>
+
+                <div class="decoration-slider-row">
+                  <label class="slider-label">{{ i18n.borderWidth || '边框宽度' }}</label>
+                  <div class="slider-control">
+                    <input
+                      v-model.number="borderWidth"
+                      type="range"
+                      min="0"
+                      max="10"
+                      step="1"
+                      class="mini-slider"
+                    />
+                    <span class="slider-value">{{ borderWidth }}px</span>
+                  </div>
+                </div>
+
+                <div class="decoration-slider-row">
+                  <label class="slider-label">{{ i18n.borderRadius || '圆角大小' }}</label>
+                  <div class="slider-control">
+                    <input
+                      v-model.number="borderRadius"
+                      type="range"
+                      min="0"
+                      max="32"
+                      step="2"
+                      class="mini-slider"
+                    />
+                    <span class="slider-value">{{ borderRadius }}px</span>
+                  </div>
+                </div>
+
+                <div class="decoration-slider-row">
+                  <label class="slider-label">{{ i18n.paddingSize || '内边距' }}</label>
+                  <div class="slider-control">
+                    <input
+                      v-model.number="paddingSize"
+                      type="range"
+                      min="0"
+                      max="48"
+                      step="4"
+                      class="mini-slider"
+                    />
+                    <span class="slider-value">{{ paddingSize }}px</span>
+                  </div>
+                </div>
+
+                <div class="decoration-slider-row">
+                  <label class="slider-label">{{ i18n.backgroundOpacity || '背景透明度' }}</label>
+                  <div class="slider-control">
+                    <input
+                      v-model.number="backgroundOpacity"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      class="mini-slider"
+                    />
+                    <span class="slider-value">{{ backgroundOpacity }}%</span>
+                  </div>
+                </div>
+
+                <div class="decoration-slider-row">
+                  <label class="slider-label">{{ i18n.shadowIntensity || '阴影强度' }}</label>
+                  <div class="slider-control">
+                    <input
+                      v-model.number="shadowIntensity"
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="10"
+                      class="mini-slider"
+                    />
+                    <span class="slider-value">{{ shadowIntensity }}%</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -171,6 +276,7 @@
               v-if="contentType === 'code'"
               class="code-preview"
               :class="[`style-${selectedStyle}`, `theme-${selectedTheme}`]"
+              :style="previewCustomStyle"
               ref="codePreview"
             >
               <!-- 窗口装饰 -->
@@ -201,6 +307,7 @@
               v-else
               class="text-preview"
               :class="[`text-style-${selectedStyle}`, `theme-${selectedTheme}`]"
+              :style="previewCustomStyle"
               ref="codePreview"
             >
               <div class="text-content" :style="{ fontSize: fontSize + 'px' }">
@@ -262,6 +369,118 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+// 预设配置模板
+const presetConfigs = [
+  {
+    name: '简约GitHub',
+    icon: '📝',
+    config: {
+      contentType: 'code' as const,
+      style: 'github',
+      theme: 'light',
+      fontSize: 14,
+      enableWatermark: false,
+      enableAuthor: false,
+      enableTimestamp: false,
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingSize: 16,
+      backgroundOpacity: 100,
+      shadowIntensity: 30
+    }
+  },
+  {
+    name: '炫彩霓虹',
+    icon: '✨',
+    config: {
+      contentType: 'code' as const,
+      style: 'neon',
+      theme: 'dark',
+      fontSize: 15,
+      enableWatermark: true,
+      enableAuthor: true,
+      enableTimestamp: true,
+      borderWidth: 2,
+      borderRadius: 12,
+      paddingSize: 20,
+      backgroundOpacity: 100,
+      shadowIntensity: 80
+    }
+  },
+  {
+    name: '卡通风格',
+    icon: '🎨',
+    config: {
+      contentType: 'code' as const,
+      style: 'cartoon',
+      theme: 'light',
+      fontSize: 14,
+      enableWatermark: false,
+      enableAuthor: true,
+      enableTimestamp: false,
+      borderWidth: 3,
+      borderRadius: 16,
+      paddingSize: 24,
+      backgroundOpacity: 100,
+      shadowIntensity: 60
+    }
+  },
+  {
+    name: '玻璃拟态',
+    icon: '💎',
+    config: {
+      contentType: 'code' as const,
+      style: 'glass',
+      theme: 'light',
+      fontSize: 14,
+      enableWatermark: true,
+      enableAuthor: false,
+      enableTimestamp: true,
+      borderWidth: 1,
+      borderRadius: 16,
+      paddingSize: 20,
+      backgroundOpacity: 85,
+      shadowIntensity: 40
+    }
+  },
+  {
+    name: '名言卡片',
+    icon: '💬',
+    config: {
+      contentType: 'text' as const,
+      style: 'quote',
+      theme: 'light',
+      fontSize: 16,
+      enableWatermark: false,
+      enableAuthor: true,
+      enableTimestamp: false,
+      borderWidth: 0,
+      borderRadius: 12,
+      paddingSize: 32,
+      backgroundOpacity: 100,
+      shadowIntensity: 50
+    }
+  },
+  {
+    name: '激励海报',
+    icon: '🚀',
+    config: {
+      contentType: 'text' as const,
+      style: 'poster',
+      theme: 'dark',
+      fontSize: 18,
+      enableWatermark: false,
+      enableAuthor: true,
+      enableTimestamp: false,
+      borderWidth: 0,
+      borderRadius: 16,
+      paddingSize: 40,
+      backgroundOpacity: 100,
+      shadowIntensity: 70
+    }
+  }
+]
+
 // 状态
 const contentType = ref<'code' | 'text'>('code')
 const codeContent = ref(props.content || '')
@@ -274,11 +493,19 @@ const codePreview = ref<HTMLDivElement>()
 
 // 装饰选项
 const showDecorations = ref(false)
+const showPresets = ref(false)
 const enableWatermark = ref(false)
 const watermarkText = ref('SiYuan Notes')
 const enableAuthor = ref(false)
 const authorName = ref('')
 const enableTimestamp = ref(false)
+
+// 高级装饰选项
+const borderWidth = ref(1)
+const borderRadius = ref(8)
+const paddingSize = ref(16)
+const backgroundOpacity = ref(100)
+const shadowIntensity = ref(50)
 
 // 监听props变化
 watch(() => props.content, (newContent) => {
@@ -329,6 +556,26 @@ const getLanguageDisplay = () => {
   return languageMap[selectedLanguage.value] || selectedLanguage.value
 }
 
+// 应用预设配置
+const applyPreset = (preset: typeof presetConfigs[0]) => {
+  const config = preset.config
+  contentType.value = config.contentType
+  selectedStyle.value = config.style
+  selectedTheme.value = config.theme
+  fontSize.value = config.fontSize
+  enableWatermark.value = config.enableWatermark
+  enableAuthor.value = config.enableAuthor
+  enableTimestamp.value = config.enableTimestamp
+  borderWidth.value = config.borderWidth
+  borderRadius.value = config.borderRadius
+  paddingSize.value = config.paddingSize
+  backgroundOpacity.value = config.backgroundOpacity
+  shadowIntensity.value = config.shadowIntensity
+
+  showMessage(`已应用「${preset.name}」预设`, 2000, 'info')
+  showPresets.value = false
+}
+
 // 当前时间
 const currentTime = computed(() => {
   const now = new Date()
@@ -341,15 +588,44 @@ const currentTime = computed(() => {
   })
 })
 
+// 预览自定义样式
+const previewCustomStyle = computed(() => {
+  return {
+    borderRadius: `${borderRadius.value}px`,
+    padding: `${paddingSize.value}px`,
+    opacity: backgroundOpacity.value / 100,
+    boxShadow: `0 ${4 + shadowIntensity.value / 10}px ${12 + shadowIntensity.value / 5}px rgba(0, 0, 0, ${0.1 + shadowIntensity.value / 500})`,
+    borderWidth: borderWidth.value > 0 ? `${borderWidth.value}px` : '0',
+    borderStyle: borderWidth.value > 0 ? 'solid' : 'none'
+  }
+})
+
 // 复制图片到剪贴板
 const copyImage = async () => {
   if (!codePreview.value || !codeContent.value) return
 
   try {
+    // 使用设备像素比,确保在高分辨率屏幕上清晰
+    const dpr = window.devicePixelRatio || 1
+    const scale = Math.max(dpr, 3) // 提高到至少 3 倍缩放
+
+    // 获取预览元素的实际背景色
+    const computedStyle = window.getComputedStyle(codePreview.value)
+    const bgColor = computedStyle.backgroundColor || 'transparent'
+
     const canvas = await html2canvas(codePreview.value, {
-      backgroundColor: null,
-      scale: 2,
-      logging: false
+      backgroundColor: bgColor, // 使用预览元素的实际背景色
+      scale: scale,
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      // 提高渲染质量
+      width: codePreview.value.scrollWidth,
+      height: codePreview.value.scrollHeight,
+      windowWidth: codePreview.value.scrollWidth,
+      windowHeight: codePreview.value.scrollHeight,
+      imageTimeout: 0,
+      removeContainer: true
     })
 
     canvas.toBlob(async (blob) => {
@@ -366,7 +642,7 @@ const copyImage = async () => {
         console.error('复制失败:', err)
         showMessage(props.i18n.copyFailed || '复制失败', 3000, 'error')
       }
-    })
+    }, 'image/png', 1.0) // 使用最高质量
   } catch (error) {
     console.error('生成图片失败:', error)
     showMessage(props.i18n.generateFailed || '生成图片失败', 3000, 'error')
@@ -378,15 +654,35 @@ const downloadImage = async () => {
   if (!codePreview.value || !codeContent.value) return
 
   try {
+    // 使用设备像素比,确保在高分辨率屏幕上清晰
+    const dpr = window.devicePixelRatio || 1
+    const scale = Math.max(dpr, 3) // 提高到至少 3 倍缩放
+
+    // 获取预览元素的实际背景色
+    const computedStyle = window.getComputedStyle(codePreview.value)
+    const bgColor = computedStyle.backgroundColor || 'transparent'
+
     const canvas = await html2canvas(codePreview.value, {
-      backgroundColor: null,
-      scale: 2,
-      logging: false
+      backgroundColor: bgColor, // 使用预览元素的实际背景色
+      scale: scale,
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      // 提高渲染质量
+      width: codePreview.value.scrollWidth,
+      height: codePreview.value.scrollHeight,
+      windowWidth: codePreview.value.scrollWidth,
+      windowHeight: codePreview.value.scrollHeight,
+      imageTimeout: 0,
+      removeContainer: true
     })
 
     const link = document.createElement('a')
-    link.download = `code-${selectedLanguage.value}-${Date.now()}.png`
-    link.href = canvas.toDataURL('image/png')
+    const filename = contentType.value === 'code'
+      ? `code-${selectedLanguage.value}-${Date.now()}.png`
+      : `text-${Date.now()}.png`
+    link.download = filename
+    link.href = canvas.toDataURL('image/png', 1.0) // 使用最高质量
     link.click()
 
     showMessage(props.i18n.imageDownloaded || '图片已下载', 3000, 'info')
@@ -482,6 +778,92 @@ const closePanel = () => {
   &:focus {
     border-color: var(--b3-theme-primary);
   }
+}
+
+/* 预设配置区域 */
+.presets-section {
+  margin-bottom: 8px;
+  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.presets-header {
+  padding: 10px 12px;
+  background: var(--b3-theme-surface);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--b3-theme-surface-lighter);
+  }
+}
+
+.presets-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--b3-theme-on-surface);
+}
+
+.presets-toggle {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+  color: var(--b3-theme-on-surface);
+
+  &.expanded {
+    transform: rotate(180deg);
+  }
+}
+
+.presets-grid {
+  padding: 12px;
+  background: var(--b3-theme-background);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.preset-card {
+  padding: 16px 12px;
+  background: var(--b3-theme-surface);
+  border: 2px solid var(--b3-theme-surface-lighter);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+
+  &:hover {
+    border-color: var(--b3-theme-primary);
+    background: var(--b3-theme-primary-lightest);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.preset-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.preset-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--b3-theme-on-surface);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .settings-section {
@@ -647,17 +1029,32 @@ const closePanel = () => {
 
 /* 玻璃拟态风格 */
 .style-glass.theme-light {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .style-glass.theme-dark {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(30, 30, 30, 0.85);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* 玻璃风格代码内容 - 增强对比度 */
+.style-glass.theme-light .code-content {
+  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.style-glass.theme-dark .code-content {
+  color: #f0f0f0;
+  background: rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* 霓虹灯风格 */
@@ -698,6 +1095,40 @@ const closePanel = () => {
     20px 20px 60px #0d0d0d,
     -20px -20px 60px #3d3d3d;
   transform: perspective(1000px) rotateX(5deg);
+}
+
+/* 霓虹灯风格代码内容 - 增强对比度 */
+.style-neon.theme-light .code-content {
+  color: #00ffff;
+  background: rgba(0, 20, 40, 0.6);
+  text-shadow:
+    0 0 5px #0ff,
+    0 0 10px #0ff;
+  font-weight: 500;
+}
+
+.style-neon.theme-dark .code-content {
+  color: #ff00ff;
+  background: rgba(20, 0, 40, 0.6);
+  text-shadow:
+    0 0 5px #f0f,
+    0 0 10px #f0f;
+  font-weight: 500;
+}
+
+.style-neon .window-header {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.style-neon.theme-light .window-title {
+  color: #0ff;
+  text-shadow: 0 0 5px #0ff;
+}
+
+.style-neon.theme-dark .window-title {
+  color: #f0f;
+  text-shadow: 0 0 5px #f0f;
 }
 
 .window-header {
@@ -1089,6 +1520,86 @@ const closePanel = () => {
   &:focus {
     border-color: var(--b3-theme-primary);
   }
+}
+
+.decoration-group {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.decoration-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--b3-theme-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.decoration-slider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.slider-label {
+  font-size: 11px;
+  color: var(--b3-theme-on-background);
+  min-width: 80px;
+}
+
+.slider-control {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-slider {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--b3-theme-surface-lighter);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--b3-theme-primary);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--b3-theme-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.slider-value {
+  font-size: 10px;
+  color: var(--b3-theme-on-surface);
+  min-width: 40px;
+  text-align: right;
+  font-weight: 600;
+  font-family: monospace;
 }
 
 .panel-footer {

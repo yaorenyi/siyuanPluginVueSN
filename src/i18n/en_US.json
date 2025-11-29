@@ -402,14 +402,22 @@
   "lightTheme": "Light",
   "darkTheme": "Dark",
   "decorations": "Decorations",
+  "metadataOptions": "Metadata",
+  "advancedStyle": "Advanced Style",
   "enableWatermark": "Show Watermark",
   "watermarkPlaceholder": "Watermark text",
   "enableAuthor": "Show Author",
   "authorPlaceholder": "Author name",
   "enableTimestamp": "Show Timestamp",
+  "borderWidth": "Border Width",
+  "borderRadius": "Border Radius",
+  "paddingSize": "Padding",
+  "backgroundOpacity": "Background Opacity",
+  "shadowIntensity": "Shadow Intensity",
   "copyImage": "Copy Image",
   "downloadImage": "Download Image",
   "imageCopied": "Image copied to clipboard",
   "imageDownloaded": "Image downloaded",
-  "generateFailed": "Failed to generate image"
+  "generateFailed": "Failed to generate image",
+  "presetTemplates": "Quick Presets"
 }
