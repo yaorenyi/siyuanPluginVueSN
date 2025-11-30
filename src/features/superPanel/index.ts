@@ -143,7 +143,9 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'qrCode': 'enableQRCode',
     'unitConverter': 'enableUnitConverter',
     'shortcuts': 'enableShortcuts',
-    'diskBrowser': 'enableDiskBrowser'
+    'diskBrowser': 'enableDiskBrowser',
+    'codeImageGenerator': 'enableCodeImageGenerator',
+    'aiContentGenerator': 'enableAIContentGenerator'
   }
 
   const settingKey = settingsMap[featureId]
@@ -230,6 +232,9 @@ async function handleUpdateAiSettings(
     // 通知相关功能模块更新配置
     if (pluginSample.__wordQuery) {
       pluginSample.__wordQuery.updateApiConfig(aiSettings.provider, aiSettings.apiKey, aiSettings.customEndpoint)
+    }
+    if (pluginSample.__aiContentGenerator) {
+      pluginSample.__aiContentGenerator.updateApiConfig(aiSettings.provider, aiSettings.apiKey, aiSettings.customEndpoint)
     }
   } else {
     showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
