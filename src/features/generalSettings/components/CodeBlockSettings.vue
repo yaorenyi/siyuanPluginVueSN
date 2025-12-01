@@ -967,7 +967,7 @@ defineExpose({
 }
 
 .preview-content {
-  padding: 8px;
+  padding: 0 8px 8px 8px;
   border-top: 1px solid var(--b3-theme-outline);
   background: var(--b3-theme-background);
 }

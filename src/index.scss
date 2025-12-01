@@ -142,13 +142,13 @@ body.codeblock-style-github {
     }
 
     .protyle-action {
-      background: linear-gradient(to bottom, var(--b3-theme-surface-variant), var(--b3-theme-surface));
+      background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.03);
       border-bottom: 1px solid var(--b3-theme-outline);
-      padding: 10px 14px;
+      padding: 2px 14px;
       display: flex;
       align-items: center;
       gap: 8px;
-      min-height: 36px;
+      min-height: 24px;
       position: relative;
       
       .protyle-action__language {
@@ -175,7 +175,7 @@ body.codeblock-style-github {
     }
 
     .hljs {
-      background: var(--b3-theme-surface) !important;
+      background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015) !important;
       padding: var(--codeblock-padding, 14px) 14px;
       padding-top: 12px;
       font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
@@ -219,14 +219,14 @@ body.codeblock-style-mac {
     }
 
     .protyle-action {
-      background: linear-gradient(to bottom, var(--b3-theme-surface-variant), var(--b3-theme-surface));
+      background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.04);
       border-bottom: 1px solid var(--b3-theme-outline);
-      padding: 10px 12px;
+      padding: 2px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
       position: relative;
-      min-height: 36px;
+      min-height: 24px;
 
       &::before {
         content: '';
@@ -270,7 +270,7 @@ body.codeblock-style-mac {
     }
 
     .hljs {
-      background: var(--b3-theme-surface) !important;
+      background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015) !important;
       padding: var(--codeblock-padding, 14px) 14px;
       padding-top: 12px;
       font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
@@ -341,17 +341,17 @@ body.codeblock-style-cartoon {
 
     .protyle-action {
       background: linear-gradient(135deg, 
-        rgba(255, 107, 157, 0.08),
-        rgba(254, 202, 87, 0.08),
-        rgba(72, 219, 251, 0.08),
-        rgba(29, 209, 161, 0.08)
+        rgba(255, 107, 157, 0.06),
+        rgba(254, 202, 87, 0.06),
+        rgba(72, 219, 251, 0.06),
+        rgba(29, 209, 161, 0.06)
       );
       border-bottom: 1px dashed var(--b3-theme-outline);
-      padding: 8px 12px;
+      padding: 2px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
-      min-height: 36px;
+      min-height: 24px;
       position: relative;
 
       &::before {
@@ -385,7 +385,7 @@ body.codeblock-style-cartoon {
     }
 
     .hljs {
-      background: var(--b3-theme-surface) !important;
+      background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015) !important;
       padding: var(--codeblock-padding, 14px) 12px;
       padding-top: 12px;
       font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, monospace;
