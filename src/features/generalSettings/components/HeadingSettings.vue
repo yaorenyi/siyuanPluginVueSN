@@ -51,6 +51,25 @@
         </div>
       </div>
 
+      <!-- 标题居中设置 -->
+      <div class="setting-row">
+        <div class="setting-item">
+          <label class="setting-label">
+            <span class="label-icon">↔️</span>
+            {{ i18n.titleCenterAlign || '标题居中显示' }}
+          </label>
+          <div class="toggle-container">
+            <input
+              v-model="titleCenterAlign"
+              type="checkbox"
+              class="toggle-checkbox"
+              @change="applyTitleCenterAlign"
+            />
+            <span class="toggle-label">{{ titleCenterAlign ? (i18n.enabled || '已启用') : (i18n.disabled || '已禁用') }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- 自定义层级标记设置 -->
       <div v-if="levelDisplayStyle === 'custom'" class="setting-row">
         <div class="setting-item">
@@ -166,6 +185,7 @@ const showPreview = ref(false)
 const headingColors = ref<HeadingColors>({ ...props.initialSettings })
 const levelDisplayStyle = ref('none')
 const customLevelMarkers = ref<string[]>(['1', '2', '3', '4', '5', '6'])
+const titleCenterAlign = ref(false)
 
 // 预设风格
 const styles: Record<string, HeadingColors> = {
@@ -296,13 +316,20 @@ function applyToDocument() {
     console.log('生成的层级CSS:', levelCss)
   }
 
-  style.textContent = colorCss + '\n' + levelCss
+  // 标题居中样式（仅文档标题，不影响H1-H6）
+  const centerAlignCss = titleCenterAlign.value ? `
+    .protyle-title__input {
+      text-align: center !important;
+    }
+  ` : ''
+
+  style.textContent = colorCss + '\n' + levelCss + '\n' + centerAlignCss
 
   if (!style.parentElement) {
     document.head.appendChild(style)
   }
 
-  console.log('CSS已应用到文档,层级显示样式:', levelDisplayStyle.value)
+  console.log('CSS已应用到文档,层级显示样式:', levelDisplayStyle.value, '标题居中:', titleCenterAlign.value)
 }
 
 // 生成层级显示 CSS
@@ -350,6 +377,13 @@ function applyLevelDisplay() {
   autoSave()
 }
 
+// 应用标题居中
+function applyTitleCenterAlign() {
+  console.log('应用标题居中样式:', titleCenterAlign.value)
+  applyToDocument()
+  autoSave()
+}
+
 function togglePreview() {
   showPreview.value = !showPreview.value
 }
@@ -361,7 +395,8 @@ function autoSave() {
       style: selectedStyle.value,
       colors: headingColors.value,
       levelDisplay: levelDisplayStyle.value,
-      customMarkers: customLevelMarkers.value
+      customMarkers: customLevelMarkers.value,
+      titleCenterAlign: titleCenterAlign.value
     }))
   } catch (error) {
     console.error('保存失败:', error)
@@ -378,6 +413,7 @@ function loadSettings() {
       headingColors.value = { ...styles.default, ...parsed.colors }
       levelDisplayStyle.value = parsed.levelDisplay || 'none'
       customLevelMarkers.value = parsed.customMarkers || ['1', '2', '3', '4', '5', '6']
+      titleCenterAlign.value = parsed.titleCenterAlign || false
       applyToDocument()
     }
   } catch (error) {
@@ -402,6 +438,13 @@ watch(selectedStyle, () => {
 // 监听层级显示变化,自动保存并应用
 watch(levelDisplayStyle, (newValue, oldValue) => {
   console.log('levelDisplayStyle 变化:', oldValue, '->', newValue)
+  applyToDocument()
+  autoSave()
+})
+
+// 监听标题居中变化,自动保存并应用
+watch(titleCenterAlign, (newValue, oldValue) => {
+  console.log('titleCenterAlign 变化:', oldValue, '->', newValue)
   applyToDocument()
   autoSave()
 })
@@ -759,4 +802,25 @@ defineExpose({
     font-size: 13px;
   }
 }
+
+/* 标题居中设置样式 */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.toggle-label {
+  font-size: 13px;
+  color: var(--b3-theme-on-surface);
+  user-select: none;
+}
+
+
 </style>
