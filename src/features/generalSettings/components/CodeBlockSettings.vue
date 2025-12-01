@@ -258,7 +258,6 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { showMessage } from 'siyuan'
 
 interface CodeBlockSettings {
   style: 'default' | 'github' | 'mac' | 'cartoon'
@@ -968,7 +967,7 @@ defineExpose({
 }
 
 .preview-content {
-  padding: 16px;
+  padding: 8px;
   border-top: 1px solid var(--b3-theme-outline);
   background: var(--b3-theme-background);
 }
@@ -976,7 +975,7 @@ defineExpose({
 .preview-box {
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
@@ -1005,14 +1004,14 @@ defineExpose({
 }
 
 .github-header {
-  padding: 8px 12px;
-  background: linear-gradient(to bottom, var(--b3-theme-surface-variant), var(--b3-theme-surface));
+  padding: 2px 12px;
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.03);
   border-bottom: 1px solid var(--b3-theme-outline);
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 0;
-  min-height: 36px;
+  min-height: 24px;
   position: relative;
 }
 
@@ -1029,7 +1028,7 @@ defineExpose({
 .preview-box.style-github .code-content {
   padding: 16px 14px;
   padding-top: 12px;
-  background: var(--b3-theme-surface);
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
   color: var(--b3-theme-on-surface);
   position: relative;
 
@@ -1052,14 +1051,14 @@ defineExpose({
 }
 
 .mac-header {
-  padding: 8px 12px;
-  background: linear-gradient(to bottom, var(--b3-theme-surface-variant), var(--b3-theme-surface));
+  padding: 2px 12px;
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.04);
   border-bottom: 1px solid var(--b3-theme-outline);
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 0;
-  min-height: 36px;
+  min-height: 24px;
 }
 
 .mac-buttons {
@@ -1132,7 +1131,7 @@ defineExpose({
 .preview-box.style-mac .code-content {
   padding: 16px 14px;
   padding-top: 12px;
-  background: var(--b3-theme-surface);
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
   color: var(--b3-theme-on-surface);
   position: relative;
 
@@ -1157,19 +1156,19 @@ defineExpose({
 }
 
 .cartoon-header {
-  padding: 8px 12px;
+  padding: 2px 12px;
   background: linear-gradient(135deg,
-    rgba(255, 107, 157, 0.08),
-    rgba(254, 202, 87, 0.08),
-    rgba(72, 219, 251, 0.08),
-    rgba(29, 209, 161, 0.08)
+    rgba(255, 107, 157, 0.06),
+    rgba(254, 202, 87, 0.06),
+    rgba(72, 219, 251, 0.06),
+    rgba(29, 209, 161, 0.06)
   );
   border-bottom: 1px dashed var(--b3-theme-outline);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 36px;
+  min-height: 24px;
 }
 
 .cartoon-decoration {
@@ -1212,7 +1211,7 @@ defineExpose({
 .preview-box.style-cartoon .code-content {
   padding: 16px 14px;
   padding-top: 12px;
-  background: var(--b3-theme-surface);
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
   color: var(--b3-theme-on-surface);
   position: relative;
 
