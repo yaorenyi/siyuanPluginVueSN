@@ -124,6 +124,42 @@
         </div>
       </div>
 
+      <!-- H1-H6字体大小设置 -->
+      <div class="setting-row">
+        <div class="setting-item">
+          <label class="setting-label">
+            <span class="label-icon">📏</span>
+            {{ i18n.headingFontSize || '标题字体大小' }}
+            <span class="setting-value">14px - 40px</span>
+          </label>
+          
+          <div class="font-size-container">
+            <div v-for="level in 6" :key="level" class="font-size-item">
+              <label class="font-size-label">
+                <span :class="`heading-icon-h${level}`">H{{ level }}</span>
+                <span class="font-size-text">{{ i18n[`heading${level}Size`] || `H${level} 标题大小` }}</span>
+                <span class="font-size-value">{{ headingSizes[`h${level}`] }}px</span>
+              </label>
+              <div class="slider-container">
+                <input
+                  v-model.number="headingSizes[`h${level}`]"
+                  type="range"
+                  min="14"
+                  max="40"
+                  step="1"
+                  class="range-slider"
+                  @input="onFontSizeChange"
+                />
+                <div class="slider-labels">
+                  <span>14px</span>
+                  <span>40px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 标题颜色设置 -->
       <div class="heading-colors">
         <div v-for="level in 6" :key="level" class="color-item">
@@ -163,7 +199,10 @@
                 :key="level"
                 class="preview-heading"
                 :class="`h${level}`"
-                :style="{ color: headingColors[`h${level}`] }"
+                :style="{
+                  color: headingColors[`h${level}`],
+                  fontSize: headingSizes[`h${level}`] + 'px'
+                }"
               >
                 {{ i18n[`heading${level}Preview`] || `这是 H${level} 标题预览` }}
               </div>
@@ -187,10 +226,20 @@ interface HeadingColors {
   h6: string
 }
 
+interface HeadingSizes {
+  h1: number
+  h2: number
+  h3: number
+  h4: number
+  h5: number
+  h6: number
+}
+
 interface Props {
   i18n?: any
   plugin?: any
   initialSettings?: HeadingColors
+  initialFontSizes?: HeadingSizes
 }
 
 interface Emits {
@@ -207,6 +256,14 @@ const props = withDefaults(defineProps<Props>(), {
     h4: '#AAD2FC',
     h5: '#AC9DC0',
     h6: '#D7D7D7'
+  }),
+  initialFontSizes: () => ({
+    h1: 28,
+    h2: 24,
+    h3: 20,
+    h4: 18,
+    h5: 16,
+    h6: 14
   })
 })
 
@@ -220,6 +277,7 @@ const customLevelMarkers = ref<string[]>(['1', '2', '3', '4', '5', '6'])
 const titleCenterAlign = ref(false)
 const titleColor = ref('#2C3E50')
 const defaultTitleColor = '#2C3E50'
+const headingSizes = ref<HeadingSizes>({ ...props.initialFontSizes })
 
 // 预设风格
 const styles: Record<string, HeadingColors> = {
@@ -325,6 +383,13 @@ function onColorChange() {
   applyToDocument()
 }
 
+// 字体大小变化处理
+function onFontSizeChange() {
+  console.log('字体大小变化:', headingSizes.value)
+  applyToDocument()
+  autoSave()
+}
+
 // 应用到文档
 function applyToDocument() {
   const style = document.getElementById('heading-colors-style') || document.createElement('style')
@@ -341,6 +406,17 @@ function applyToDocument() {
         }
       `
     })
+    .join('\n')
+
+  // 字体大小样式（H1-H6）
+  const fontSizeCss = Object.entries(headingSizes.value)
+    .map(([level, size]) => `
+      .protyle-wysiwyg [data-node-id].${level},
+      .protyle-wysiwyg .${level},
+      .b3-typography .${level} {
+        font-size: ${size}px !important;
+      }
+    `)
     .join('\n')
 
   // 层级显示样式
@@ -364,13 +440,13 @@ function applyToDocument() {
     }
   ` : ''
 
-  style.textContent = colorCss + '\n' + levelCss + '\n' + centerAlignCss + '\n' + titleColorCss
+  style.textContent = colorCss + '\n' + fontSizeCss + '\n' + levelCss + '\n' + centerAlignCss + '\n' + titleColorCss
 
   if (!style.parentElement) {
     document.head.appendChild(style)
   }
 
-  console.log('CSS已应用到文档,层级显示样式:', levelDisplayStyle.value, '标题居中:', titleCenterAlign.value, '标题颜色:', titleColor.value)
+  console.log('CSS已应用到文档,字体大小:', headingSizes.value, '层级显示样式:', levelDisplayStyle.value, '标题居中:', titleCenterAlign.value, '标题颜色:', titleColor.value)
 }
 
 // 生成层级显示 CSS
@@ -455,6 +531,7 @@ async function autoSave() {
     const settingsToSave = {
       style: selectedStyle.value,
       colors: headingColors.value,
+      fontSizes: headingSizes.value,
       levelDisplay: levelDisplayStyle.value,
       customMarkers: customLevelMarkers.value,
       titleCenterAlign: titleCenterAlign.value,
@@ -493,6 +570,7 @@ async function loadSettings() {
     
     selectedStyle.value = settings.style || 'default'
     headingColors.value = { ...styles.default, ...settings.colors }
+    headingSizes.value = { ...props.initialFontSizes, ...settings.fontSizes }
     levelDisplayStyle.value = settings.levelDisplay || 'none'
     customLevelMarkers.value = settings.customMarkers || ['1', '2', '3', '4', '5', '6']
     titleCenterAlign.value = settings.titleCenterAlign ?? false
@@ -500,6 +578,7 @@ async function loadSettings() {
     
     console.log('已加载设置:', {
       style: selectedStyle.value,
+      fontSizes: headingSizes.value,
       levelDisplay: levelDisplayStyle.value,
       titleCenterAlign: titleCenterAlign.value,
       titleColor: titleColor.value
@@ -553,6 +632,13 @@ watch(titleColor, (newValue, oldValue) => {
   }
   autoSave()
 })
+
+// 监听字体大小变化,自动保存并应用
+watch(headingSizes, (newValue, oldValue) => {
+  console.log('headingSizes 变化:', oldValue, '->', newValue)
+  applyToDocument()
+  autoSave()
+}, { deep: true })
 
 // 暴露方法
 defineExpose({
@@ -985,6 +1071,160 @@ defineExpose({
   border-color: var(--b3-theme-primary);
   background: var(--b3-theme-primary);
   color: var(--b3-theme-on-primary);
+}
+
+/* 字体大小设置样式 */
+.font-size-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.font-size-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--b3-theme-surface);
+  border: 1px solid var(--b3-theme-outline);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.font-size-item:hover {
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1);
+}
+
+.font-size-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--b3-theme-on-surface);
+  margin: 0;
+}
+
+.heading-icon-h1,
+.heading-icon-h2,
+.heading-icon-h3,
+.heading-icon-h4,
+.heading-icon-h5,
+.heading-icon-h6 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  color: var(--b3-theme-on-primary);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.heading-icon-h1 {
+  background: linear-gradient(135deg, #F39A94, #E57373);
+}
+
+.heading-icon-h2 {
+  background: linear-gradient(135deg, #F8D694, #FFB74D);
+}
+
+.heading-icon-h3 {
+  background: linear-gradient(135deg, #B1DCB9, #81C784);
+}
+
+.heading-icon-h4 {
+  background: linear-gradient(135deg, #AAD2FC, #64B5F6);
+}
+
+.heading-icon-h5 {
+  background: linear-gradient(135deg, #AC9DC0, #9575CD);
+}
+
+.heading-icon-h6 {
+  background: linear-gradient(135deg, #D7D7D7, #9E9E9E);
+}
+
+.font-size-text {
+  flex: 1;
+  font-size: 13px;
+}
+
+.font-size-value {
+  padding: 2px 8px;
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.range-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--b3-theme-surface-variant);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: all 0.2s ease;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--b3-theme-primary);
+  cursor: pointer;
+  border: 3px solid var(--b3-theme-background);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--b3-theme-primary);
+  cursor: pointer;
+  border: 3px solid var(--b3-theme-background);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.range-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--b3-theme-on-surface-variant);
+  font-weight: 500;
+  padding: 0 4px;
 }
 
 

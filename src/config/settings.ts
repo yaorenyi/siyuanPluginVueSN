@@ -282,6 +282,14 @@ export interface HeadingSettings {
     h5: string
     h6: string
   }
+  fontSizes: {
+    h1: number
+    h2: number
+    h3: number
+    h4: number
+    h5: number
+    h6: number
+  }
   levelDisplay: string
   customMarkers: string[]
   titleCenterAlign: boolean
@@ -300,6 +308,14 @@ export const DEFAULT_HEADING_SETTINGS: HeadingSettings = {
     h4: '#AAD2FC',
     h5: '#AC9DC0',
     h6: '#D7D7D7'
+  },
+  fontSizes: {
+    h1: 28,
+    h2: 24,
+    h3: 20,
+    h4: 18,
+    h5: 16,
+    h6: 14
   },
   levelDisplay: 'none',
   customMarkers: ['1', '2', '3', '4', '5', '6'],
