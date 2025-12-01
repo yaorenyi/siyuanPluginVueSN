@@ -33,6 +33,7 @@ trigger: manual
 - 性能优化：优化代码的性能，减少资源占用，提升加载速度，确保项目的高效运行。
 - 新功能必须在 SuperPanelView.vue 超级面板 有功能开关,在 superPanel/index.ts添加功能开关映射
 - 大模型 api 配置统一入口
+- 持久化：使用思源API plugin.loadData() 和 plugin.saveData() 方法
 
 ### 问题解决
 

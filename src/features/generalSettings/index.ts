@@ -23,8 +23,8 @@ export class GeneralSettings {
   public async init() {
     this.addDock();
     this.applySavedSettings(); // 应用已保存的设置
-    this.applyCodeBlockStyle(); // 应用代码块样式
-    this.applyListStyle(); // 应用列表样式
+    await this.applyCodeBlockStyle(); // 应用代码块样式
+    await this.applyListStyle(); // 应用列表样式
     await this.applyHeadingStyle(); // 应用标题样式
     console.log('通用设置模块已初始化');
   }
@@ -188,13 +188,13 @@ export class GeneralSettings {
   /**
    * 应用代码块样式
    */
-  public applyCodeBlockStyle() {
+  public async applyCodeBlockStyle() {
     try {
-      const saved = localStorage.getItem('general-codeblock-settings');
-      if (saved) {
-        const settings = JSON.parse(saved);
-        this.applyCodeBlockStyleFromSettings(settings);
-      }
+      // 从插件数据库加载设置
+      const { loadCodeBlockSettings } = await import('@/config/settings');
+      const settings = await loadCodeBlockSettings(this.plugin);
+      this.applyCodeBlockStyleFromSettings(settings);
+      console.log('代码块样式已从数据库加载并应用:', settings);
     } catch (error) {
       console.error('应用代码块样式失败:', error);
     }
@@ -203,13 +203,13 @@ export class GeneralSettings {
   /**
    * 应用列表样式
    */
-  public applyListStyle() {
+  public async applyListStyle() {
     try {
-      const saved = localStorage.getItem('general-list-settings');
-      if (saved) {
-        const settings = JSON.parse(saved);
-        this.applyListStyles(settings);
-      }
+      // 从插件数据库加载设置
+      const { loadListSettingsFromDB } = await import('@/config/settings');
+      const settings = await loadListSettingsFromDB(this.plugin);
+      this.applyListStyles(settings);
+      console.log('列表样式已从数据库加载并应用:', settings);
     } catch (error) {
       console.error('应用列表样式失败:', error);
     }

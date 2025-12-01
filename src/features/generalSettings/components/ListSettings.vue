@@ -278,10 +278,12 @@ import type { ListSettings as IListSettings } from '@/config/settings'
 
 interface Props {
   i18n?: any
+  plugin?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  i18n: () => ({})
+  i18n: () => ({}),
+  plugin: null
 })
 
 const emit = defineEmits<{
@@ -310,14 +312,19 @@ const defaultSettings: IListSettings = {
 const settings = reactive<IListSettings>({ ...defaultSettings })
 
 // 组件挂载时加载保存的设置
-onMounted(() => {
+onMounted(async () => {
+  if (!props.plugin) {
+    console.warn('插件实例不可用，使用默认设置')
+    return
+  }
+  
   try {
-    const saved = localStorage.getItem('general-list-settings')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      Object.assign(settings, { ...defaultSettings, ...parsed })
-      handleSettingsChange()
-    }
+    console.log('尝试从数据库加载列表设置...')
+    const { loadListSettingsFromDB } = await import('@/config/settings')
+    const loadedSettings = await loadListSettingsFromDB(props.plugin)
+    Object.assign(settings, { ...defaultSettings, ...loadedSettings })
+    console.log('从数据库加载的列表设置:', settings)
+    handleSettingsChange()
   } catch (error) {
     console.error('加载列表设置失败:', error)
   }
@@ -396,11 +403,23 @@ ${selector}>[data-subtype="u"] .li[data-subtype="u"] .li[data-subtype="u"]>.prot
 }
 
 // 处理设置变化
-const handleSettingsChange = () => {
-  emit('change', {
+const handleSettingsChange = async () => {
+  const settingsWithCSS = {
     ...settings,
     css: generateCSS()
-  })
+  }
+  
+  emit('change', settingsWithCSS)
+  
+  // 自动保存到数据库
+  if (props.plugin) {
+    try {
+      const { saveListSettingsToDB } = await import('@/config/settings')
+      await saveListSettingsToDB(props.plugin, settingsWithCSS)
+    } catch (error) {
+      console.error('保存列表设置失败:', error)
+    }
+  }
 }
 
 // 暴露方法

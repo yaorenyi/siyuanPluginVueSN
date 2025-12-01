@@ -270,6 +270,7 @@ interface CodeBlockSettings {
 
 interface Props {
   i18n?: any
+  plugin?: any
   initialSettings?: CodeBlockSettings
 }
 
@@ -279,6 +280,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   i18n: () => ({}),
+  plugin: null,
   initialSettings: () => ({
     style: 'default',
     fontSize: 13,
@@ -302,15 +304,18 @@ const DEFAULT_SETTINGS: CodeBlockSettings = {
 }
 
 // 监听设置变化，自动保存
-watch(settings, (newSettings) => {
+watch(settings, async (newSettings) => {
   emit('change', newSettings)
   applyCodeBlockStyle(newSettings.style)
   applyCodeBlockCollapse(newSettings.enableCollapse, newSettings.collapseHeight)
-  // 自动保存到 localStorage
-  try {
-    localStorage.setItem('general-codeblock-settings', JSON.stringify(newSettings))
-  } catch (error) {
-    console.error('自动保存失败:', error)
+  // 自动保存到数据库
+  if (props.plugin) {
+    try {
+      const { saveCodeBlockSettings } = await import('@/config/settings')
+      await saveCodeBlockSettings(props.plugin, newSettings)
+    } catch (error) {
+      console.error('自动保存失败:', error)
+    }
   }
 }, { deep: true })
 
@@ -628,22 +633,27 @@ function applyCodeBlockCollapse(enable: boolean, height: number) {
 }
 
 // 加载保存的设置
-function loadSettings() {
+async function loadSettings() {
+  if (!props.plugin) {
+    console.warn('插件实例不可用，使用默认设置')
+    return
+  }
+  
   try {
-    const saved = localStorage.getItem('general-codeblock-settings')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      settings.value = { ...DEFAULT_SETTINGS, ...parsed }
-      applyCodeBlockStyle(settings.value.style)
-    }
+    console.log('尝试从数据库加载代码块设置...')
+    const { loadCodeBlockSettings } = await import('@/config/settings')
+    const loadedSettings = await loadCodeBlockSettings(props.plugin)
+    settings.value = { ...DEFAULT_SETTINGS, ...loadedSettings }
+    console.log('从数据库加载的代码块设置:', settings.value)
+    applyCodeBlockStyle(settings.value.style)
   } catch (error) {
     console.error('加载设置失败:', error)
   }
 }
 
 // 初始化时加载设置并应用样式
-onMounted(() => {
-  loadSettings()
+onMounted(async () => {
+  await loadSettings()
   // 确保在页面加载时应用保存的样式
   applyCodeBlockStyle(settings.value.style)
   applyCodeBlockCollapse(settings.value.enableCollapse, settings.value.collapseHeight)

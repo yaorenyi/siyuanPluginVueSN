@@ -26,7 +26,7 @@
 
         <!-- 代码块美化 -->
         <div v-show="activeCategory === 'codeblock'" class="content-section">
-          <CodeBlockSettings :i18n="i18n" @change="handleCodeBlockChange" />
+          <CodeBlockSettings :i18n="i18n" :plugin="plugin" @change="handleCodeBlockChange" />
         </div>
 
         <!-- 标题配置 -->
@@ -41,7 +41,7 @@
 
         <!-- 列表设置 -->
         <div v-show="activeCategory === 'list'" class="content-section">
-          <ListSettings :i18n="i18n" @change="handleListChange" />
+          <ListSettings :i18n="i18n" :plugin="plugin" @change="handleListChange" />
         </div>
 
         <!-- 通用操作 -->

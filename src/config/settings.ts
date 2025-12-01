@@ -362,3 +362,99 @@ export async function resetHeadingSettings(plugin: Plugin): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * 代码块设置接口
+ */
+export interface CodeBlockSettings {
+  style: 'default' | 'github' | 'mac' | 'cartoon'
+  fontSize: number
+  padding: number
+  enableCollapse: boolean
+  collapseHeight: number
+}
+
+/**
+ * 默认代码块设置
+ */
+export const DEFAULT_CODEBLOCK_SETTINGS: CodeBlockSettings = {
+  style: 'default',
+  fontSize: 13,
+  padding: 14,
+  enableCollapse: true,
+  collapseHeight: 400
+}
+
+/**
+ * 配置存储键
+ */
+const CODEBLOCK_SETTINGS_KEY = 'codeblock-settings'
+
+/**
+ * 加载代码块设置
+ */
+export async function loadCodeBlockSettings(plugin: Plugin): Promise<CodeBlockSettings> {
+  try {
+    const data = await plugin.loadData(CODEBLOCK_SETTINGS_KEY)
+    if (!data) {
+      console.log('没有找到保存的代码块设置，使用默认值')
+      return { ...DEFAULT_CODEBLOCK_SETTINGS }
+    }
+    console.log('从数据库加载代码块设置:', data)
+    return { ...DEFAULT_CODEBLOCK_SETTINGS, ...data }
+  } catch (error) {
+    console.error('加载代码块设置失败:', error)
+    return { ...DEFAULT_CODEBLOCK_SETTINGS }
+  }
+}
+
+/**
+ * 保存代码块设置
+ */
+export async function saveCodeBlockSettings(plugin: Plugin, settings: CodeBlockSettings): Promise<boolean> {
+  try {
+    await plugin.saveData(CODEBLOCK_SETTINGS_KEY, settings)
+    console.log('代码块设置已保存到数据库:', settings)
+    return true
+  } catch (error) {
+    console.error('保存代码块设置失败:', error)
+    return false
+  }
+}
+
+/**
+ * 配置存储键
+ */
+const LIST_SETTINGS_KEY = 'list-settings'
+
+/**
+ * 加载列表设置
+ */
+export async function loadListSettingsFromDB(plugin: Plugin): Promise<ListSettings> {
+  try {
+    const data = await plugin.loadData(LIST_SETTINGS_KEY)
+    if (!data) {
+      console.log('没有找到保存的列表设置，使用默认值')
+      return { ...DEFAULT_LIST_SETTINGS }
+    }
+    console.log('从数据库加载列表设置:', data)
+    return { ...DEFAULT_LIST_SETTINGS, ...data }
+  } catch (error) {
+    console.error('加载列表设置失败:', error)
+    return { ...DEFAULT_LIST_SETTINGS }
+  }
+}
+
+/**
+ * 保存列表设置
+ */
+export async function saveListSettingsToDB(plugin: Plugin, settings: ListSettings): Promise<boolean> {
+  try {
+    await plugin.saveData(LIST_SETTINGS_KEY, settings)
+    console.log('列表设置已保存到数据库:', settings)
+    return true
+  } catch (error) {
+    console.error('保存列表设置失败:', error)
+    return false
+  }
+}
