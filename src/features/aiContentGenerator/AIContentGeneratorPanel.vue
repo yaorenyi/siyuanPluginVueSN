@@ -541,10 +541,12 @@ import { marked } from 'marked';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import * as api from '@/api';
+import { AIGeneratorStorage, type AIGeneratorSettings, type AIPromptConfig } from './storage';
 
 // Props
 interface Props {
   i18n: any;
+  plugin: any;
   onGenerate: (options: GenerateOptions) => Promise<string>;
 }
 
@@ -558,7 +560,12 @@ interface GenerateOptions {
   onChunk?: (chunk: string) => void; // 流式输出回调（修复问题2）
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  plugin: null
+});
+
+// 存储实例
+let storage: AIGeneratorStorage | null = null;
 
 // 状态
 const userInput = ref('');
@@ -1462,32 +1469,56 @@ ${editTargetDoc.value.content}`,
 };
 
 // 保存当前提示词配置
-const saveCurrentPrompt = () => {
+const saveCurrentPrompt = async () => {
   if (!newPromptName.value.trim()) {
     showMessage(props.i18n.enterPromptName || '请输入配置名称', 2000, 'info');
     return;
   }
 
-  const promptConfig: SavedPrompt = {
+  const promptConfig: AIPromptConfig = {
+    id: Date.now().toString(),
     name: newPromptName.value.trim(),
     systemPrompt: systemPrompt.value,
     temperature: temperature.value,
     maxTokens: maxTokens.value,
     enableMarkdown: enableMarkdown.value,
-    enableTypewriter: enableTypewriter.value
+    enableTypewriter: enableTypewriter.value,
+    contextMessageLimit: contextMessageLimit.value,
+    createdAt: Date.now()
   };
 
   savedPrompts.value.push(promptConfig);
-  savePromptsToStorage();
+  
+  try {
+    if (storage) {
+      await storage.savePrompts(savedPrompts.value);
+    } else {
+      // 降级使用localStorage
+      localStorage.setItem('ai-content-generator-prompts', JSON.stringify(savedPrompts.value));
+    }
+  } catch (error) {
+    console.error('保存提示词配置失败:', error);
+  }
+  
   newPromptName.value = '';
   showMessage(`✓ 已保存配置: ${promptConfig.name}`, 2000, 'info');
 };
 
-// 清除当前提示词选择（需求3：同时清除localStorage）
-const clearCurrentPrompt = () => {
+// 清除当前提示词选择
+const clearCurrentPrompt = async () => {
   currentPromptName.value = '';
-  localStorage.removeItem(CURRENT_PROMPT_STORAGE_KEY);
-  showMessage('✓ 已清除提示词选择', 1500, 'info');
+  
+  try {
+    if (storage) {
+      await storage.clearCurrentPrompt();
+    } else {
+      // 降级使用localStorage
+      localStorage.removeItem('ai-content-generator-current-prompt');
+    }
+    showMessage('✓ 已清除提示词选择', 1500, 'info');
+  } catch (error) {
+    console.error('清除当前提示词失败:', error);
+  }
 };
 
 /**
@@ -1654,40 +1685,94 @@ const getPromptPreview = (text: string): string => {
   return text.substring(0, maxLength) + '...';
 };
 
-// 保存到localStorage
-const savePromptsToStorage = () => {
+// 保存提示词到存储
+const savePromptsToStorage = async () => {
+  if (!storage) return;
+  
   try {
-    localStorage.setItem('ai-content-generator-prompts', JSON.stringify(savedPrompts.value));
+    await storage.savePrompts(savedPrompts.value);
   } catch (error) {
     console.error('保存提示词配置失败:', error);
+    // 降级使用localStorage
+    try {
+      localStorage.setItem('ai-content-generator-prompts', JSON.stringify(savedPrompts.value));
+    } catch (localError) {
+      console.error('localStorage保存也失败:', localError);
+    }
   }
 };
 
-// 从localStorage加载（需求3：同时加载当前提示词选择）
-const loadPromptsFromStorage = () => {
+// 从存储加载提示词配置
+const loadPromptsFromStorage = async () => {
+  if (!storage) {
+    // 降级使用localStorage
+    try {
+      const stored = localStorage.getItem('ai-content-generator-prompts');
+      if (stored) {
+        savedPrompts.value = JSON.parse(stored);
+      }
+
+      const currentPrompt = localStorage.getItem('ai-content-generator-current-prompt');
+      if (currentPrompt) {
+        const promptIndex = savedPrompts.value.findIndex(p => p.name === currentPrompt);
+        if (promptIndex !== -1) {
+          loadPrompt(promptIndex);
+        }
+      }
+    } catch (error) {
+      console.error('从localStorage加载提示词配置失败:', error);
+    }
+    return;
+  }
+
   try {
-    const stored = localStorage.getItem('ai-content-generator-prompts');
-    if (stored) {
-      savedPrompts.value = JSON.parse(stored);
+    const prompts = await storage.loadPrompts();
+    if (prompts) {
+      savedPrompts.value = prompts;
     }
 
-    // 需求3：加载保存的当前提示词
-    const currentPrompt = localStorage.getItem(CURRENT_PROMPT_STORAGE_KEY);
-    if (currentPrompt) {
-      const promptIndex = savedPrompts.value.findIndex(p => p.name === currentPrompt);
+    const currentPromptName = await storage.loadCurrentPrompt();
+    if (currentPromptName) {
+      const promptIndex = savedPrompts.value.findIndex(p => p.name === currentPromptName);
       if (promptIndex !== -1) {
-        // 自动加载保存的提示词配置
         loadPrompt(promptIndex);
       }
     }
   } catch (error) {
-    console.error('加载提示词配置失败:', error);
+    console.error('从插件存储加载提示词配置失败:', error);
+    // 降级尝试localStorage
+    try {
+      const stored = localStorage.getItem('ai-content-generator-prompts');
+      if (stored) {
+        savedPrompts.value = JSON.parse(stored);
+      }
+
+      const currentPrompt = localStorage.getItem('ai-content-generator-current-prompt');
+      if (currentPrompt) {
+        const promptIndex = savedPrompts.value.findIndex(p => p.name === currentPrompt);
+        if (promptIndex !== -1) {
+          loadPrompt(promptIndex);
+        }
+      }
+    } catch (localError) {
+      console.error('从localStorage加载也失败:', localError);
+    }
   }
 };
 
 // 组件挂载时加载保存的提示词
-onMounted(() => {
-  loadPromptsFromStorage();
+onMounted(async () => {
+  // 初始化存储实例
+  if (props.plugin) {
+    storage = new AIGeneratorStorage(props.plugin);
+    await storage.init();
+    loadPromptsFromStorage();
+    loadSettings();
+  } else {
+    // 降级使用localStorage
+    loadPromptsFromStorage();
+    loadSettings();
+  }
 });
 
 // 使用模板
@@ -1702,28 +1787,59 @@ const useTemplate = (templateType: string) => {
   userInput.value = templates[templateType] || '';
 };
 
-// 保存设置到本地存储（需求5：包含contextMessageLimit）
-const saveSettings = () => {
+// 保存设置到存储
+const saveSettings = async () => {
+  if (!storage) return;
+  
+  const settings = {
+    systemPrompt: systemPrompt.value,
+    temperature: temperature.value,
+    maxTokens: maxTokens.value,
+    enableMarkdown: enableMarkdown.value,
+    enableTypewriter: enableTypewriter.value,
+    contextMessageLimit: contextMessageLimit.value
+  };
+
   try {
-    localStorage.setItem('ai-content-generator-settings', JSON.stringify({
-      systemPrompt: systemPrompt.value,
-      temperature: temperature.value,
-      maxTokens: maxTokens.value,
-      enableMarkdown: enableMarkdown.value,
-      enableTypewriter: enableTypewriter.value,
-      contextMessageLimit: contextMessageLimit.value
-    }));
+    const success = await storage.saveSettings(settings);
+    if (success) {
+      console.log('AI生成器设置已保存');
+    }
   } catch (error) {
     console.error('保存设置失败:', error);
+    // 降级使用localStorage
+    try {
+      localStorage.setItem('ai-content-generator-settings', JSON.stringify(settings));
+    } catch (localError) {
+      console.error('localStorage保存也失败:', localError);
+    }
   }
 };
 
-// 加载设置（需求5：包含contextMessageLimit）
-const loadSettings = () => {
+// 加载设置
+const loadSettings = async () => {
+  if (!storage) {
+    // 降级使用localStorage
+    try {
+      const saved = localStorage.getItem('ai-content-generator-settings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        systemPrompt.value = settings.systemPrompt || systemPrompt.value;
+        temperature.value = settings.temperature ?? temperature.value;
+        maxTokens.value = settings.maxTokens || maxTokens.value;
+        enableMarkdown.value = settings.enableMarkdown ?? enableMarkdown.value;
+        enableTypewriter.value = settings.enableTypewriter ?? enableTypewriter.value;
+        contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
+      }
+    } catch (error) {
+      console.error('从localStorage加载设置失败:', error);
+    }
+    return;
+  }
+
   try {
-    const saved = localStorage.getItem('ai-content-generator-settings');
-    if (saved) {
-      const settings = JSON.parse(saved);
+    const settings = await storage.loadSettings();
+    if (settings) {
       systemPrompt.value = settings.systemPrompt || systemPrompt.value;
       temperature.value = settings.temperature ?? temperature.value;
       maxTokens.value = settings.maxTokens || maxTokens.value;
@@ -1732,7 +1848,22 @@ const loadSettings = () => {
       contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
     }
   } catch (error) {
-    console.error('加载设置失败:', error);
+    console.error('从插件存储加载设置失败:', error);
+    // 降级尝试localStorage
+    try {
+      const saved = localStorage.getItem('ai-content-generator-settings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        systemPrompt.value = settings.systemPrompt || systemPrompt.value;
+        temperature.value = settings.temperature ?? temperature.value;
+        maxTokens.value = settings.maxTokens || maxTokens.value;
+        enableMarkdown.value = settings.enableMarkdown ?? enableMarkdown.value;
+        enableTypewriter.value = settings.enableTypewriter ?? enableTypewriter.value;
+        contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
+      }
+    } catch (localError) {
+      console.error('从localStorage加载设置也失败:', localError);
+    }
   }
 };
 

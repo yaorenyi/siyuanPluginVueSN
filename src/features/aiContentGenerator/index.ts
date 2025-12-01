@@ -98,6 +98,7 @@ export class AIContentGenerator {
           setup() {
             return () => h(AIContentGeneratorPanel, {
               i18n: self.plugin.i18n,
+              plugin: self.plugin,
               onGenerate: async (options: GenerateOptions) => {
                 return await self.generateContent(options);
               }

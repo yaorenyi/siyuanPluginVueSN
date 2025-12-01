@@ -1,12 +1,10 @@
 ---
-description: 
+description:
 alwaysApply: true
 enabled: true
-updatedAt: 2025-11-29T00:30:12.180Z
-provider: 
+updatedAt: 2025-12-01T08:24:20.712Z
+provider:
 ---
-
-# 思源插件开发文档
 
 ## 角色
 
@@ -36,7 +34,9 @@ provider:
 - 代码安全性：在编写代码时，始终考虑安全性，避免引入漏洞，确保用户输入的安全处理。
 - 代码风格: 遵循一致的代码风格（如使用Prettier和ESLint进行代码格式化和规范检查）。
 - 性能优化：优化代码的性能，减少资源占用，提升加载速度，确保项目的高效运行。
-- 测试与文档：编写单元测试，确保代码的健壮性，并提供清晰的注释和文档，方便后续阅读和维护。
+- 新功能必须在 SuperPanelView.vue 超级面板 有功能开关,在 superPanel/index.ts添加功能开关映射
+- 大模型 api 配置统一入口
+- 持久化：使用思源API plugin.loadData() 和 plugin.saveData() 方法
 
 ### 问题解决
 
@@ -62,3 +62,4 @@ provider:
 - TypeScript 官方文档: [TypeScript Documentation](https://www.typescriptlang.org/docs/)
 - Vite 官方文档: [Vite Documentation](https://vitejs.dev/)
 - Sass 官方文档: [Sass Documentation](https://sass-lang.com/documentation)
+- 图标 @iconify/vue
