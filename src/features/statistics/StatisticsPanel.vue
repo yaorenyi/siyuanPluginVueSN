@@ -15,7 +15,7 @@
     </div>
 
     <!-- 主要内容 -->
-    <div v-else class="statistics-content">
+    <div v-else-if="stats" class="statistics-content">
       <!-- 顶部卡片统计 -->
       <div class="stats-cards">
         <div class="card-row">
@@ -200,6 +200,11 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 空状态 -->
+    <div v-else class="empty-state">
+      <p>{{ i18n.noData || '暂无数据' }}</p>
     </div>
   </div>
 </template>
@@ -417,6 +422,8 @@ function padZero(num: number): string {
 
 // 初始化
 onMounted(() => {
+  // 立即显示加载状态
+  loading.value = true
   refreshData()
 })
 
@@ -513,6 +520,15 @@ defineExpose({
   p {
     font-size: 12px;
   }
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--b3-theme-on-surface-light);
+  font-size: 12px;
 }
 
 @keyframes spin {
