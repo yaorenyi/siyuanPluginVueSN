@@ -610,5 +610,6 @@
   "saveToArchive": "Save to AI Archive",
   "savingToArchive": "Saving to AI Archive...",
   "saveToArchiveSuccess": "Saved to AI Archive",
-  "saveToArchiveFailed": "Failed to save to AI Archive"
+  "saveToArchiveFailed": "Failed to save to AI Archive",
+  "aiQuery": "AI Query"
 }

@@ -619,5 +619,6 @@
   "saveToArchive": "保存到AI问答封存",
   "savingToArchive": "正在保存到AI问答封存...",
   "saveToArchiveSuccess": "已保存到AI问答封存",
-  "saveToArchiveFailed": "保存到AI问答封存失败"
+  "saveToArchiveFailed": "保存到AI问答封存失败",
+  "aiQuery": "AI查询"
 }
