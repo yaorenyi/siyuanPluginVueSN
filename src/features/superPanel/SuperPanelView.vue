@@ -210,7 +210,8 @@ const getAvailableModels = () => {
     deepseek: {
       common: [
         { value: 'deepseek-chat', label: 'DeepSeek Chat (推荐)' },
-        { value: 'deepseek-coder', label: 'DeepSeek Coder (代码)' }
+        { value: 'deepseek-coder', label: 'DeepSeek Coder (代码)' },
+        { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner (思考)' },
       ],
       all: []
     },
