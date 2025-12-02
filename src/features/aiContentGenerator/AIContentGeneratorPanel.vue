@@ -424,6 +424,19 @@
               {{ i18n.undo || '撤回' }}
             </button>
             <!-- 通用按钮 -->
+            <!-- 普通模式：保存到AI问答封存按钮 -->
+            <button
+              v-if="!editMode"
+              class="btn-action btn-save"
+              @click="saveToArchiveNotebook"
+              :disabled="isGenerating"
+              :title="i18n.saveToArchive || '保存到AI问答封存'"
+            >
+              <svg width="16" height="16">
+                <use xlink:href="#iconSave"></use>
+              </svg>
+              {{ i18n.saveToArchive || '保存' }}
+            </button>
             <!-- 普通模式：插入到当前文档按钮 -->
             <button
               v-if="!editMode"
@@ -752,6 +765,11 @@ ${cleanDocContent}`;
         displayedContent.value = result;
       }
       showMessage('✓ 生成成功', 2000, 'info');
+      
+      // 自动保存到AI问答封存笔记本
+      if (!editMode.value) {
+        await saveToArchiveNotebook();
+      }
     } else {
       errorMessage.value = props.i18n.generateFailed || '生成失败，请重试';
     }
@@ -806,6 +824,191 @@ const convertToSiyuanMarkdown = (content: string): string => {
   converted = converted.replace(/\n{3,}/g, '\n\n');
 
   return converted;
+};
+
+/**
+ * 保存生成内容到"AI问答封存"笔记本
+ */
+const saveToArchiveNotebook = async () => {
+  if (!generatedContent.value) {
+    showMessage('没有可保存的内容', 2000, 'info');
+    return;
+  }
+
+  try {
+    showMessage('正在保存...', 1000, 'info');
+
+    // 1. 获取或创建"AI问答封存"笔记本
+    const archiveNotebookId = await getOrCreateArchiveNotebook();
+    if (!archiveNotebookId) {
+      showMessage('无法创建AI问答封存笔记本', 3000, 'error');
+      return;
+    }
+
+    // 2. 根据内容自动分类
+    const category = await autoClassifyContent(generatedContent.value);
+    
+    // 3. 获取或创建分类文档
+    const categoryDocId = await getOrCreateCategoryDoc(archiveNotebookId, category);
+    if (!categoryDocId) {
+      showMessage('无法创建分类文档', 3000, 'error');
+      return;
+    }
+
+    // 4. 生成文档标题
+    const docTitle = await generateDocTitle(generatedContent.value);
+    
+    // 5. 创建时间戳
+    const timestamp = new Date().toLocaleString('zh-CN', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(/\//g, '-').replace(/,/g, '');
+    
+    const fullTitle = `${docTitle}-${timestamp}`;
+
+    // 6. 在分类文档下创建子文档
+    const docPath = `/${category}/${fullTitle}`;
+    const newDocId = await api.createDocWithMd(
+      archiveNotebookId,
+      docPath,
+      generatedContent.value
+    );
+
+    if (newDocId) {
+      showMessage(`✓ 已保存: AI问答封存/${category}/${fullTitle}`, 3000, 'info');
+    } else {
+      showMessage('保存失败', 3000, 'error');
+    }
+  } catch (error) {
+    console.error('保存到封存笔记本失败:', error);
+    showMessage('保存失败: ' + (error as Error).message, 3000, 'error');
+  }
+};
+
+/**
+ * 获取或创建"AI问答封存"笔记本
+ */
+const getOrCreateArchiveNotebook = async (): Promise<string | null> => {
+  try {
+    // 获取所有笔记本
+    const notebooks = await api.lsNotebooks();
+    
+    // 查找"AI问答封存"笔记本
+    const archiveNotebook = notebooks.notebooks.find(
+      (nb: any) => nb.name === 'AI问答封存'
+    );
+
+    if (archiveNotebook) {
+      return archiveNotebook.id;
+    }
+
+    // 不存在则创建
+    const newNotebook = await api.createNotebook('AI问答封存');
+    return newNotebook?.id || null;
+  } catch (error) {
+    console.error('获取或创建笔记本失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 自动分类内容
+ */
+const autoClassifyContent = async (content: string): Promise<string> => {
+  try {
+    // 简单的关键词匹配分类
+    const firstPart = content.substring(0, 500);
+
+    // 技术文档关键词
+    if (/代码|函数|API|接口|算法|数据结构|编程|开发|技术|bug|debug/i.test(firstPart)) {
+      return '技术文档';
+    }
+    
+    // 学习笔记关键词
+    if (/学习|笔记|总结|复习|知识点|要点|理解|掌握/i.test(firstPart)) {
+      return '学习笔记';
+    }
+    
+    // 创意想法关键词
+    if (/创意|想法|灵感|构思|设计|方案|计划|头脑风暴/i.test(firstPart)) {
+      return '创意想法';
+    }
+    
+    // 问答记录关键词
+    if (/问题|回答|解答|疑问|为什么|怎么|如何|什么是/i.test(firstPart)) {
+      return '问答记录';
+    }
+    
+    // 总结归纳关键词
+    if (/总结|归纳|概括|梳理|整理|汇总|提炼/i.test(firstPart)) {
+      return '总结归纳';
+    }
+
+    return '其他';
+  } catch (error) {
+    console.error('自动分类失败:', error);
+    return '其他';
+  }
+};
+
+/**
+ * 获取或创建分类文档
+ */
+const getOrCreateCategoryDoc = async (
+  notebookId: string,
+  category: string
+): Promise<string | null> => {
+  try {
+    // 查询是否已存在该分类文档
+    const sqlQuery = `SELECT id FROM blocks WHERE box = '${notebookId}' AND type = 'd' AND content = '${category}' LIMIT 1`;
+    const result = await api.sql(sqlQuery);
+
+    if (result && result.length > 0) {
+      return result[0].id;
+    }
+
+    // 不存在则创建
+    const docPath = `/${category}`;
+    const newDocId = await api.createDocWithMd(
+      notebookId,
+      docPath,
+      `# ${category}\n\n本文档用于存放${category}相关的AI生成内容。`
+    );
+
+    return newDocId;
+  } catch (error) {
+    console.error('获取或创建分类文档失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 生成文档标题
+ */
+const generateDocTitle = async (content: string): Promise<string> => {
+  try {
+    // 从内容中提取第一个标题
+    const titleMatch = content.match(/^#\s+(.+)$/m);
+    if (titleMatch && titleMatch[1]) {
+      const title = titleMatch[1].trim().substring(0, 20);
+      return title.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g, '');
+    }
+
+    // 如果没有标题，使用前20个字符
+    const firstLine = content.split('\n')[0].trim();
+    if (firstLine) {
+      return firstLine.substring(0, 20).replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g, '') || 'AI生成内容';
+    }
+
+    return 'AI生成内容';
+  } catch (error) {
+    console.error('生成标题失败:', error);
+    return 'AI生成内容';
+  }
 };
 
 // 复制内容（需求2：修复Markdown格式复制）

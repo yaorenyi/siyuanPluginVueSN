@@ -615,5 +615,9 @@
   "copied": "已复制",
   "replaceEncrypted": "替换加密文本",
   "replaceSuccess": "替换成功",
-  "replaceFailed": "替换失败"
+  "replaceFailed": "替换失败",
+  "saveToArchive": "保存到AI问答封存",
+  "savingToArchive": "正在保存到AI问答封存...",
+  "saveToArchiveSuccess": "已保存到AI问答封存",
+  "saveToArchiveFailed": "保存到AI问答封存失败"
 }

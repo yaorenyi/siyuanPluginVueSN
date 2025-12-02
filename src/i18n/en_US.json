@@ -606,5 +606,9 @@
   "copied": "Copied",
   "replaceEncrypted": "Replace Encrypted Text",
   "replaceSuccess": "Replaced successfully",
-  "replaceFailed": "Replace failed"
+  "replaceFailed": "Replace failed",
+  "saveToArchive": "Save to AI Archive",
+  "savingToArchive": "Saving to AI Archive...",
+  "saveToArchiveSuccess": "Saved to AI Archive",
+  "saveToArchiveFailed": "Failed to save to AI Archive"
 }
