@@ -69,8 +69,6 @@
 import { showMessage } from 'siyuan'
 import { ref, onMounted } from 'vue'
 import * as api from '@/api'
-import { usePlugin } from '@/main'
-import type PluginSample from '@/index'
 
 interface Props {
   i18n?: any
@@ -86,7 +84,6 @@ const props = withDefaults(defineProps<Props>(), {
   i18n: () => ({})
 })
 
-const plugin = usePlugin() as PluginSample
 const isLoading = ref(false)
 const systemInfo = ref<SystemInfo | null>(null)
 
@@ -131,23 +128,11 @@ async function refreshPage() {
     isLoading.value = true
     showMessage(props.i18n.refreshing || '正在刷新页面...', 2000, 'info')
 
-    // 保存当前设置到localStorage
-    const currentSettings = {
-      timestamp: Date.now(),
-      action: 'refresh'
-    }
-    localStorage.setItem('general-last-action', JSON.stringify(currentSettings))
-
-    // 延迟刷新以显示消息
-    setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        window.location.reload()
-      }
-    }, 1000)
+    // 使用封装的思源API重新加载UI
+    await api.reloadUI()
   } catch (error) {
     console.error('刷新失败:', error)
     showMessage(props.i18n.refreshFailed || '刷新失败', 3000, 'error')
-  } finally {
     isLoading.value = false
   }
 }

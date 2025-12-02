@@ -8,6 +8,11 @@
 
 import { fetchSyncPost, IWebSocketData } from "siyuan";
 
+/**
+ * 思源笔记 API 基础 URL
+ */
+export const SIYUAN_API_BASE_URL = 'http://127.0.0.1:6806';
+
 async function request(url: string, data: any) {
   let response: IWebSocketData = await fetchSyncPost(url, data);
   let res = response.code === 0 ? response.data : null;
@@ -492,4 +497,22 @@ export async function version(): Promise<string> {
 
 export async function currentTime(): Promise<number> {
   return request("/api/system/currentTime", {});
+}
+
+/**
+ * 重新加载 UI
+ * 使用原生 fetch 调用系统 API 重载界面
+ */
+export async function reloadUI(): Promise<void> {
+  try {
+    await fetch(`${SIYUAN_API_BASE_URL}/api/system/reloadUI`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (error) {
+    console.error('重新加载 UI 失败:', error);
+    throw error;
+  }
 }
