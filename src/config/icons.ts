@@ -114,6 +114,12 @@ export const FEATURE_ICONS = {
   pronunciation: {
     icon: 'mdi:volume-high',
     color: '#f43f5e'
+  },
+
+  // 内容加密
+  encryption: {
+    icon: 'mdi:lock',
+    color: '#dc2626'
   }
 } as const
 

@@ -39,6 +39,11 @@
           <PasswordSettings :i18n="i18n" />
         </div>
 
+        <!-- 加密设置 -->
+        <div v-show="activeCategory === 'encryption'" class="content-section">
+          <EncryptionSettings :plugin="plugin" />
+        </div>
+
         <!-- 列表设置 -->
         <div v-show="activeCategory === 'list'" class="content-section">
           <ListSettings :i18n="i18n" :plugin="plugin" @change="handleListChange" />
@@ -61,6 +66,7 @@ import PasswordSettings from './components/PasswordSettings.vue'
 import CodeBlockSettings from './components/CodeBlockSettings.vue'
 import HeadingSettings from './components/HeadingSettings.vue'
 import ListSettings from './components/ListSettings.vue'
+import EncryptionSettings from './components/EncryptionSettings.vue'
 
 interface Props {
   i18n?: any
@@ -98,6 +104,10 @@ const categories = computed(() => [
   {
     id: 'password',
     label: props.i18n.passwordSetting || '密码设置'
+  },
+  {
+    id: 'encryption',
+    label: props.i18n.encryptionSettings || '加密设置'
   },
   {
     id: 'actions',

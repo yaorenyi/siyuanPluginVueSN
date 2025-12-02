@@ -410,6 +410,14 @@ const features = computed<Feature[]>(() => [
     desc: props.i18n.enableStatisticsDesc || '显示笔记数据统计和分析',
     enabled: props.settings.enableStatistics,
     actions: []
+  },
+  {
+    id: 'encryption',
+    iconKey: 'encryption',
+    title: props.i18n.encryption || '内容加密',
+    desc: props.i18n.enableEncryptionDesc || '使用 AES-256-GCM 算法对选中文本进行加密和解密',
+    enabled: props.settings.enableEncryption,
+    actions: []
   }
 ])
 
