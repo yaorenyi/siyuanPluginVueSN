@@ -242,24 +242,32 @@
         </div>
         <div class="toolbar-actions">
           <button class="btn-ai-action" @click="aiEditAction('polish')" :disabled="isGenerating" :title="i18n.aiPolish || 'AI润色'">
-            <svg width="14" height="14"><use xlink:href="#iconPaint"></use></svg>
+            <svg width="14" height="14"><use xlink:href="#iconEdit"></use></svg>
             {{ i18n.polish || '润色' }}
           </button>
           <button class="btn-ai-action" @click="aiEditAction('expand')" :disabled="isGenerating" :title="i18n.aiExpand || '扩写内容'">
-            <svg width="14" height="14"><use xlink:href="#iconExpand"></use></svg>
+            <svg width="14" height="14"><use xlink:href="#iconAdd"></use></svg>
             {{ i18n.expand || '扩写' }}
           </button>
           <button class="btn-ai-action" @click="aiEditAction('condense')" :disabled="isGenerating" :title="i18n.aiCondense || '精简内容'">
-            <svg width="14" height="14"><use xlink:href="#iconShrink"></use></svg>
+            <svg width="14" height="14"><use xlink:href="#iconMin"></use></svg>
             {{ i18n.condense || '精简' }}
           </button>
           <button class="btn-ai-action" @click="aiEditAction('fix')" :disabled="isGenerating" :title="i18n.aiFix || '修正错误'">
             <svg width="14" height="14"><use xlink:href="#iconCheck"></use></svg>
             {{ i18n.fix || '纠错' }}
           </button>
+          <button class="btn-ai-action" @click="aiEditAction('translate')" :disabled="isGenerating" :title="i18n.aiTranslate || '翻译文档'">
+            <svg width="14" height="14"><use xlink:href="#iconLanguage"></use></svg>
+            {{ i18n.translate || '翻译' }}
+          </button>
+          <button class="btn-ai-action" @click="aiEditAction('rewrite')" :disabled="isGenerating" :title="i18n.aiRewrite || '改写文档'">
+            <svg width="14" height="14"><use xlink:href="#iconRefresh"></use></svg>
+            {{ i18n.rewrite || '改写' }}
+          </button>
           <button class="btn-ai-action btn-analyze" @click="analyzeDocument" :disabled="isGenerating || isAnalyzing" :title="i18n.aiAnalyze || 'AI分析建议'">
             <div v-if="isAnalyzing" class="loading-spinner-tiny"></div>
-            <svg v-else width="14" height="14"><use xlink:href="#iconLightbulb"></use></svg>
+            <svg v-else width="14" height="14"><use xlink:href="#iconInfo"></use></svg>
             {{ i18n.analyze || '智能分析' }}
           </button>
         </div>
@@ -383,10 +391,22 @@
           <div class="result-actions">
             <!-- Edit模式专用按钮 -->
             <template v-if="editMode">
+              <!-- 停止生成按钮（编辑模式） -->
+              <button
+                v-if="isGenerating"
+                class="btn-action btn-stop"
+                @click="handleStop"
+                :title="i18n.stopGeneration || '停止生成'"
+              >
+                <svg width="16" height="16">
+                  <use xlink:href="#iconClose"></use>
+                </svg>
+                {{ i18n.stop || '停止' }}
+              </button>
               <button
                 class="btn-action btn-apply"
                 @click="applyEdit"
-                :disabled="!editTargetDoc || isApplying"
+                :disabled="!editTargetDoc || isApplying || isGenerating"
                 :title="i18n.applyEdit || '应用编辑'"
               >
                 <div v-if="isApplying" class="loading-spinner-small"></div>
@@ -1280,7 +1300,7 @@ const undoEdit = async () => {
 /**
  * AI智能编辑功能
  */
-const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix') => {
+const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | 'translate' | 'rewrite') => {
   if (!editTargetDoc.value) {
     showMessage('请先选择要编辑的文档', 2000, 'info');
     return;
@@ -1290,8 +1310,13 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix') =>
     polish: '请对以下文档进行润色优化，保持原有结构，提升语言质量和可读性，使表达更加专业、流畅。保持Markdown格式，直接输出优化后的完整文档内容：',
     expand: '请对以下文档进行扩写，增加更详细的说明、例子和补充信息，使内容更加丰富和全面。保持Markdown格式，直接输出扩写后的完整文档内容：',
     condense: '请对以下文档进行精简，去除冗余内容，保留核心要点，使表达更加简洁有力。保持Markdown格式，直接输出精简后的完整文档内容：',
-    fix: '请对以下文档进行错误检查和修正，包括拼写错误、语法错误、逻辑错误等。保持Markdown格式，直接输出修正后的完整文档内容：'
+    fix: '请对以下文档进行错误检查和修正，包括拼写错误、语法错误、逻辑错误等。保持Markdown格式，直接输出修正后的完整文档内容：',
+    translate: '请将以下文档翻译成中文（如果原文是中文则翻译成英文）。保持原有的Markdown格式和文档结构，只翻译文本内容。直接输出翻译后的完整文档内容：',
+    rewrite: '请用不同的表达方式重写以下文档，保持核心意思不变，但使用全新的语言风格和句式结构。保持Markdown格式，直接输出改写后的完整文档内容：'
   };
+
+  // 创建新的 AbortController
+  abortController.value = new AbortController();
 
   isGenerating.value = true;
   generatedContent.value = '';
@@ -1305,6 +1330,7 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix') =>
       systemPrompt: '你是一个专业的文档编辑助手，擅长优化Markdown文档。请直接输出优化后的完整文档，不要添加任何解释性文字。',
       temperature: 0.3, // 降低创造性，提高准确性
       maxTokens: maxTokens.value,
+      signal: abortController.value?.signal,
       onChunk: (chunk: string) => {
         displayedContent.value += chunk;
         generatedContent.value += chunk;
@@ -1315,11 +1341,17 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix') =>
 
     showMessage('✓ AI编辑完成', 2000, 'info');
   } catch (error) {
+    // 如果是用户主动取消，不显示错误
+    if ((error as Error).name === 'AbortError') {
+      console.log('用户取消了AI编辑');
+      return;
+    }
     console.error('AI编辑失败:', error);
     errorMessage.value = (error as Error).message || 'AI编辑失败';
     showMessage('AI编辑失败: ' + errorMessage.value, 3000, 'error');
   } finally {
     isGenerating.value = false;
+    abortController.value = null;
   }
 };
 

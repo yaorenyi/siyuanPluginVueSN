@@ -1003,6 +1003,18 @@
     background: var(--b3-theme-error-lighter);
     color: var(--b3-theme-error);
   }
+
+  &.btn-stop {
+    background: var(--b3-theme-error);
+    color: white;
+    border-color: var(--b3-theme-error);
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: var(--b3-theme-error-light);
+      transform: translateY(-1px);
+    }
+  }
 }
 
 .loading-spinner-small {
