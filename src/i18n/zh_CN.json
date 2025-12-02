@@ -568,5 +568,12 @@
   "recent3Years": "最近三年",
   "recentYearMonthly": "最近一年每月字数",
   "recent2YearsMonthly": "最近两年每月字数",
-  "recent3YearsMonthly": "最近三年每月字数"
+  "recent3YearsMonthly": "最近三年每月字数",
+  "todayCreated": "今日新增",
+  "todayModified": "今日修改",
+  "avgWordsPerDoc": "平均字数",
+  "topTags": "热门标签",
+  "recentDocs": "最近活跃",
+  "times": "次",
+  "refresh": "刷新"
 }

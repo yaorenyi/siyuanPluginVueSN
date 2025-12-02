@@ -559,5 +559,12 @@
   "recent3Years": "Recent 3 Years",
   "recentYearMonthly": "Recent Year Monthly Words",
   "recent2YearsMonthly": "Recent 2 Years Monthly Words",
-  "recent3YearsMonthly": "Recent 3 Years Monthly Words"
+  "recent3YearsMonthly": "Recent 3 Years Monthly Words",
+  "todayCreated": "Today Created",
+  "todayModified": "Today Modified",
+  "avgWordsPerDoc": "Avg Words/Doc",
+  "topTags": "Top Tags",
+  "recentDocs": "Recent Active",
+  "times": "times",
+  "refresh": "Refresh"
 }

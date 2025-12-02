@@ -1,4 +1,6 @@
 import { Plugin } from 'siyuan';
+import { createApp, App as VueApp } from 'vue';
+import StatisticsPanel from './StatisticsPanel.vue';
 
 /**
  * 统计数据接口
@@ -10,8 +12,13 @@ interface StatisticsData {
   totalAssets: number;     // 总附件数
   totalTags: number;       // 总标签数
   totalBacklinks: number;  // 总双链数
+  todayCreated: number;    // 今日新增文档数
+  todayModified: number;   // 今日修改文档数
+  avgWordsPerDoc: number;  // 平均每文档字数
   dailyStats: DailyWordCount[];  // 每日字数统计
   currentPeriod: string;   // 当前统计周期
+  topTags?: Array<{ name: string; count: number }>;  // 热门标签
+  recentDocs?: Array<{ id: string; title: string; updated: string; words: number }>;  // 最近活跃文档
 }
 
 /**
@@ -30,6 +37,7 @@ interface DailyWordCount {
 export class Statistics {
   private plugin: Plugin;
   private dockElement: HTMLElement | null = null;
+  private vueApp: VueApp | null = null;
   private currentYear: number;
   private viewMode: 'day' | 'week' | 'month' | 'year' = 'day'; // 当前查看模式
   private dayRange: 7 | 15 | 30 | 90 | 180 | 365 = 7; // 日视图的天数范围
@@ -73,9 +81,48 @@ export class Statistics {
   }
   
   /**
-   * 渲染侧边栏面板
+   * 渲染侧边栏面板 - 使用 Vue 组件
    */
   private async renderDockPanel() {
+    if (!this.dockElement) return;
+    
+    // 清理旧的 Vue 实例
+    if (this.vueApp) {
+      this.vueApp.unmount();
+      this.vueApp = null;
+    }
+    
+    // 创建容器
+    this.dockElement.innerHTML = '<div id="statistics-vue-app"></div>';
+    const container = this.dockElement.querySelector('#statistics-vue-app');
+    if (!container) return;
+    
+    // 创建 Vue 应用
+    this.vueApp = createApp(StatisticsPanel, {
+      i18n: this.plugin.i18n,
+      onRefresh: async (params: {
+        viewMode: 'day' | 'week' | 'month' | 'year'
+        dayRange?: 7 | 15 | 30 | 90 | 180 | 365
+        monthYearRange?: 1 | 2 | 3
+        selectedYear?: number
+      }) => {
+        // 更新内部状态
+        this.viewMode = params.viewMode;
+        if (params.dayRange) this.dayRange = params.dayRange;
+        if (params.monthYearRange) this.monthYearRange = params.monthYearRange;
+        if (params.selectedYear) this.currentYear = params.selectedYear;
+        
+        return await this.getStatistics();
+      },
+    });
+    
+    this.vueApp.mount(container);
+  }
+  
+  /**
+   * 旧的渲染方法（已废弃，保留作为参考）
+   */
+  private async renderDockPanelOld() {
     if (!this.dockElement) return;
     
     // 获取统计数据
@@ -375,14 +422,32 @@ export class Statistics {
   private async getStatistics(): Promise<StatisticsData> {
     try {
       // 并行获取所有基础统计
-      const [totalNotes, totalWords, totalBlocks, totalAssets, totalTags, totalBacklinks] = await Promise.all([
+      const [
+        totalNotes, 
+        totalWords, 
+        totalBlocks, 
+        totalAssets, 
+        totalTags, 
+        totalBacklinks,
+        todayCreated,
+        todayModified,
+        topTags,
+        recentDocs
+      ] = await Promise.all([
         this.getTotalNotes(),
         this.getTotalWords(),
         this.getTotalBlocks(),
         this.getTotalAssets(),
         this.getTotalTags(),
-        this.getTotalBacklinks()
+        this.getTotalBacklinks(),
+        this.getTodayCreated(),
+        this.getTodayModified(),
+        this.getTopTags(10),
+        this.getRecentDocs(5)
       ]);
+      
+      // 计算平均每文档字数
+      const avgWordsPerDoc = totalNotes > 0 ? Math.round(totalWords / totalNotes) : 0;
             
       // 根据不同模式获取每日统计
       let dailyStats: DailyWordCount[] = [];
@@ -427,8 +492,13 @@ export class Statistics {
         totalAssets,
         totalTags,
         totalBacklinks,
+        todayCreated,
+        todayModified,
+        avgWordsPerDoc,
         dailyStats,
         currentPeriod,
+        topTags,
+        recentDocs,
       };
     } catch (error) {
       console.error('获取统计数据失败:', error);
@@ -439,10 +509,121 @@ export class Statistics {
         totalAssets: 0,
         totalTags: 0,
         totalBacklinks: 0,
+        todayCreated: 0,
+        todayModified: 0,
+        avgWordsPerDoc: 0,
         dailyStats: [],
         currentPeriod: '',
+        topTags: [],
+        recentDocs: [],
       };
     }
+  }
+  
+  /**
+   * 获取今日新增文档数
+   */
+  private async getTodayCreated(): Promise<number> {
+    const today = new Date();
+    const startDate = this.formatDate(today).substring(0, 8);
+    const sql = `SELECT COUNT(DISTINCT root_id) as count FROM blocks WHERE type='d' AND substr(created, 1, 8) = '${startDate}'`;
+    const result = await this.executeSql(sql);
+    return result[0]?.count || 0;
+  }
+  
+  /**
+   * 获取今日修改文档数
+   */
+  private async getTodayModified(): Promise<number> {
+    const today = new Date();
+    const startDate = this.formatDate(today).substring(0, 8);
+    const sql = `SELECT COUNT(DISTINCT root_id) as count FROM blocks WHERE type='d' AND substr(updated, 1, 8) = '${startDate}'`;
+    const result = await this.executeSql(sql);
+    return result[0]?.count || 0;
+  }
+  
+  /**
+   * 获取热门标签（按使用次数排序）
+   */
+  private async getTopTags(limit: number = 10): Promise<Array<{ name: string; count: number }>> {
+    try {
+      // 尝试从 spans 表查询
+      let sql = `
+        SELECT content as name, COUNT(*) as count 
+        FROM spans 
+        WHERE type='tag' 
+        GROUP BY content 
+        ORDER BY count DESC 
+        LIMIT ${limit}
+      `;
+      let result = await this.executeSql(sql);
+      
+      if (result.length === 0) {
+        // 尝试从 attributes 表查询
+        sql = `
+          SELECT value as name, COUNT(*) as count 
+          FROM attributes 
+          WHERE name='tags' 
+          GROUP BY value 
+          ORDER BY count DESC 
+          LIMIT ${limit}
+        `;
+        result = await this.executeSql(sql);
+      }
+      
+      return result.map(row => ({
+        name: String(row.name).replace(/^#/, ''), // 移除标签前缀
+        count: row.count || 0
+      }));
+    } catch (error) {
+      console.error('获取热门标签失败:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * 获取最近活跃文档
+   */
+  private async getRecentDocs(limit: number = 5): Promise<Array<{ id: string; title: string; updated: string; words: number }>> {
+    try {
+      const sql = `
+        SELECT 
+          d.id,
+          d.content as title,
+          d.updated,
+          (SELECT SUM(LENGTH(content)) FROM blocks WHERE root_id = d.root_id AND type='p') as words
+        FROM blocks d
+        WHERE d.type='d'
+        ORDER BY d.updated DESC
+        LIMIT ${limit}
+      `;
+      const result = await this.executeSql(sql);
+      
+      return result.map(row => ({
+        id: String(row.id),
+        title: String(row.title || this.plugin.i18n.untitled),
+        updated: this.formatTimestamp(String(row.updated)),
+        words: row.words || 0
+      }));
+    } catch (error) {
+      console.error('获取最近活跃文档失败:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * 格式化时间戳为可读日期
+   */
+  private formatTimestamp(timestamp: string): string {
+    if (timestamp.length !== 14) return timestamp;
+    
+    const year = timestamp.substring(0, 4);
+    const month = timestamp.substring(4, 6);
+    const day = timestamp.substring(6, 8);
+    const hour = timestamp.substring(8, 10);
+    const minute = timestamp.substring(10, 12);
+    
+    return `${year}-${month}-${day} ${hour}:${minute}`;
   }
   
   /**
@@ -835,6 +1016,11 @@ export class Statistics {
    * 销毁模块
    */
   destroy() {
+    // 清理 Vue 实例
+    if (this.vueApp) {
+      this.vueApp.unmount();
+      this.vueApp = null;
+    }
     // 清理资源
     this.dockElement = null;
   }
