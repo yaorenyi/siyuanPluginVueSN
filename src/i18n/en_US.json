@@ -566,5 +566,10 @@
   "topTags": "Top Tags",
   "recentDocs": "Recent Active",
   "times": "times",
-  "refresh": "Refresh"
+  "refresh": "Refresh",
+  "dailyAvgWords": "Daily Avg",
+  "weeklyAvgWords": "Weekly Avg",
+  "monthlyAvgWords": "Monthly Avg",
+  "yearlyAvgWords": "Yearly Avg",
+  "avgWords": "Average"
 }

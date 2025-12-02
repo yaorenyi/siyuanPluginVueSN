@@ -575,5 +575,10 @@
   "topTags": "热门标签",
   "recentDocs": "最近活跃",
   "times": "次",
-  "refresh": "刷新"
+  "refresh": "刷新",
+  "dailyAvgWords": "日均字数",
+  "weeklyAvgWords": "周均字数",
+  "monthlyAvgWords": "月均字数",
+  "yearlyAvgWords": "年均字数",
+  "avgWords": "平均字数"
 }

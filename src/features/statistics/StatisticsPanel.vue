@@ -16,52 +16,74 @@
 
     <!-- 主要内容 -->
     <div v-else-if="stats" class="statistics-content">
-      <!-- 顶部卡片统计 -->
-      <div class="stats-cards">
-        <div class="card-row">
-          <div class="stat-card primary">
-            <div class="card-value">{{ formatNumber(stats.totalNotes) }}</div>
-            <div class="card-label">📓 {{ i18n.totalNotes }}</div>
+      <!-- 顶部卡片统计 - 紧凑布局 -->
+      <div class="stats-cards-compact">
+        <!-- 主要统计：笔记和字数 -->
+        <div class="stat-card-main">
+          <div class="stat-item-inline">
+            <span class="stat-icon">📓</span>
+            <div class="stat-content">
+              <div class="stat-value">{{ formatNumber(stats.totalNotes) }}</div>
+              <div class="stat-label">{{ i18n.totalNotes }}</div>
+            </div>
           </div>
-          <div class="stat-card secondary">
-            <div class="card-value">{{ formatNumber(stats.totalWords) }}</div>
-            <div class="card-label">✍️ {{ i18n.totalWords }}</div>
+          <div class="stat-divider"></div>
+          <div class="stat-item-inline">
+            <span class="stat-icon">✍️</span>
+            <div class="stat-content">
+              <div class="stat-value">{{ formatNumber(stats.totalWords) }}</div>
+              <div class="stat-label">{{ i18n.totalWords }}</div>
+            </div>
           </div>
         </div>
-        
-        <div class="card-grid">
-          <div class="stat-card mini">
-            <div class="card-value">{{ formatShortNumber(stats.totalBlocks) }}</div>
-            <div class="card-label">🧩 {{ i18n.totalBlocks }}</div>
+
+        <!-- 次要统计：内容和关系 -->
+        <div class="stat-card-secondary">
+          <div class="stat-item-small">
+            <span class="stat-icon-small">🧩</span>
+            <span class="stat-value-small">{{ formatShortNumber(stats.totalBlocks) }}</span>
+            <span class="stat-label-small">{{ i18n.totalBlocks }}</span>
           </div>
-          <div class="stat-card mini">
-            <div class="card-value">{{ formatShortNumber(stats.totalAssets) }}</div>
-            <div class="card-label">📎 {{ i18n.totalAssets }}</div>
+          <div class="stat-item-small">
+            <span class="stat-icon-small">📎</span>
+            <span class="stat-value-small">{{ formatShortNumber(stats.totalAssets) }}</span>
+            <span class="stat-label-small">{{ i18n.totalAssets }}</span>
           </div>
-          <div class="stat-card mini">
-            <div class="card-value">{{ formatShortNumber(stats.totalTags) }}</div>
-            <div class="card-label">🏷️ {{ i18n.totalTags }}</div>
+          <div class="stat-item-small">
+            <span class="stat-icon-small">🏷️</span>
+            <span class="stat-value-small">{{ formatShortNumber(stats.totalTags) }}</span>
+            <span class="stat-label-small">{{ i18n.totalTags }}</span>
           </div>
-          <div class="stat-card mini">
-            <div class="card-value">{{ formatShortNumber(stats.totalBacklinks) }}</div>
-            <div class="card-label">🔗 {{ i18n.totalBacklinks }}</div>
+          <div class="stat-item-small">
+            <span class="stat-icon-small">🔗</span>
+            <span class="stat-value-small">{{ formatShortNumber(stats.totalBacklinks) }}</span>
+            <span class="stat-label-small">{{ i18n.totalBacklinks }}</span>
           </div>
         </div>
       </div>
 
-      <!-- 新增统计卡片 -->
-      <div class="extended-stats">
-        <div class="stat-item">
-          <span class="stat-icon">📅</span>
-          <span class="stat-text">{{ i18n.todayCreated || '今日新增' }}: <strong>{{ stats.todayCreated }}</strong></span>
+      <!-- 新增统计卡片 - 卡片形式 -->
+      <div class="extended-stats-cards">
+        <div class="stat-card-small gradient-1">
+          <div class="card-icon">📅</div>
+          <div class="card-content">
+            <div class="card-value-small">{{ stats.todayCreated }}</div>
+            <div class="card-label-small">{{ i18n.todayCreated || '今日新增' }}</div>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-icon">✏️</span>
-          <span class="stat-text">{{ i18n.todayModified || '今日修改' }}: <strong>{{ stats.todayModified }}</strong></span>
+        <div class="stat-card-small gradient-2">
+          <div class="card-icon">✏️</div>
+          <div class="card-content">
+            <div class="card-value-small">{{ stats.todayModified }}</div>
+            <div class="card-label-small">{{ i18n.todayModified || '今日修改' }}</div>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-icon">📊</span>
-          <span class="stat-text">{{ i18n.avgWordsPerDoc || '平均字数' }}: <strong>{{ stats.avgWordsPerDoc }}</strong></span>
+        <div class="stat-card-small gradient-3">
+          <div class="card-icon">📊</div>
+          <div class="card-content">
+            <div class="card-value-small">{{ stats.avgWordsPerDoc }}</div>
+            <div class="card-label-small">{{ i18n.avgWordsPerDoc || '平均字数' }}</div>
+          </div>
         </div>
       </div>
 
@@ -77,6 +99,12 @@
           >
             {{ mode.icon }} {{ mode.label }}
           </button>
+        </div>
+
+        <!-- 时段平均每日字数 -->
+        <div v-if="periodAvgWords > 0" class="period-avg-card">
+          <span class="avg-label">{{ getPeriodAvgLabel() }}</span>
+          <span class="avg-value">{{ formatNumber(periodAvgWords) }} {{ i18n.words || '字' }}</span>
         </div>
 
         <!-- 日视图范围选择 -->
@@ -297,6 +325,27 @@ const availableYears = computed(() => {
 const chartTitle = computed(() => {
   return stats.value?.currentPeriod || ''
 })
+
+// 计算时段平均每日字数
+const periodAvgWords = computed(() => {
+  if (!chartData.value || chartData.value.length === 0) return 0
+  
+  const totalWords = chartData.value.reduce((sum, item) => sum + item.words, 0)
+  const days = chartData.value.length
+  
+  return days > 0 ? Math.round(totalWords / days) : 0
+})
+
+// 获取时段平均标签
+function getPeriodAvgLabel(): string {
+  const labels: Record<string, string> = {
+    'day': props.i18n.dailyAvgWords || '日均字数',
+    'week': props.i18n.weeklyAvgWords || '周均字数',
+    'month': props.i18n.monthlyAvgWords || '月均字数',
+    'year': props.i18n.yearlyAvgWords || '年均字数',
+  }
+  return labels[viewMode.value] || props.i18n.avgWords || '平均字数'
+}
 
 // 监听视图模式变化
 watch(viewMode, () => {
@@ -641,32 +690,61 @@ defineExpose({
   }
 }
 
-.extended-stats {
-  display: flex;
-  flex-direction: column;
+.extended-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding: 12px;
-  background: var(--b3-theme-surface);
-  border-radius: 8px;
   margin-bottom: 16px;
 
-  .stat-item {
+  .stat-card-small {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--b3-theme-on-surface);
+    gap: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
 
-    .stat-icon {
-      font-size: 16px;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    .stat-text {
-      flex: 1;
+    &.gradient-1 {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
 
-      strong {
-        color: var(--b3-theme-primary);
-        font-weight: 600;
+    &.gradient-2 {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    &.gradient-3 {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .card-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .card-content {
+      flex: 1;
+      min-width: 0;
+
+      .card-value-small {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 2px;
+      }
+
+      .card-label-small {
+        font-size: 10px;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
@@ -750,6 +828,37 @@ defineExpose({
       &:focus {
         border-color: var(--b3-theme-primary);
       }
+    }
+  }
+
+  .period-avg-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    background: var(--b3-theme-surface);
+    border: 1px solid var(--b3-border-color);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: var(--b3-theme-primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .avg-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--b3-theme-on-surface);
+    }
+
+    .avg-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--b3-theme-primary);
     }
   }
 }
