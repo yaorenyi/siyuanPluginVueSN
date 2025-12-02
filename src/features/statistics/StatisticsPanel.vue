@@ -609,23 +609,68 @@ defineExpose({
   }
 }
 
-.stats-cards {
+.stats-cards-compact {
   margin-bottom: 16px;
 
-  .card-row {
+  .stat-card-main {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    justify-content: space-around;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-item-inline {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+
+      .stat-icon {
+        font-size: 32px;
+        flex-shrink: 0;
+      }
+
+      .stat-content {
+        flex: 1;
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: 700;
+          line-height: 1.2;
+          margin-bottom: 2px;
+        }
+
+        .stat-label {
+          font-size: 11px;
+          opacity: 0.9;
+        }
+      }
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.3);
+      margin: 0 8px;
+    }
   }
 
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-
-  .stat-card {
-    padding: 12px;
+  .stat-card-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     border-radius: 8px;
     color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -636,56 +681,27 @@ defineExpose({
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    &.primary {
+    .stat-item-small {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex: 1;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+      justify-content: center;
 
-    &.secondary {
-      flex: 1;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-
-    &.mini {
-      padding: 10px 8px;
-      text-align: center;
-
-      &:nth-child(1) {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      .stat-icon-small {
+        font-size: 16px;
       }
 
-      &:nth-child(2) {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      .stat-value-small {
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
       }
 
-      &:nth-child(3) {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      .stat-label-small {
+        font-size: 10px;
+        opacity: 0.9;
       }
-
-      &:nth-child(4) {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      }
-    }
-
-    .card-value {
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 4px;
-    }
-
-    .card-label {
-      font-size: 11px;
-      opacity: 0.9;
-    }
-
-    &.mini .card-value {
-      font-size: 18px;
-    }
-
-    &.mini .card-label {
-      font-size: 10px;
-      margin-top: 3px;
     }
   }
 }
