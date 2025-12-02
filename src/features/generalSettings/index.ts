@@ -26,6 +26,10 @@ export class GeneralSettings {
     await this.applyCodeBlockStyle(); // 应用代码块样式
     await this.applyListStyle(); // 应用列表样式
     await this.applyHeadingStyle(); // 应用标题样式
+
+    // 监听页面内容变化，确保样式持续应用
+    this.observeContentChanges();
+
     console.log('通用设置模块已初始化');
   }
 
@@ -223,8 +227,22 @@ export class GeneralSettings {
       // 从插件数据库加载设置
       const { loadHeadingSettings } = await import('@/config/settings');
       const settings = await loadHeadingSettings(this.plugin);
-      this.applyHeadingStyles(settings);
-      console.log('标题样式已从数据库加载并应用:', settings);
+
+      // 确保 DOM 已准备好，延迟应用样式以避免时机问题
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          setTimeout(() => {
+            this.applyHeadingStyles(settings);
+            console.log('标题样式已从数据库加载并应用 (DOM ready):', settings);
+          }, 200);
+        });
+      } else {
+        // DOM 已经加载完成，稍微延迟以确保页面完全渲染
+        setTimeout(() => {
+          this.applyHeadingStyles(settings);
+          console.log('标题样式已从数据库加载并应用:', settings);
+        }, 200);
+      }
     } catch (error) {
       console.error('应用标题样式失败:', error);
     }
@@ -259,6 +277,20 @@ export class GeneralSettings {
         })
         .join('\n');
 
+      // 字体大小样式（H1-H6）
+      const fontSizes = settings.fontSizes || {};
+      const fontSizeCss = Object.entries(fontSizes)
+        .map(([level, size]) => `
+          .protyle-wysiwyg [data-node-id].${level},
+          .protyle-wysiwyg .${level},
+          .b3-typography .${level} {
+            font-size: ${size}px !important;
+          }
+        `)
+        .join('\n');
+
+      console.log('应用字体大小样式:', fontSizes);
+
       // 层级显示样式
       let levelCss = '';
       if (settings.levelDisplay && settings.levelDisplay !== 'none') {
@@ -286,7 +318,7 @@ export class GeneralSettings {
         console.log('应用标题颜色:', settings.titleColor);
       }
 
-      style.textContent = colorCss + '\n' + levelCss + '\n' + centerAlignCss + '\n' + titleColorCss;
+      style.textContent = colorCss + '\n' + fontSizeCss + '\n' + levelCss + '\n' + centerAlignCss + '\n' + titleColorCss;
 
       if (!style.parentElement) {
         document.head.appendChild(style);
@@ -461,10 +493,71 @@ export class GeneralSettings {
   }
 
   /**
+   * 观察内容变化，确保样式持续应用
+   */
+  private observeContentChanges() {
+    try {
+      // 创建 MutationObserver 监听 DOM 变化
+      const observer = new MutationObserver((mutations) => {
+        let shouldReapplyStyles = false;
+
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList') {
+            // 检查是否有新的编辑器内容添加
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as Element;
+                // 如果添加的是编辑器相关元素，重新应用样式
+                if (element.classList?.contains('protyle-wysiwyg') ||
+                    element.classList?.contains('b3-typography') ||
+                    element.querySelector?.('.protyle-wysiwyg') ||
+                    element.querySelector?.('.b3-typography')) {
+                  shouldReapplyStyles = true;
+                }
+              }
+            });
+          }
+        });
+
+        if (shouldReapplyStyles) {
+          setTimeout(async () => {
+            await this.applyHeadingStyle();
+          }, 100);
+        }
+      });
+
+      // 配置观察选项
+      const observerOptions = {
+        childList: true,
+        subtree: true,
+        attributes: false
+      };
+
+      // 开始观察 document.body 的变化
+      observer.observe(document.body, observerOptions);
+
+      // 保存 observer 实例以便清理
+      (this as any).contentObserver = observer;
+
+      console.log('已启动内容变化观察器');
+    } catch (error) {
+      console.error('启动内容变化观察器失败:', error);
+    }
+  }
+
+  /**
    * 销毁功能
    */
   public destroy() {
-    console.log('通用设置模块已销毁');
+    try {
+      // 停止观察器
+      if ((this as any).contentObserver) {
+        (this as any).contentObserver.disconnect();
+      }
+      console.log('通用设置模块已销毁');
+    } catch (error) {
+      console.error('销毁通用设置模块失败:', error);
+    }
   }
 }
 
