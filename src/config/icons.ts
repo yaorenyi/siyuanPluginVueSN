@@ -102,6 +102,12 @@ export const FEATURE_ICONS = {
   aiContentGenerator: {
     icon: 'mdi:robot',
     color: '#9333ea'
+  },
+
+  // 数据统计
+  statistics: {
+    icon: 'mdi:chart-bar',
+    color: '#0ea5e9'
   }
 } as const
 

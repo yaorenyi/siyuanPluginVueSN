@@ -402,6 +402,14 @@ const features = computed<Feature[]>(() => [
     desc: props.i18n.aiContentGeneratorDesc || '使用AI生成Markdown格式内容，支持自定义对话和上下文',
     enabled: props.settings.enableAIContentGenerator,
     actions: []
+  },
+  {
+    id: 'statistics',
+    iconKey: 'statistics',
+    title: props.i18n.statisticsPanel || '数据统计',
+    desc: props.i18n.enableStatisticsDesc || '显示笔记数据统计和分析',
+    enabled: props.settings.enableStatistics,
+    actions: []
   }
 ])
 

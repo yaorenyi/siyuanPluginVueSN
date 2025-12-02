@@ -19,6 +19,7 @@ export interface PluginSettings {
   enableDiskBrowser: boolean     // 是否启用本地磁盘浏览器功能
   enableCodeImageGenerator: boolean // 是否启用代码图片生成器功能
   enableAIContentGenerator: boolean // 是否启用AI信息生成功能
+  enableStatistics: boolean      // 是否启用数据统计功能
   wordQueryApiKey: string        // 单词查询API密钥（已废弃，使用aiApiProvider和aiApiKey）
   compactMode: boolean           // 是否启用全局紧洛模式
   // 统一的大模型API配置
@@ -74,6 +75,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   enableDiskBrowser: true,
   enableCodeImageGenerator: true,
   enableAIContentGenerator: true,
+  enableStatistics: true,
   wordQueryApiKey: 'sk-fae27cc50015409fb2524b0970d3f0b0',
   compactMode: true,
   // 统一的大模型API配置默认值

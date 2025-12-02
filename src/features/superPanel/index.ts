@@ -145,7 +145,8 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'shortcuts': 'enableShortcuts',
     'diskBrowser': 'enableDiskBrowser',
     'codeImageGenerator': 'enableCodeImageGenerator',
-    'aiContentGenerator': 'enableAIContentGenerator'
+    'aiContentGenerator': 'enableAIContentGenerator',
+    'statistics': 'enableStatistics'
   }
 
   const settingKey = settingsMap[featureId]
