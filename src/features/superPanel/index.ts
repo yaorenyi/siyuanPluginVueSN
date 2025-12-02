@@ -146,7 +146,8 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'diskBrowser': 'enableDiskBrowser',
     'codeImageGenerator': 'enableCodeImageGenerator',
     'aiContentGenerator': 'enableAIContentGenerator',
-    'statistics': 'enableStatistics'
+    'statistics': 'enableStatistics',
+    'pronunciation': 'enablePronunciation'
   }
 
   const settingKey = settingsMap[featureId]
@@ -237,6 +238,9 @@ async function handleUpdateAiSettings(
     }
     if (pluginSample.__aiContentGenerator) {
       pluginSample.__aiContentGenerator.updateApiConfig(aiSettings.provider, aiSettings.model, aiSettings.apiKey, aiSettings.customEndpoint)
+    }
+    if (pluginSample.__pronunciation) {
+      pluginSample.__pronunciation.updateApiConfig(aiSettings.provider, aiSettings.model, aiSettings.apiKey, aiSettings.customEndpoint)
     }
   } else {
     showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')

@@ -580,5 +580,12 @@
   "weeklyAvgWords": "周均字数",
   "monthlyAvgWords": "月均字数",
   "yearlyAvgWords": "年均字数",
-  "avgWords": "平均字数"
+  "avgWords": "平均字数",
+  "pronunciation": "谐音翻译",
+  "enablePronunciation": "启用谐音翻译功能",
+  "enablePronunciationDesc": "使用AI生成英文单词的谐音记忆",
+  "pronunciationDesc": "输入英文单词，生成谐音记忆",
+  "pronunciationPlaceholder": "输入英文单词...",
+  "pronunciationHelp": "谐音翻译",
+  "pronunciationHint": "输入英文单词，点击生成按钮，AI将为您生成谐音记忆"
 }

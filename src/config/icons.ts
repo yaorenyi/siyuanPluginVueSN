@@ -108,6 +108,12 @@ export const FEATURE_ICONS = {
   statistics: {
     icon: 'mdi:chart-bar',
     color: '#0ea5e9'
+  },
+
+  // 谐音翻译
+  pronunciation: {
+    icon: 'mdi:volume-high',
+    color: '#f43f5e'
   }
 } as const
 
