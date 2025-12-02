@@ -69,7 +69,7 @@
               type="number"
               v-model.number="maxTokens"
               min="100"
-              max="4000"
+              max="50000"
               step="100"
               class="number-input"
             />
@@ -90,31 +90,30 @@
               <span>{{ i18n.maximum || '最多' }} (10)</span>
             </div>
           </div>
-          <div class="setting-item">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="enableMarkdown" />
-              <span>{{ i18n.forceMarkdown || '强制Markdown格式输出' }}</span>
-            </label>
-          </div>
+          <!-- 问题3：删除强制Markdown输出选项，默认就是Markdown格式 -->
           <!-- 打字机效果已默认启用,不再提供可选项 -->
 
           <!-- 保存提示词配置 -->
           <div class="setting-item save-prompt-section">
             <div class="save-prompt-header">
               <label>{{ i18n.savePromptConfig || '保存当前配置' }}</label>
+              <span v-if="currentPromptName" class="editing-hint">
+                ({{ i18n.editing || '编辑' }}: {{ currentPromptName }})
+              </span>
             </div>
             <div class="save-prompt-input-group">
               <input
                 v-model="newPromptName"
                 type="text"
                 class="prompt-name-input"
-                :placeholder="i18n.promptNamePlaceholder || '输入配置名称...'"
+                :placeholder="currentPromptName || (i18n.promptNamePlaceholder || '输入配置名称...')"
                 @keydown.enter="saveCurrentPrompt"
+                @focus="onPromptNameFocus"
               />
               <button
                 class="btn-save-prompt"
                 @click="saveCurrentPrompt"
-                :disabled="!newPromptName.trim()"
+                :disabled="!newPromptName.trim() && !currentPromptName"
               >
                 <svg width="14" height="14">
                   <use xlink:href="#iconSave"></use>
@@ -180,15 +179,26 @@
             >
               <div class="prompt-item-header">
                 <span class="prompt-name">{{ prompt.name }}</span>
-                <button
-                  class="btn-delete-prompt"
-                  @click.stop="deletePrompt(index)"
-                  :title="i18n.delete || '删除'"
-                >
-                  <svg width="14" height="14">
-                    <use xlink:href="#iconTrashcan"></use>
-                  </svg>
-                </button>
+                <div class="prompt-item-actions">
+                  <button
+                    class="btn-edit-prompt"
+                    @click.stop="editPrompt(index)"
+                    :title="i18n.edit || '编辑'"
+                  >
+                    <svg width="14" height="14">
+                      <use xlink:href="#iconEdit"></use>
+                    </svg>
+                  </button>
+                  <button
+                    class="btn-delete-prompt"
+                    @click.stop="deletePrompt(index)"
+                    :title="i18n.delete || '删除'"
+                  >
+                    <svg width="14" height="14">
+                      <use xlink:href="#iconTrashcan"></use>
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div class="prompt-item-preview">{{ getPromptPreview(prompt.systemPrompt) }}</div>
               <div class="prompt-item-meta">
@@ -279,15 +289,13 @@
           @click="insertCurrentDocReference"
           :title="i18n.referenceCurrentDoc || '引用当前文档内容'"
         >
-          <svg width="16" height="16">
-            <use xlink:href="#iconAt"></use>
-          </svg>
+          <span class="btn-icon">📄</span>
           <span>{{ i18n.referenceCurrentDoc || '@当前文档' }}</span>
         </button>
         <span v-if="referencedDocTitle" class="referenced-doc-title">
           📄 {{ referencedDocTitle }}
           <button class="btn-cancel-reference" @click="cancelDocReference" :title="i18n.cancel || '取消'">
-            <svg width="12" height="12">
+            <svg width="10" height="10">
               <use xlink:href="#iconClose"></use>
             </svg>
           </button>
@@ -300,7 +308,7 @@
           v-model="userInput"
           class="user-input"
           :placeholder="referencedDocContent ? (i18n.inputPlaceholderWithDoc || '输入问题或直接生成总结...') : (i18n.inputPlaceholder || '输入您的问题或需求...')"
-          rows="3"
+          rows="2"
           @keydown.ctrl.enter="handleGenerate"
           :disabled="isGenerating"
         ></textarea>
@@ -547,8 +555,7 @@ const isInserting = ref(false);
 // 对话设置
 const systemPrompt = ref('你是一个专业的内容创作助手，擅长生成结构清晰、格式规范的Markdown文档。请确保输出内容使用标准的Markdown语法。');
 const temperature = ref(0.7);
-const maxTokens = ref(2000);
-const enableMarkdown = ref(true);
+const maxTokens = ref(10000); // 问题1：默认改为1万
 const enableTypewriter = ref(true);
 
 // 需求5：新增上下文消息数量配置
@@ -556,14 +563,16 @@ const contextMessageLimit = ref(1);
 
 // 上下文配置已删除
 const displayedContent = ref(''); // 用于打字机效果显示的内容
-// 提示词管理
+// 提示词管理（与 AIPromptConfig 保持一致）
 interface SavedPrompt {
+  id: string;
   name: string;
   systemPrompt: string;
   temperature: number;
   maxTokens: number;
-  enableMarkdown: boolean;
   enableTypewriter: boolean;
+  contextMessageLimit: number;
+  createdAt: number;
 }
 
 const savedPrompts = ref<SavedPrompt[]>([]);
@@ -626,20 +635,6 @@ watch(renderedDisplayedMarkdown, async () => {
     }
   });
 });
-
-/**
- * HTML转义工具函数
- */
-const escapeHtml = (text: string): string => {
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
-};
 
 // 切换设置面板
 const toggleSettings = () => {
@@ -706,9 +701,8 @@ const handleGenerate = async () => {
     let finalSystemPrompt = systemPrompt.value;
     console.log('系统提示词:', finalSystemPrompt.substring(0, 100) + '...');
 
-    if (enableMarkdown.value) {
-      finalSystemPrompt += '\n\n**重要**: 请严格使用Markdown格式输出，包括标题(#)、列表(- 或 1.)、代码块(```)、粗体(**) 等标准语法。';
-    }
+    // 问题3：默认就是Markdown格式输出，不需要额外配置
+    finalSystemPrompt += '\n\n**重要**: 请严格使用Markdown格式输出，包括标题(#)、列表(- 或 1.)、代码块(```)、粗体(**) 等标准语法。';
 
     // 添加当前文档上下文（如果有）
     let contextInfo = '';
@@ -1210,26 +1204,44 @@ ${editTargetDoc.value.content}`,
   }
 };
 
+// 当聚焦配置名称输入框时，自动填充当前配置名称
+const onPromptNameFocus = () => {
+  if (currentPromptName.value && !newPromptName.value) {
+    newPromptName.value = currentPromptName.value;
+  }
+};
+
 // 保存当前提示词配置
 const saveCurrentPrompt = async () => {
-  if (!newPromptName.value.trim()) {
+  // 如果输入框为空但有当前配置名称，使用当前配置名称
+  const promptName = newPromptName.value.trim() || currentPromptName.value;
+  
+  if (!promptName) {
     showMessage(props.i18n.enterPromptName || '请输入配置名称', 2000, 'info');
     return;
   }
-
+  
+  // 检查是否已存在同名配置（更新模式）
+  const existingIndex = savedPrompts.value.findIndex(p => p.name === promptName);
+  
   const promptConfig: AIPromptConfig = {
-    id: Date.now().toString(),
-    name: newPromptName.value.trim(),
+    id: existingIndex >= 0 ? savedPrompts.value[existingIndex].id : Date.now().toString(),
+    name: promptName,
     systemPrompt: systemPrompt.value,
     temperature: temperature.value,
     maxTokens: maxTokens.value,
-    enableMarkdown: enableMarkdown.value,
     enableTypewriter: enableTypewriter.value,
     contextMessageLimit: contextMessageLimit.value,
-    createdAt: Date.now()
+    createdAt: existingIndex >= 0 ? savedPrompts.value[existingIndex].createdAt : Date.now()
   };
 
-  savedPrompts.value.push(promptConfig);
+  if (existingIndex >= 0) {
+    // 更新现有配置
+    savedPrompts.value[existingIndex] = promptConfig;
+  } else {
+    // 添加新配置
+    savedPrompts.value.push(promptConfig);
+  }
 
   try {
     if (storage) {
@@ -1243,7 +1255,14 @@ const saveCurrentPrompt = async () => {
   }
 
   newPromptName.value = '';
-  showMessage(`✓ 已保存配置: ${promptConfig.name}`, 2000, 'info');
+  currentPromptName.value = promptName;
+  showMessage(
+    existingIndex >= 0 
+      ? `✓ 已更新配置: ${promptConfig.name}` 
+      : `✓ 已保存配置: ${promptConfig.name}`, 
+    2000, 
+    'info'
+  );
 };
 
 // 清除当前提示词选择
@@ -1395,8 +1414,8 @@ const loadPrompt = (index: number) => {
   systemPrompt.value = prompt.systemPrompt;
   temperature.value = prompt.temperature;
   maxTokens.value = prompt.maxTokens;
-  enableMarkdown.value = prompt.enableMarkdown;
   enableTypewriter.value = prompt.enableTypewriter;
+  contextMessageLimit.value = prompt.contextMessageLimit || 1;
 
   // 设置当前选中的提示词名称
   currentPromptName.value = prompt.name;
@@ -1406,6 +1425,28 @@ const loadPrompt = (index: number) => {
 
   showPromptSelector.value = false;
   showMessage(`✓ 已加载配置: ${prompt.name}`, 2000, 'info');
+};
+
+// 编辑提示词配置
+const editPrompt = (index: number) => {
+  const prompt = savedPrompts.value[index];
+  if (!prompt) return;
+
+  // 加载配置到编辑区域
+  systemPrompt.value = prompt.systemPrompt;
+  temperature.value = prompt.temperature;
+  maxTokens.value = prompt.maxTokens;
+  enableTypewriter.value = prompt.enableTypewriter;
+  contextMessageLimit.value = prompt.contextMessageLimit;
+
+  // 设置当前选中的提示词名称
+  currentPromptName.value = prompt.name;
+
+  // 打开设置面板以便编辑
+  showSettings.value = true;
+  showPromptSelector.value = false;
+
+  showMessage(`✓ 已加载配置到编辑区: ${prompt.name}，修改后请重新保存`, 3000, 'info');
 };
 
 // 删除提示词配置
@@ -1537,7 +1578,6 @@ const saveSettings = async () => {
     systemPrompt: systemPrompt.value,
     temperature: temperature.value,
     maxTokens: maxTokens.value,
-    enableMarkdown: enableMarkdown.value,
     enableTypewriter: enableTypewriter.value,
     contextMessageLimit: contextMessageLimit.value
   };
@@ -1569,7 +1609,6 @@ const loadSettings = async () => {
         systemPrompt.value = settings.systemPrompt || systemPrompt.value;
         temperature.value = settings.temperature ?? temperature.value;
         maxTokens.value = settings.maxTokens || maxTokens.value;
-        enableMarkdown.value = settings.enableMarkdown ?? enableMarkdown.value;
         enableTypewriter.value = settings.enableTypewriter ?? enableTypewriter.value;
         contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
       }
@@ -1585,7 +1624,6 @@ const loadSettings = async () => {
       systemPrompt.value = settings.systemPrompt || systemPrompt.value;
       temperature.value = settings.temperature ?? temperature.value;
       maxTokens.value = settings.maxTokens || maxTokens.value;
-      enableMarkdown.value = settings.enableMarkdown ?? enableMarkdown.value;
       enableTypewriter.value = settings.enableTypewriter ?? enableTypewriter.value;
       contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
     }
@@ -1599,7 +1637,6 @@ const loadSettings = async () => {
         systemPrompt.value = settings.systemPrompt || systemPrompt.value;
         temperature.value = settings.temperature ?? temperature.value;
         maxTokens.value = settings.maxTokens || maxTokens.value;
-        enableMarkdown.value = settings.enableMarkdown ?? enableMarkdown.value;
         enableTypewriter.value = settings.enableTypewriter ?? enableTypewriter.value;
         contextMessageLimit.value = settings.contextMessageLimit ?? contextMessageLimit.value;
       }
@@ -1609,8 +1646,8 @@ const loadSettings = async () => {
   }
 };
 
-// 监听设置变化（需求5：包含contextMessageLimit）
-watch([systemPrompt, temperature, maxTokens, enableMarkdown, enableTypewriter, contextMessageLimit], () => {
+// 监听设置变化
+watch([systemPrompt, temperature, maxTokens, enableTypewriter, contextMessageLimit], () => {
   saveSettings();
 });
 
