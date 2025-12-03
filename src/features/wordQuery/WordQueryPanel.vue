@@ -2,23 +2,23 @@
   <div class="word-query-panel">
     <!-- 顶部操作栏 -->
     <div class="query-header">
-      <div class="input-wrapper">
-        <input
-          v-model="searchWord"
-          type="text"
-          class="query-input"
-          :placeholder="i18n.enterWordPlaceholder || '输入单词或词语，2秒后自动查询...'"
-          @keyup.enter="handleQuery"
-        />
-        <button class="query-btn" @click="handleQuery" :disabled="isLoading">
-          <svg class="query-icon" v-if="!isLoading">
-            <use xlink:href="#iconSearch"></use>
-          </svg>
-          <div class="loading-spinner" v-else></div>
+      <div class="mode-tabs">
+        <button 
+          class="mode-tab" 
+          :class="{ active: currentMode === 'word' }"
+          @click="switchMode('word')"
+        >
+          📖 {{ i18n.wordQuery || '单词查询' }}
+        </button>
+        <button 
+          class="mode-tab" 
+          :class="{ active: currentMode === 'translate' }"
+          @click="switchMode('translate')"
+        >
+          🌐 {{ i18n.translation || '长文翻译' }}
         </button>
       </div>
 
-      <!-- API密钥设置按钮 -->
       <div class="api-key-toggle">
         <button class="settings-btn" @click="toggleHistory" :title="i18n.history || '历史记录'">
           <svg class="settings-icon"><use xlink:href="#iconHistory"></use></svg>
@@ -31,6 +31,26 @@
         </button>
       </div>
     </div>
+
+    <!-- 单词查询模式 -->
+    <div v-if="currentMode === 'word'" class="mode-content">
+      <div class="input-section">
+        <div class="input-wrapper">
+          <input
+            v-model="searchWord"
+            type="text"
+            class="query-input"
+            :placeholder="i18n.enterWordPlaceholder || '输入单词或词语，2秒后自动查询...'"
+            @keyup.enter="handleQuery"
+          />
+          <button class="query-btn" @click="handleQuery" :disabled="isLoading">
+            <svg class="query-icon" v-if="!isLoading">
+              <use xlink:href="#iconSearch"></use>
+            </svg>
+            <div class="loading-spinner" v-else></div>
+          </button>
+        </div>
+      </div>
 
     <!-- 历史记录面板 -->
     <div class="history-panel" v-if="showHistory">
@@ -135,8 +155,8 @@
       </div>
     </div>
 
-    <!-- 查询结果 -->
-    <div class="query-content">
+      <!-- 查询结果 -->
+      <div class="query-content">
       <!-- 加载状态 -->
       <div v-if="isLoading" class="query-loading">
         <div class="loading-spinner-large"></div>
@@ -211,6 +231,89 @@
         <div class="empty-icon">📚</div>
         <p>{{ i18n.enterWordHint || '输入中英文单词或词语查询释义、音标、谐音等信息' }}</p>
       </div>
+      </div>
+    </div>
+
+    <!-- 翻译模式 -->
+    <div v-else class="mode-content translate-mode">
+      <div class="translate-container">
+        <div class="translate-input-section">
+          <div class="section-header">
+            <span class="section-title">{{ i18n.sourceText || '原文' }}</span>
+            <div class="language-selector">
+              <select v-model="sourceLanguage" class="language-select">
+                <option value="auto">{{ i18n.autoDetect || '自动检测' }}</option>
+                <option value="zh">{{ i18n.chinese || '中文' }}</option>
+                <option value="en">{{ i18n.english || '英文' }}</option>
+                <option value="ja">{{ i18n.japanese || '日文' }}</option>
+                <option value="ko">{{ i18n.korean || '韩文' }}</option>
+                <option value="fr">{{ i18n.french || '法文' }}</option>
+                <option value="de">{{ i18n.german || '德文' }}</option>
+                <option value="es">{{ i18n.spanish || '西班牙文' }}</option>
+              </select>
+            </div>
+          </div>
+          <textarea
+            v-model="translateText"
+            class="translate-textarea"
+            :placeholder="i18n.enterTextToTranslate || '输入要翻译的文本...'"
+            rows="8"
+          ></textarea>
+          <div class="input-actions">
+            <button class="action-btn-small" @click="clearTranslateInput">
+              <svg class="action-icon-small"><use xlink:href="#iconTrashcan"></use></svg>
+              {{ i18n.clear || '清除' }}
+            </button>
+            <button class="action-btn-small primary" @click="handleTranslate" :disabled="isTranslating">
+              <div class="loading-spinner-small" v-if="isTranslating"></div>
+              <svg class="action-icon-small" v-else><use xlink:href="#iconLanguage"></use></svg>
+              {{ isTranslating ? (i18n.translating || '翻译中...') : (i18n.translate || '翻译') }}
+            </button>
+          </div>
+        </div>
+
+        <div class="translate-divider">
+          <div class="divider-line"></div>
+          <button class="swap-btn" @click="swapLanguages" :title="i18n.swapLanguages || '交换语言'">
+            <svg class="swap-icon"><use xlink:href="#iconRefresh"></use></svg>
+          </button>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="translate-output-section">
+          <div class="section-header">
+            <span class="section-title">{{ i18n.translatedText || '译文' }}</span>
+            <div class="language-selector">
+              <select v-model="targetLanguage" class="language-select">
+                <option value="zh">{{ i18n.chinese || '中文' }}</option>
+                <option value="en">{{ i18n.english || '英文' }}</option>
+                <option value="ja">{{ i18n.japanese || '日文' }}</option>
+                <option value="ko">{{ i18n.korean || '韩文' }}</option>
+                <option value="fr">{{ i18n.french || '法文' }}</option>
+                <option value="de">{{ i18n.german || '德文' }}</option>
+                <option value="es">{{ i18n.spanish || '西班牙文' }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="translate-result" v-if="translateResult">
+            <div class="result-text">{{ translateResult }}</div>
+          </div>
+          <div class="translate-empty" v-else>
+            <div class="empty-icon">🌍</div>
+            <p>{{ i18n.translationWillAppearHere || '翻译结果将显示在这里' }}</p>
+          </div>
+          <div class="output-actions" v-if="translateResult">
+            <button class="action-btn-small" @click="copyTranslation">
+              <svg class="action-icon-small"><use xlink:href="#iconCopy"></use></svg>
+              {{ i18n.copy || '复制' }}
+            </button>
+            <button class="action-btn-small" @click="exportTranslation">
+              <svg class="action-icon-small"><use xlink:href="#iconUpload"></use></svg>
+              {{ i18n.export || '导出' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -224,6 +327,7 @@ import IconWrapper from '@/components/IconWrapper.vue';
 interface Props {
   i18n: any;
   onQuery: (word: string) => Promise<string>;
+  onTranslate?: (text: string, sourceLang: string, targetLang: string) => Promise<string>;
 }
 
 const props = defineProps<Props>();
@@ -244,12 +348,20 @@ interface FavoriteItem {
 }
 
 // 状态
+const currentMode = ref<'word' | 'translate'>('word');
 const searchWord = ref('');
 const queryResult = ref('');
 const isLoading = ref(false);
 const errorMessage = ref('');
 const showCopyOptions = ref(false);
 const autoQueryTimer = ref<NodeJS.Timeout | null>(null);
+
+// 翻译模式状态
+const translateText = ref('');
+const translateResult = ref('');
+const isTranslating = ref(false);
+const sourceLanguage = ref('auto');
+const targetLanguage = ref('zh');
 
 // 新增功能状态
 const showHistory = ref(false);
@@ -698,11 +810,115 @@ const clearResult = () => {
   errorMessage.value = '';
 };
 
+// 切换模式
+const switchMode = (mode: 'word' | 'translate') => {
+  currentMode.value = mode;
+  // 关闭所有面板
+  showHistory.value = false;
+  showFavorites.value = false;
+  showAdvancedOptions.value = false;
+};
+
+// 翻译功能
+const handleTranslate = async () => {
+  const text = translateText.value.trim();
+  if (!text) {
+    showMessage('请输入要翻译的文本', 2000, 'error');
+    return;
+  }
+
+  isTranslating.value = true;
+  translateResult.value = '';
+
+  try {
+    // 如果父组件提供了翻译方法，使用它
+    if (props.onTranslate) {
+      const result = await props.onTranslate(text, sourceLanguage.value, targetLanguage.value);
+      translateResult.value = result;
+    } else {
+      // 否则使用默认的查询方法（通过特殊格式）
+      const prompt = `请将以下${sourceLanguage.value === 'auto' ? '' : getLanguageName(sourceLanguage.value)}文本翻译成${getLanguageName(targetLanguage.value)}，只输出翻译结果，不要有其他说明：\n\n${text}`;
+      const result = await props.onQuery(prompt);
+      translateResult.value = result;
+    }
+    showMessage('✓ 翻译完成', 2000, 'info');
+  } catch (error) {
+    console.error('Translation error:', error);
+    showMessage('翻译失败: ' + (error as Error).message, 3000, 'error');
+  } finally {
+    isTranslating.value = false;
+  }
+};
+
+// 获取语言名称
+const getLanguageName = (code: string): string => {
+  const names: Record<string, string> = {
+    'auto': '自动检测',
+    'zh': '中文',
+    'en': '英文',
+    'ja': '日文',
+    'ko': '韩文',
+    'fr': '法文',
+    'de': '德文',
+    'es': '西班牙文'
+  };
+  return names[code] || code;
+};
+
+// 交换语言
+const swapLanguages = () => {
+  if (sourceLanguage.value === 'auto') {
+    showMessage('自动检测模式无法交换', 2000, 'info');
+    return;
+  }
+  const temp = sourceLanguage.value;
+  sourceLanguage.value = targetLanguage.value;
+  targetLanguage.value = temp;
+  
+  // 交换文本
+  const tempText = translateText.value;
+  translateText.value = translateResult.value;
+  translateResult.value = tempText;
+};
+
+// 清除翻译输入
+const clearTranslateInput = () => {
+  translateText.value = '';
+  translateResult.value = '';
+};
+
+// 复制翻译结果
+const copyTranslation = async () => {
+  try {
+    await navigator.clipboard.writeText(translateResult.value);
+    showMessage('已复制到剪贴板', 2000, 'info');
+  } catch (error) {
+    console.error('Copy failed:', error);
+    showMessage('复制失败', 2000, 'error');
+  }
+};
+
+// 导出翻译结果
+const exportTranslation = async () => {
+  try {
+    const content = `## 翻译结果\n\n### 原文 (${getLanguageName(sourceLanguage.value)})\n${translateText.value}\n\n### 译文 (${getLanguageName(targetLanguage.value)})\n${translateResult.value}`;
+    await navigator.clipboard.writeText(content);
+    showMessage('已复制到剪贴板，可直接粘贴到文档', 3000, 'info');
+  } catch (error) {
+    console.error('Export failed:', error);
+    showMessage('导出失败', 2000, 'error');
+  }
+};
+
 // 键盘快捷键
 const handleKeyDown = (event: KeyboardEvent) => {
-  // Ctrl/Cmd + Enter 执行查询
+  // Ctrl/Cmd + Enter 执行查询或翻译
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    handleQuery();
+    if (currentMode.value === 'word') {
+      handleQuery();
+    } else {
+      handleTranslate();
+    }
   }
   // Escape 清除结果并关闭下拉菜单
   if (event.key === 'Escape') {
@@ -763,20 +979,64 @@ onUnmounted(() => {
 }
 
 .query-header {
-  padding: 12px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--b3-theme-surface-lighter);
   flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: var(--b3-theme-surface);
+  gap: 12px;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--b3-theme-surface-lighter);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.mode-tab {
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--b3-theme-on-surface);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mode-tab:hover {
+  background: var(--b3-theme-surface-light);
+}
+
+.mode-tab.active {
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
+  box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.3);
+}
+
+.mode-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.input-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+  flex-shrink: 0;
 }
 
 .input-wrapper {
   display: flex;
   gap: 8px;
-  flex: 1;
-  margin-right: 8px;
+  width: 100%;
 }
 
 .query-input {
@@ -1606,6 +1866,266 @@ onUnmounted(() => {
   .result-content {
     padding: 8px;
     margin-bottom: 6px;
+  }
+}
+
+/* 翻译模式样式 */
+.translate-mode {
+  padding: 12px;
+}
+
+.translate-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+}
+
+.translate-input-section,
+.translate-output-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--b3-theme-primary-lighter);
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--b3-theme-primary);
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-select {
+  padding: 4px 8px;
+  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 6px;
+  background: var(--b3-theme-surface);
+  color: var(--b3-theme-on-surface);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.language-select:hover {
+  border-color: var(--b3-theme-primary-lighter);
+}
+
+.language-select:focus {
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 0 0 2px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.1);
+}
+
+.translate-textarea {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid var(--b3-theme-surface-lighter);
+  border-radius: 8px;
+  background: var(--b3-theme-background);
+  color: var(--b3-theme-on-background);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  min-height: 120px;
+}
+
+.translate-textarea:hover {
+  border-color: var(--b3-theme-primary-lighter);
+}
+
+.translate-textarea:focus {
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.1);
+}
+
+.translate-textarea::placeholder {
+  color: var(--b3-theme-on-surface);
+  opacity: 0.5;
+}
+
+.input-actions,
+.output-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.action-btn-small {
+  padding: 6px 12px;
+  background: var(--b3-theme-surface);
+  color: var(--b3-theme-on-surface);
+  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.action-btn-small:hover {
+  background: var(--b3-theme-surface-light);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn-small.primary {
+  background: linear-gradient(135deg, var(--b3-theme-primary), var(--b3-theme-primary-lighter));
+  color: var(--b3-theme-on-primary);
+  border-color: var(--b3-theme-primary);
+}
+
+.action-btn-small.primary:hover {
+  box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.3);
+}
+
+.action-btn-small:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-icon-small {
+  width: 14px;
+  height: 14px;
+}
+
+.loading-spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.translate-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--b3-theme-surface-lighter), transparent);
+}
+
+.swap-btn {
+  padding: 8px;
+  background: var(--b3-theme-surface);
+  border: 2px solid var(--b3-theme-surface-lighter);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.swap-btn:hover {
+  background: var(--b3-theme-primary);
+  border-color: var(--b3-theme-primary);
+  transform: rotate(180deg);
+}
+
+.swap-btn:hover .swap-icon {
+  color: var(--b3-theme-on-primary);
+}
+
+.swap-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--b3-theme-on-surface);
+  transition: color 0.3s ease;
+}
+
+.translate-result {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--b3-theme-surface-lighter), var(--b3-theme-surface));
+  border: 2px solid var(--b3-theme-surface-lighter);
+  border-radius: 8px;
+  overflow-y: auto;
+  min-height: 120px;
+}
+
+.result-text {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--b3-theme-on-background);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.translate-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--b3-theme-on-surface);
+  opacity: 0.6;
+  min-height: 120px;
+}
+
+.translate-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@media (max-width: 400px) {
+  .mode-tabs {
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .mode-tab {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .translate-container {
+    gap: 12px;
+  }
+
+  .translate-textarea {
+    min-height: 100px;
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .translate-result {
+    min-height: 100px;
+    padding: 10px;
+  }
+
+  .result-text {
+    font-size: 12px;
   }
 }
 </style>

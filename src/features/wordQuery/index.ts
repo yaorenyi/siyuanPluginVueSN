@@ -89,6 +89,9 @@ export class WordQuery {
               i18n: self.plugin.i18n,
               onQuery: async (word: string) => {
                 return await self.queryWord(word);
+              },
+              onTranslate: async (text: string, sourceLang: string, targetLang: string) => {
+                return await self.translateText(text, sourceLang, targetLang);
               }
             });
           }
@@ -504,6 +507,68 @@ export class WordQuery {
       return data.content;
     } else {
       throw new Error('自定义API返回数据格式错误');
+    }
+  }
+
+  /**
+   * 翻译文本
+   * @param text - 要翻译的文本
+   * @param sourceLang - 源语言
+   * @param targetLang - 目标语言
+   */
+  public async translateText(text: string, sourceLang: string, targetLang: string): Promise<string> {
+    if (!text) {
+      showMessage(this.plugin.i18n.noTextToTranslate || '请输入要翻译的文本', 3000, 'error');
+      return '';
+    }
+
+    showMessage('🌐 正在翻译...', 2000, 'info');
+
+    try {
+      const prompt = this.buildTranslatePrompt(text, sourceLang, targetLang);
+      const response = await this.callAPI(prompt);
+
+      if (response) {
+        showMessage('✓ 翻译完成', 2000, 'info');
+        return response;
+      } else {
+        showMessage('翻译失败，请重试', 3000, 'error');
+        return '';
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      const errorMsg = error.message || '未知错误';
+      showMessage('🚫 翻译失败: ' + errorMsg, 5000, 'error');
+      return '';
+    }
+  }
+
+  /**
+   * 构建翻译提示词
+   */
+  private buildTranslatePrompt(text: string, sourceLang: string, targetLang: string): string {
+    const langNames: Record<string, string> = {
+      'auto': '自动检测',
+      'zh': '中文',
+      'en': '英文',
+      'ja': '日文',
+      'ko': '韩文',
+      'fr': '法文',
+      'de': '德文',
+      'es': '西班牙文'
+    };
+
+    const sourceName = langNames[sourceLang] || sourceLang;
+    const targetName = langNames[targetLang] || targetLang;
+
+    if (sourceLang === 'auto') {
+      return `请将以下文本翻译成${targetName}，保持原文的格式和语气，只输出翻译结果，不要有任何解释或说明：
+
+${text}`;
+    } else {
+      return `请将以下${sourceName}文本翻译成${targetName}，保持原文的格式和语气，只输出翻译结果，不要有任何解释或说明：
+
+${text}`;
     }
   }
 
