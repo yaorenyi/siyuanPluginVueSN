@@ -5,12 +5,17 @@
 import { Plugin } from 'siyuan'
 import { createApp, h } from 'vue'
 import DiskBrowserPanel from './DiskBrowserPanel.vue'
+import { DiskBrowserStorage } from './storage'
 
 /**
  * 注册本地磁盘浏览器功能
  */
 export function registerDiskBrowser(plugin: Plugin) {
   console.log('注册本地磁盘浏览器功能')
+
+  // 初始化存储
+  const storage = new DiskBrowserStorage(plugin)
+  storage.init()
 
   // 添加右侧边栏 Dock
   plugin.addDock({
@@ -33,6 +38,7 @@ export function registerDiskBrowser(plugin: Plugin) {
         setup() {
           return () => h(DiskBrowserPanel, {
             i18n: plugin.i18n,
+            storage,
           })
         }
       })

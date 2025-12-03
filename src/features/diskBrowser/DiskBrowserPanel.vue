@@ -49,6 +49,39 @@
       </div>
     </div>
 
+    <!-- 收藏夹区域 -->
+    <div class="favorites-section" v-if="favoriteFolders.length > 0">
+      <div class="favorites-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>{{ i18n.favorites || '收藏夹' }}</span>
+        <span class="favorites-count">{{ favoriteFolders.length }}</span>
+      </div>
+      <div class="favorites-list-horizontal">
+        <div
+          v-for="path in favoriteFolders"
+          :key="path"
+          class="favorite-card"
+          @click="navigateToFavorite(path)"
+          :title="path"
+        >
+          <div class="favorite-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13L11 5H5C3.89543 5 3 5.89543 3 7Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="favorite-name">{{ getFolderName(path) }}</div>
+          <button class="favorite-remove-btn" @click.stop="toggleFavorite(path)" :title="i18n.removeFavorite || '取消收藏'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 文件夹列表区域 -->
     <div class="folder-list" v-if="expandedDisk">
       <!-- 面包屑导航 -->
@@ -112,7 +145,6 @@
           :key="item.path"
           class="folder-item"
           :class="{ 'is-file': item.isFile }"
-          @click="handleItemClick(item)"
           @dblclick="handleItemDoubleClick(item)"
         >
           <div class="folder-icon">
@@ -204,6 +236,7 @@ interface CacheData<T> {
 
 interface Props {
   i18n: any
+  storage: any
 }
 
 const props = defineProps<Props>()
@@ -315,7 +348,7 @@ function toggleFavorite(folderPath: string) {
     showMessage(props.i18n.favoriteRemoved || '已取消收藏', 2000, 'info')
   } else {
     favoriteFolders.value.push(folderPath)
-    showMessage(props.i18n.favoriteAdded || '已添加收藏', 2000, 'success')
+    showMessage(props.i18n.favoriteAdded || '已添加收藏', 2000, 'info')
   }
   saveFavorites()
 }
@@ -328,25 +361,23 @@ function isFavorite(folderPath: string): boolean {
 }
 
 /**
- * 保存收藏夹到本地存储
+ * 保存收藏夹到思源存储
  */
-function saveFavorites() {
+async function saveFavorites() {
   try {
-    localStorage.setItem('disk-browser-favorites', JSON.stringify(favoriteFolders.value))
+    await props.storage.saveFavorites(favoriteFolders.value)
   } catch (error) {
     console.error('保存收藏夹失败:', error)
   }
 }
 
 /**
- * 从本地存储加载收藏夹
+ * 从思源存储加载收藏夹
  */
-function loadFavorites() {
+async function loadFavorites() {
   try {
-    const saved = localStorage.getItem('disk-browser-favorites')
-    if (saved) {
-      favoriteFolders.value = JSON.parse(saved)
-    }
+    const favorites = await props.storage.loadFavorites()
+    favoriteFolders.value = favorites || []
   } catch (error) {
     console.error('加载收藏夹失败:', error)
     favoriteFolders.value = []
@@ -598,13 +629,7 @@ function refreshDisks() {
   showMessage(props.i18n.refreshing || '正在刷新...', 2000, 'info')
 }
 
-/**
- * 刷新文件夹列表（强制刷新）
- */
-function refreshFolder(drive: string) {
-  loadFolders(drive, true)
-  showMessage(props.i18n.refreshing || '正在刷新...', 2000, 'info')
-}
+
 
 /**
  * 刷新当前文件夹
@@ -771,12 +796,7 @@ async function loadFoldersFromPath(path: string, forceRefresh = false) {
   }
 }
 
-/**
- * 处理项目单击
- */
-function handleItemClick(item: FolderInfo) {
-  // 单击选中，不执行操作
-}
+
 
 /**
  * 处理项目双击
@@ -950,6 +970,51 @@ function formatSize(bytes: number): string {
   return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + units[i]
 }
 
+/**
+ * 从路径中提取文件夹名称
+ */
+function getFolderName(path: string): string {
+  const parts = path.split('\\')
+  return parts[parts.length - 1] || path
+}
+
+/**
+ * 导航到收藏的文件夹
+ */
+async function navigateToFavorite(path: string) {
+  try {
+    // 提取盘符
+    const driveMatch = path.match(/^([A-Z]:)/)
+    if (!driveMatch) {
+      showMessage(props.i18n.invalidPath || '无效路径', 2000, 'error')
+      return
+    }
+
+    const drive = driveMatch[1]
+    
+    // 展开对应的磁盘
+    expandedDisk.value = drive
+    selectedDisk.value = drive
+    
+    // 如果是根目录
+    if (path === drive || path === drive + '\\') {
+      currentPath.value = ''
+      pathSegments.value = []
+      await loadFolders(drive)
+    } else {
+      // 导航到具体路径
+      currentPath.value = path
+      updatePathSegments()
+      await loadFoldersFromPath(path)
+    }
+    
+    showMessage(props.i18n.navigatedToFavorite || '已跳转到收藏夹', 2000, 'info')
+  } catch (error) {
+    console.error('导航到收藏夹失败:', error)
+    showMessage(props.i18n.navigationFailed || '导航失败', 2000, 'error')
+  }
+}
+
 onMounted(() => {
   loadFavorites()
   fetchDisks()
@@ -1081,6 +1146,136 @@ onUnmounted(() => {
 
   &::-webkit-scrollbar-track {
     background: transparent;
+  }
+}
+
+// 收藏夹区域
+.favorites-section {
+  border-top: 1px solid var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-surface);
+  flex-shrink: 0;
+}
+
+.favorites-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--b3-theme-surface-lighter);
+  color: var(--b3-theme-on-surface);
+  font-size: 11px;
+  font-weight: 600;
+
+  svg {
+    color: var(--b3-theme-primary);
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+.favorites-count {
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--b3-theme-primary-lightest);
+  color: var(--b3-theme-primary);
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+.favorites-list-horizontal {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--b3-theme-surface-lighter);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.favorite-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  max-width: 180px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--b3-theme-background);
+  border: 1px solid var(--b3-theme-surface-lighter);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--b3-theme-surface-lighter);
+    border-color: var(--b3-theme-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+    .favorite-remove-btn {
+      opacity: 1;
+    }
+  }
+}
+
+.favorite-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--b3-theme-primary-lightest);
+  color: var(--b3-theme-primary);
+  flex-shrink: 0;
+}
+
+.favorite-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--b3-theme-on-background);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--b3-theme-on-surface-light);
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--b3-theme-error);
+    color: white;
+    transform: scale(1.1);
   }
 }
 
