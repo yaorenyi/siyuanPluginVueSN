@@ -34,36 +34,38 @@
 
       <div v-for="group in groupedShortcuts" :key="group.name" class="shortcut-group">
         <div class="group-header">{{ group.name }}</div>
-        <div
-          v-for="shortcut in group.shortcuts"
-          :key="shortcut.id"
-          class="shortcut-row"
-        >
-          <div class="shortcut-info">
-            <div class="shortcut-name">{{ shortcut.name }}</div>
+        <div class="shortcut-grid">
+          <div
+            v-for="shortcut in group.shortcuts"
+            :key="shortcut.id"
+            class="shortcut-card"
+          >
+            <div class="card-header">
+              <div class="shortcut-name">{{ shortcut.name }}</div>
+              <div class="shortcut-actions">
+                <button
+                  class="action-btn copy-btn"
+                  :title="i18n.copy || '复制'"
+                  @click="copyShortcutInfo(shortcut)"
+                >
+                  <svg class="shortcut-icon"><use xlink:href="#iconCopy"></use></svg>
+                </button>
+                <button
+                  v-if="shortcut.category === 'custom'"
+                  class="action-btn delete-btn"
+                  :title="i18n.delete || '删除'"
+                  @click="deleteShortcut(shortcut.id)"
+                >
+                  <svg class="shortcut-icon"><use xlink:href="#iconTrash"></use></svg>
+                </button>
+              </div>
+            </div>
+            <div class="shortcut-keys">
+              <span v-for="key in shortcut.keys.split('+')" :key="key" class="key-badge">
+                {{ key.trim() }}
+              </span>
+            </div>
             <div class="shortcut-desc">{{ shortcut.description }}</div>
-          </div>
-          <div class="shortcut-keys">
-            <span v-for="key in shortcut.keys.split('+')" :key="key" class="key-badge">
-              {{ key.trim() }}
-            </span>
-          </div>
-          <div class="shortcut-actions">
-            <button
-              class="action-btn copy-btn"
-              :title="i18n.copy || '复制'"
-              @click="copyShortcutInfo(shortcut)"
-            >
-              <svg class="shortcut-icon"><use xlink:href="#iconCopy"></use></svg>
-            </button>
-            <button
-              v-if="shortcut.category === 'custom'"
-              class="action-btn delete-btn"
-              :title="i18n.delete || '删除'"
-              @click="deleteShortcut(shortcut.id)"
-            >
-              <svg class="shortcut-icon"><use xlink:href="#iconTrash"></use></svg>
-            </button>
           </div>
         </div>
       </div>
@@ -151,6 +153,7 @@ function getCategoryLabel(category: string): string {
     'all': props.i18n.allShortcuts || '全部',
     'siyuan': props.i18n.siyuanShortcuts || '思源笔记',
     'plugin': props.i18n.pluginShortcuts || '插件快捷键',
+    'claude': props.i18n.claudeShortcuts || 'Claude Code',
     'custom': props.i18n.customShortcuts || '自定义'
   }
   return labels[category] || category
@@ -263,28 +266,28 @@ const showCopyTip = () => {
   height: 100%;
   background: var(--b3-theme-background);
   color: var(--b3-theme-on-background);
-  font-size: 12px;
+  font-size: 13px;
   overflow: hidden;
 }
 
 .shortcut-header {
   display: flex;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--b3-theme-surface-lighter);
   background: var(--b3-theme-surface);
 }
 
 .shortcut-search-input {
   flex: 1;
-  padding: 5px 8px;
+  padding: 8px 12px;
   border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 3px;
+  border-radius: 6px;
   background: var(--b3-theme-background);
   color: var(--b3-theme-on-background);
-  font-size: 11px;
+  font-size: 13px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .shortcut-search-input:focus {
@@ -296,11 +299,11 @@ const showCopyTip = () => {
 }
 
 .shortcut-add-btn {
-  padding: 5px 8px;
-  border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--b3-theme-primary);
+  padding: 8px 12px;
+  border: 1px solid var(--b3-theme-primary);
+  border-radius: 6px;
+  background: var(--b3-theme-primary);
+  color: white;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -309,9 +312,9 @@ const showCopyTip = () => {
 }
 
 .shortcut-add-btn:hover {
-  background: var(--b3-theme-primary);
-  color: var(--b3-theme-background);
-  border-color: var(--b3-theme-primary);
+  opacity: 0.85;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .shortcut-icon {
@@ -330,12 +333,13 @@ const showCopyTip = () => {
 
 .category-tab {
   flex: 0 0 auto;
-  padding: 6px 10px;
+  padding: 10px 16px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   color: var(--b3-theme-on-surface-variant);
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -367,81 +371,110 @@ const showCopyTip = () => {
 
 .shortcut-group {
   padding: 0;
+  margin-bottom: 16px;
 }
 
 .group-header {
-  padding: 5px 10px 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--b3-theme-on-surface-variant);
+  padding: 10px 16px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--b3-theme-primary);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+  letter-spacing: 1px;
   background: var(--b3-theme-surface);
   position: sticky;
   top: 0;
+  z-index: 10;
+  border-left: 4px solid var(--b3-theme-primary);
 }
 
-.shortcut-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--b3-theme-surface-lighter);
-  transition: background 0.2s;
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 12px;
 }
 
-.shortcut-row:hover {
+.shortcut-card {
   background: var(--b3-theme-surface);
+  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
 }
 
-.shortcut-info {
-  flex: 1;
-  min-width: 0;
+.shortcut-card:hover {
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .shortcut-name {
-  font-weight: 500;
+  font-weight: 600;
   color: var(--b3-theme-on-surface);
-  font-size: 11px;
-  margin-bottom: 1px;
+  font-size: 13px;
+  line-height: 1.3;
+  flex: 1;
 }
 
 .shortcut-desc {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--b3-theme-on-surface-variant);
-  line-height: 1.3;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .shortcut-keys {
   display: flex;
-  gap: 3px;
-  flex-shrink: 0;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .key-badge {
   display: inline-block;
-  padding: 1px 4px;
+  padding: 4px 8px;
   background: var(--b3-theme-primary);
-  color: var(--b3-theme-background);
-  border-radius: 2px;
-  font-size: 9px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-weight: 600;
+  color: white;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-weight: 700;
   white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .shortcut-actions {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.shortcut-card:hover .shortcut-actions {
+  opacity: 1;
 }
 
 .action-btn {
-  padding: 4px 6px;
+  padding: 4px;
   background: transparent;
-  border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 3px;
+  border: none;
+  border-radius: 4px;
   color: var(--b3-theme-on-surface-variant);
   cursor: pointer;
   transition: all 0.2s;
@@ -452,29 +485,18 @@ const showCopyTip = () => {
 }
 
 .action-btn:hover {
-  background: var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-background);
   color: var(--b3-theme-primary);
-  border-color: var(--b3-theme-primary);
-}
-
-.copy-btn {
-  color: var(--b3-theme-on-surface-variant);
 }
 
 .copy-btn:active {
   background: var(--b3-theme-primary);
   color: white;
-  border-color: var(--b3-theme-primary);
-}
-
-.delete-btn {
-  color: #ff6b6b;
 }
 
 .delete-btn:hover {
   background: #ff6b6b;
   color: white;
-  border-color: #ff6b6b;
 }
 
 /* 对话框样式 */

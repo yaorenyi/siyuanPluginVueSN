@@ -5,7 +5,7 @@
 /**
  * 快捷键分类
  */
-export type ShortcutCategory = 'siyuan' | 'plugin' | 'custom'
+export type ShortcutCategory = 'siyuan' | 'plugin' | 'claude' | 'custom'
 
 /**
  * 快捷键信息
