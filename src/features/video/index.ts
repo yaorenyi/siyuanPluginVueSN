@@ -1,6 +1,6 @@
 import { Plugin } from 'siyuan';
 import { showMessage } from 'siyuan';
-import { encryptVideo, decryptVideo, isEncryptedVideo, getEncryptedFileName } from './crypto';
+import { encryptVideo, decryptVideo, isEncryptedVideo, getEncryptedFileName, getOriginalFileName } from './crypto';
 
 export function registerVideo(plugin: Plugin) {
   console.log('视频功能模块初始化');
@@ -361,7 +361,6 @@ export async function decryptVideoFile(videoPath: string): Promise<string> {
     const decryptedData = await decryptVideo(encryptedData)
     
     // 生成解密文件路径（去除 .sn 或 .sn2 后缀）
-    const { getOriginalFileName } = await import('./crypto')
     const decryptedPath = getOriginalFileName(videoPath)
     
     // 保存解密文件

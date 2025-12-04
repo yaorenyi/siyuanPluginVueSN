@@ -275,6 +275,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import type { ListSettings as IListSettings } from '@/config/settings'
+import { loadListSettingsFromDB, saveListSettingsToDB } from '@/config/settings'
 
 interface Props {
   i18n?: any
@@ -320,7 +321,6 @@ onMounted(async () => {
   
   try {
     console.log('尝试从数据库加载列表设置...')
-    const { loadListSettingsFromDB } = await import('@/config/settings')
     const loadedSettings = await loadListSettingsFromDB(props.plugin)
     Object.assign(settings, { ...defaultSettings, ...loadedSettings })
     console.log('从数据库加载的列表设置:', settings)
@@ -414,7 +414,6 @@ const handleSettingsChange = async () => {
   // 自动保存到数据库
   if (props.plugin) {
     try {
-      const { saveListSettingsToDB } = await import('@/config/settings')
       await saveListSettingsToDB(props.plugin, settingsWithCSS)
     } catch (error) {
       console.error('保存列表设置失败:', error)

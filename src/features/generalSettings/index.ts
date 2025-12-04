@@ -6,6 +6,7 @@ import { Plugin, showMessage } from 'siyuan';
 import { createApp, h } from 'vue';
 // @ts-ignore
 import GeneralSettingsPanel from './GeneralSettingsPanel.vue';
+import { loadCodeBlockSettings, loadListSettingsFromDB, loadHeadingSettings } from '@/config/settings';
 
 /**
  * 通用设置类
@@ -195,7 +196,6 @@ export class GeneralSettings {
   public async applyCodeBlockStyle() {
     try {
       // 从插件数据库加载设置
-      const { loadCodeBlockSettings } = await import('@/config/settings');
       const settings = await loadCodeBlockSettings(this.plugin);
       this.applyCodeBlockStyleFromSettings(settings);
       console.log('代码块样式已从数据库加载并应用:', settings);
@@ -210,7 +210,6 @@ export class GeneralSettings {
   public async applyListStyle() {
     try {
       // 从插件数据库加载设置
-      const { loadListSettingsFromDB } = await import('@/config/settings');
       const settings = await loadListSettingsFromDB(this.plugin);
       this.applyListStyles(settings);
       console.log('列表样式已从数据库加载并应用:', settings);
@@ -225,7 +224,6 @@ export class GeneralSettings {
   public async applyHeadingStyle() {
     try {
       // 从插件数据库加载设置
-      const { loadHeadingSettings } = await import('@/config/settings');
       const settings = await loadHeadingSettings(this.plugin);
 
       // 确保 DOM 已准备好，延迟应用样式以避免时机问题

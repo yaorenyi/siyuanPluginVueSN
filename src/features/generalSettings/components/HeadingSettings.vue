@@ -216,6 +216,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { saveHeadingSettings, loadHeadingSettings } from '@/config/settings'
 
 interface HeadingColors {
   h1: string
@@ -539,7 +540,6 @@ async function autoSave() {
     }
     
     // 使用插件的数据存储 API
-    const { saveHeadingSettings } = await import('@/config/settings')
     const success = await saveHeadingSettings(props.plugin, settingsToSave)
     
     if (success) {
@@ -563,7 +563,6 @@ async function loadSettings() {
     console.log('尝试从数据库加载设置...')
     
     // 使用插件的数据存储 API
-    const { loadHeadingSettings } = await import('@/config/settings')
     const settings = await loadHeadingSettings(props.plugin)
     
     console.log('从数据库加载的设置:', settings)

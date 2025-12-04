@@ -258,6 +258,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { saveCodeBlockSettings, loadCodeBlockSettings } from '@/config/settings'
 
 interface CodeBlockSettings {
   style: 'default' | 'github' | 'mac' | 'cartoon'
@@ -310,7 +311,6 @@ watch(settings, async (newSettings) => {
   // 自动保存到数据库
   if (props.plugin) {
     try {
-      const { saveCodeBlockSettings } = await import('@/config/settings')
       await saveCodeBlockSettings(props.plugin, newSettings)
     } catch (error) {
       console.error('自动保存失败:', error)
@@ -640,7 +640,6 @@ async function loadSettings() {
 
   try {
     console.log('尝试从数据库加载代码块设置...')
-    const { loadCodeBlockSettings } = await import('@/config/settings')
     const loadedSettings = await loadCodeBlockSettings(props.plugin)
     settings.value = { ...DEFAULT_SETTINGS, ...loadedSettings }
     console.log('从数据库加载的代码块设置:', settings.value)

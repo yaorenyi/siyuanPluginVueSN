@@ -278,7 +278,8 @@ import {
   getVideoUrl,
   getVideoStoragePath,
   encryptAllVideos,
-  decryptAllVideos
+  decryptAllVideos,
+  decryptVideoFile
 } from './index'
 import { isEncryptedVideo } from './crypto'
 import { usePlugin } from '@/main'
@@ -665,7 +666,6 @@ async function handleSingleDecrypt(video: any) {
   try {
     showMessage(`正在解密: ${video.name}`, 0, 'info')
     
-    const { decryptVideoFile } = await import('./index')
     await decryptVideoFile(video.path)
     
     showMessage(`解密成功: ${video.name}`, 3000, 'info')
