@@ -1722,3 +1722,451 @@
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
+
+// 移动端优化样式
+@media (max-width: 768px), (hover: none) {
+  .ai-content-panel {
+    font-size: 14px;
+  }
+
+  .panel-header {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .header-title {
+      font-size: 15px;
+      flex: 1 1 100%;
+    }
+
+    .header-actions {
+      flex: 1 1 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .btn-icon {
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .settings-panel,
+  .context-panel {
+    .panel-section {
+      padding: 12px;
+    }
+
+    .section-content {
+      gap: 16px;
+    }
+
+    .setting-item {
+      gap: 8px;
+
+      label {
+        font-size: 14px;
+      }
+    }
+
+    .prompt-input {
+      font-size: 14px;
+      padding: 10px 12px;
+      min-height: 100px;
+    }
+
+    .number-input {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+  }
+
+  .input-section {
+    padding: 12px;
+  }
+
+  // 移动端：提示词选择器优化
+  .prompt-selector-wrapper {
+    .btn-prompt-selector {
+      padding: 12px;
+      font-size: 14px;
+      min-height: 48px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .prompt-selector-panel {
+      max-height: 60vh;
+
+      .prompt-list {
+        max-height: calc(60vh - 60px);
+      }
+
+      .prompt-item {
+        padding: 14px;
+        margin-bottom: 10px;
+
+        &:active {
+          background: var(--b3-theme-primary-lighter);
+        }
+      }
+
+      .prompt-name {
+        font-size: 14px;
+      }
+
+      .prompt-item-preview {
+        font-size: 13px;
+      }
+    }
+  }
+
+  // 移动端：当前提示词显示优化
+  .current-prompt-display {
+    padding: 10px 12px;
+    font-size: 14px;
+    flex-wrap: wrap;
+
+    .prompt-value {
+      flex: 1 1 100%;
+      margin-top: 4px;
+    }
+  }
+
+  // 移动端：引用文档按钮优化
+  .reference-doc-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    .btn-reference-doc {
+      padding: 12px;
+      font-size: 14px;
+      min-height: 48px;
+      justify-content: center;
+    }
+
+    .referenced-doc-title {
+      font-size: 14px;
+      padding: 10px 12px;
+      max-width: 100%;
+    }
+  }
+
+  // 移动端：输入框优化
+  .input-wrapper {
+    gap: 10px;
+
+    .user-input {
+      font-size: 15px;
+      padding: 12px;
+      min-height: 100px;
+    }
+
+    .btn-generate,
+    .btn-stop {
+      padding: 14px 16px;
+      font-size: 15px;
+      min-height: 50px;
+      font-weight: 600;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  // 移动端：Edit模式优化
+  .edit-doc-selector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+
+    .selector-label {
+      font-size: 14px;
+    }
+
+    .btn-select-doc {
+      padding: 12px;
+      font-size: 14px;
+      min-height: 48px;
+    }
+
+    .btn-clear-doc {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 8px;
+      min-width: 36px;
+      min-height: 36px;
+    }
+  }
+
+  // 移动端：AI编辑工具栏优化
+  .ai-edit-toolbar {
+    padding: 12px;
+
+    .toolbar-label {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-actions {
+      gap: 8px;
+
+      .btn-ai-action {
+        padding: 10px 14px;
+        font-size: 14px;
+        min-height: 44px;
+        flex: 1 1 calc(50% - 4px);
+        justify-content: center;
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        &.btn-analyze {
+          flex: 1 1 100%;
+        }
+      }
+    }
+  }
+
+  // 移动端：编辑模式信息优化
+  .edit-mode-info {
+    padding: 12px;
+
+    .meta-item {
+      font-size: 14px;
+      gap: 10px;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  // 移动端：AI建议面板优化
+  .ai-suggestions-panel {
+    margin: 12px;
+    padding: 14px;
+
+    .suggestions-header {
+      font-size: 15px;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .suggestions-content {
+      .suggestion-text {
+        font-size: 14px;
+        padding: 14px;
+      }
+
+      .btn-apply-suggestions {
+        padding: 14px;
+        font-size: 15px;
+        min-height: 50px;
+      }
+    }
+  }
+
+  // 移动端：输出区域优化
+  .output-section {
+    padding: 12px;
+  }
+
+  .result-container {
+    gap: 12px;
+  }
+
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
+
+    .result-title {
+      font-size: 15px;
+      width: 100%;
+    }
+
+    .result-actions {
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .btn-action {
+        flex: 1 1 calc(50% - 4px);
+        padding: 10px 12px;
+        font-size: 13px;
+        min-height: 44px;
+        justify-content: center;
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        // 移动端：重要按钮占满一行
+        &.btn-apply,
+        &.btn-insert,
+        &.btn-stop {
+          flex: 1 1 100%;
+          font-size: 15px;
+          min-height: 50px;
+        }
+      }
+    }
+  }
+
+  // 移动端：Markdown预览优化
+  .markdown-preview {
+    padding: 14px;
+    font-size: 15px;
+    line-height: 1.7;
+
+    :deep(h1) {
+      font-size: 1.6em;
+    }
+
+    :deep(h2) {
+      font-size: 1.4em;
+    }
+
+    :deep(h3) {
+      font-size: 1.2em;
+    }
+
+    :deep(code) {
+      font-size: 13px;
+      padding: 3px 6px;
+    }
+
+    :deep(pre) {
+      padding: 14px;
+      font-size: 13px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    :deep(table) {
+      font-size: 13px;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      th, td {
+        padding: 10px;
+        min-width: 80px;
+      }
+    }
+  }
+
+  // 移动端：空状态优化
+  .empty-state {
+    padding: 20px;
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  }
+
+  .quick-templates {
+    max-width: 100%;
+
+    .templates-title {
+      font-size: 14px;
+    }
+
+    .template-buttons {
+      grid-template-columns: 1fr;
+      gap: 10px;
+
+      .btn-template {
+        padding: 14px;
+        font-size: 14px;
+        min-height: 50px;
+        text-align: center;
+      }
+    }
+  }
+
+  // 移动端：加载和错误状态优化
+  .loading-state,
+  .error-state {
+    padding: 20px;
+
+    p {
+      font-size: 15px;
+    }
+
+    .btn-retry {
+      padding: 12px 20px;
+      font-size: 15px;
+      min-height: 48px;
+    }
+  }
+
+  .loading-spinner-large {
+    width: 50px;
+    height: 50px;
+    border-width: 4px;
+  }
+}
+
+// 思源笔记移动端特定样式
+.body--mobile {
+  .ai-content-panel {
+    // 移动端全屏优化
+    .panel-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--b3-theme-surface);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    // 移动端输入区域固定在底部（可选）
+    .input-section {
+      position: sticky;
+      bottom: 0;
+      background: var(--b3-theme-background);
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 9;
+    }
+
+    // 移动端滚动优化
+    .output-section {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+  }
+}

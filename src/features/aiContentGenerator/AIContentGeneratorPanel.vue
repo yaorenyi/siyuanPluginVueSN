@@ -6,6 +6,18 @@
         <span>🤖 {{ i18n.aiContentGenerator || 'AI信息生成' }}</span>
       </div>
       <div class="header-actions">
+        <!-- 移动端：收起/展开输入区域按钮 -->
+        <button
+          v-if="isMobile"
+          class="btn-icon"
+          @click="showInputSection = !showInputSection"
+          :class="{ 'active': showInputSection }"
+          :title="showInputSection ? '收起输入' : '展开输入'"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <use :xlink:href="showInputSection ? '#iconUp' : '#iconDown'"></use>
+          </svg>
+        </button>
         <!-- Edit模式切换按钮 -->
         <button
           class="btn-icon"
@@ -127,7 +139,7 @@
     </div>
 
     <!-- 输入区域 -->
-    <div class="input-section">
+    <div class="input-section" v-show="showInputSection">
       <!-- 当前选中的提示词显示（修复问题1） -->
       <div v-if="currentPromptName" class="current-prompt-display">
         <svg width="14" height="14">
@@ -444,9 +456,9 @@
               {{ i18n.undo || '撤回' }}
             </button>
             <!-- 通用按钮 -->
-            <!-- 普通模式：保存到AI问答封存按钮 -->
+            <!-- 普通模式：保存到AI问答封存按钮（移动端隐藏） -->
             <button
-              v-if="!editMode"
+              v-if="!editMode && !isMobile"
               class="btn-action btn-save"
               @click="saveToArchiveNotebook"
               :disabled="isGenerating"
@@ -520,7 +532,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { showMessage } from 'siyuan';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
@@ -560,6 +572,12 @@ const errorMessage = ref('');
 const showRaw = ref(false);
 const showSettings = ref(false);
 const abortController = ref<AbortController | null>(null);
+
+// 移动端检测
+const isMobile = ref(false);
+
+// 移动端：输入区域显示状态
+const showInputSection = ref(true);
 
 // Edit模式状态
 const editMode = ref(false);
@@ -721,6 +739,11 @@ const handleGenerate = async () => {
     return;
   }
 
+  // 移动端：隐藏输入区域
+  if (isMobile.value) {
+    showInputSection.value = false;
+  }
+
   // 创建新的 AbortController
   abortController.value = new AbortController();
 
@@ -786,8 +809,8 @@ ${cleanDocContent}`;
       }
       showMessage('✓ 生成成功', 2000, 'info');
       
-      // 自动保存到AI问答封存笔记本
-      if (!editMode.value) {
+      // 自动保存到AI问答封存笔记本（移动端不自动保存）
+      if (!editMode.value && !isMobile.value) {
         await saveToArchiveNotebook();
       }
     } else {
@@ -1148,6 +1171,11 @@ const clearContent = () => {
   errorMessage.value = '';
   showRaw.value = false;
   stopTypewriter();
+  
+  // 移动端：清除后显示输入区域
+  if (isMobile.value) {
+    showInputSection.value = true;
+  }
 };
 
 // 选择目标文档
@@ -1306,6 +1334,11 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | '
     return;
   }
 
+  // 移动端：自动收起设置面板
+  if (isMobile.value) {
+    showSettings.value = false;
+  }
+
   const actionPrompts = {
     polish: '请对以下文档进行润色优化，保持原有结构，提升语言质量和可读性，使表达更加专业、流畅。保持Markdown格式，直接输出优化后的完整文档内容：',
     expand: '请对以下文档进行扩写，增加更详细的说明、例子和补充信息，使内容更加丰富和全面。保持Markdown格式，直接输出扩写后的完整文档内容：',
@@ -1364,6 +1397,11 @@ const analyzeDocument = async () => {
     return;
   }
 
+  // 移动端：自动收起设置面板
+  if (isMobile.value) {
+    showSettings.value = false;
+  }
+
   isAnalyzing.value = true;
   try {
     const options: GenerateOptions = {
@@ -1401,6 +1439,11 @@ const analyzeDocument = async () => {
  */
 const applySuggestions = async () => {
   if (!editTargetDoc.value || !aiSuggestions.value) return;
+
+  // 移动端：自动收起设置面板
+  if (isMobile.value) {
+    showSettings.value = false;
+  }
 
   isGenerating.value = true;
   generatedContent.value = '';
@@ -1778,8 +1821,30 @@ const loadPromptsFromStorage = async () => {
   }
 };
 
+// 检测是否为移动端
+const checkIsMobile = () => {
+  // 检测思源笔记的移动端环境
+  const isSiyuanMobile = document.body.classList.contains('body--mobile');
+  // 检测屏幕宽度
+  const isSmallScreen = window.innerWidth <= 768;
+  isMobile.value = isSiyuanMobile || isSmallScreen;
+  
+  // 调试日志
+  console.log('[AI生成器] 移动端检测:', {
+    isSiyuanMobile,
+    isSmallScreen,
+    screenWidth: window.innerWidth,
+    isMobile: isMobile.value,
+    bodyClasses: document.body.className
+  });
+};
+
 // 组件挂载时加载保存的提示词
 onMounted(async () => {
+  // 检测移动端
+  checkIsMobile();
+  window.addEventListener('resize', checkIsMobile);
+
   // 初始化存储实例
   if (props.plugin) {
     storage = new AIGeneratorStorage(props.plugin);
@@ -1791,6 +1856,11 @@ onMounted(async () => {
     loadPromptsFromStorage();
     loadSettings();
   }
+});
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+  window.removeEventListener('resize', checkIsMobile);
 });
 
 // 使用模板
