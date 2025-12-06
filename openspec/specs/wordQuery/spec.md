@@ -1,4 +1,9 @@
-## MODIFIED Requirements
+# Word Query Capability
+
+## Purpose
+Provides word lookup, translation, and language learning features within SiYuan Note. Users can query dictionary information, translate text between languages, manage word history and favorites, and access pronunciation features.
+
+## Requirements
 
 ### Requirement: Word Query Panel UI Design
 The WordQueryPanel component SHALL adopt GitHub's design language for all visual elements while maintaining existing functionality.

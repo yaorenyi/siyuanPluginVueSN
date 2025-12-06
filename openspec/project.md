@@ -1,151 +1,151 @@
-# Project Context
+# 项目上下文
 
-## Purpose
-This is a SiYuan Note plugin development template built with Vite and Vue 3. The project provides a comprehensive plugin that integrates multiple utility features including table of contents, image compression, document navigation, word query, QR code generation, unit conversion, disk browsing, code image generation, AI content generation, statistics, pronunciation translation, encryption, and video management. It aims to enhance the SiYuan Note user experience by providing frequently used tools and utilities within a single plugin.
+## 目的
+这是一个使用 Vite 和 Vue 3 构建的思源笔记插件开发模板。该项目提供了一个全面的插件，集成了多个实用功能，包括目录、图片压缩、文档导航、单词查询、二维码生成、单位转换、磁盘浏览、代码图片生成、AI 内容生成、统计、发音翻译、加密和视频管理。它旨在通过在单个插件中提供常用工具和实用程序来增强思源笔记用户体验。
 
-## Tech Stack
+## 技术栈
 
-### Frontend Framework
-- **Vue 3.3.8** - Progressive JavaScript framework for building UI components
-- **TypeScript 5.0.4** - Type-safe JavaScript superset
-- **Sass 1.62.1** - CSS preprocessor for styling
+### 前端框架
+- **Vue 3.3.8** - 用于构建 UI 组件的渐进式 JavaScript 框架
+- **TypeScript 5.0.4** - 类型安全的 JavaScript 超集
+- **Sass 1.62.1** - 用于样式的 CSS 预处理器
 
-### Build Tools
-- **Vite 6.2.1** - Fast build tool and development server
-- **@vitejs/plugin-vue** - Vue plugin for Vite
-- **vite-plugin-static-copy** - Static asset copying plugin
-- **vite-plugin-zip-pack** - Plugin packaging
+### 构建工具
+- **Vite 6.2.1** - 快速构建工具和开发服务器
+- **@vitejs/plugin-vue** - Vite 的 Vue 插件
+- **vite-plugin-static-copy** - 静态资源复制插件
+- **vite-plugin-zip-pack** - 插件打包
 
-### Code Quality
-- **ESLint 9.22.0** - JavaScript and TypeScript linting
-- **@antfu/eslint-config** - Opinionated ESLint config by Anthony Fu
-- **eslint-plugin-perfectionist** - Plugin for sorting object keys, imports, etc
-- **eslint-plugin-format** - Formatting plugin
+### 代码质量
+- **ESLint 9.22.0** - JavaScript 和 TypeScript 代码检查
+- **@antfu/eslint-config** - Anthony Fu 的观点化 ESLint 配置
+- **eslint-plugin-perfectionist** - 用于排序对象键、导入等的插件
+- **eslint-plugin-format** - 格式化插件
 
-### SiYuan Integration
-- **siyuan 1.1.0** - SiYuan Note plugin SDK
+### 思源集成
+- **siyuan 1.1.0** - 思源笔记插件 SDK
 
-### UI Components
-- **@iconify/vue 5.0.0** - Icon component library
+### UI 组件
+- **@iconify/vue 5.0.0** - 图标组件库
 
-### Utilities
-- **browser-image-compression** - Image compression in browser
-- **html2canvas** - Screenshot/DOM capture
-- **marked** - Markdown parser
-- **qrcode** - QR code generation
-- **highlight.js** - Syntax highlighting
-- **video.js** - HTML5 video player
+### 实用程序
+- **browser-image-compression** - 浏览器中的图片压缩
+- **html2canvas** - 截图/DOM 捕获
+- **marked** - Markdown 解析器
+- **qrcode** - 二维码生成
+- **highlight.js** - 语法高亮
+- **video.js** - HTML5 视频播放器
 
-### Development Tools
-- **ts-node** - TypeScript execution environment
-- **fast-glob** - Fast glob pattern matching
-- **minimist** - Argument parser
+### 开发工具
+- **ts-node** - TypeScript 执行环境
+- **fast-glob** - 快速全局模式匹配
+- **minimist** - 参数解析器
 
-## Project Conventions
+## 项目约定
 
-### Code Style
-- **Indentation**: 2 spaces (configured in ESLint)
-- **Quotes**: Single quotes for strings
-- **Naming Conventions**:
-  - Files: camelCase (e.g., `myFeature.ts`)
-  - Vue Components: PascalCase (e.g., `SettingPanel.vue`)
-  - Functions/Variables: camelCase (e.g., `registerFeature`)
-  - Constants: UPPER_CASE (e.g., `DEFAULT_SETTINGS`)
-- **TypeScript**: Strict mode disabled, but with no unused locals/parameters checks
-- **Vue 3 Composition API**: Use `<script setup>` syntax with TypeScript
-- **SCSS**: Modular SCSS files imported per component
+### 代码风格
+- **缩进**：2 个空格（在 ESLint 中配置）
+- **引号**：字符串使用单引号
+- **命名约定**：
+  - 文件：camelCase（例如，`myFeature.ts`）
+  - Vue 组件：PascalCase（例如，`SettingPanel.vue`）
+  - 函数/变量：camelCase（例如，`registerFeature`）
+  - 常量：UPPER_CASE（例如，`DEFAULT_SETTINGS`）
+- **TypeScript**：禁用严格模式，但没有未使用的局部变量/参数检查
+- **Vue 3 组合式 API**：使用带有 TypeScript 的 `<script setup>` 语法
+- **SCSS**：按组件导入的模块化 SCSS 文件
 
-### Architecture Patterns
+### 架构模式
 
-#### Modular Feature Architecture
-- Each feature resides in `src/features/[featureName]/` as an independent module
-- Features are registered dynamically based on configuration settings
-- Each feature exports a `register[FeatureName]` function
+#### 模块化功能架构
+- 每个功能驻留在 `src/features/[featureName]/` 中作为独立模块
+- 功能根据配置设置动态注册
+- 每个功能导出一个 `register[FeatureName]` 函数
 
-#### Configuration Management
-- Centralized settings in `src/config/settings.ts`
-- Settings persisted using SiYuan's `plugin.loadData()` and `plugin.saveData()`
-- Type-safe configuration interfaces
+#### 配置管理
+- `src/config/settings.ts` 中的集中设置
+- 使用思源的 `plugin.loadData()` 和 `plugin.saveData()` 持久化设置
+- 类型安全的配置接口
 
-#### Internationalization
-- JSON-based language files in `src/i18n/`
-- Supports Chinese (zh_CN) and English (en_US)
-- Access via `plugin.i18n.featureName.key`
+#### 国际化
+- `src/i18n/` 中基于 JSON 的语言文件
+- 支持中文（zh_CN）和英文（en_US）
+- 通过 `plugin.i18n.featureName.key` 访问
 
-### Testing Strategy
-- Currently no formal testing framework is implemented
-- Manual testing through SiYuan Note client
-- Development mode supports hot reload for iterative testing
+### 测试策略
+- 目前没有实施正式的测试框架
+- 通过思源笔记客户端进行手动测试
+- 开发模式支持热重载进行迭代测试
 
-### Git Workflow
-- **Branching**: Main development on main branch
-- **Commit Convention**: Commits should be descriptive and in Chinese or English
-- **Release Process**: Automated version bumping using semantic versioning
-- **Tagging**: Git tags created automatically for releases
+### Git 工作流程
+- **分支**：主分支上的主开发
+- **提交约定**：提交应具有描述性，使用中文或英文
+- **发布过程**：使用语义版本自动版本递增
+- **标记**：自动为发布创建 Git 标记
 
-## Domain Context
+## 领域上下文
 
-### SiYuan Note Plugin System
-- Plugins extend SiYuan Note functionality through a defined API
-- Plugins run in both desktop and mobile environments
-- Access to SiYuan's block-based document structure
-- Integration with SiYuan's menu system and UI
+### 思源笔记插件系统
+- 插件通过定义的 API 扩展思源笔记功能
+- 插件在桌面和移动环境中运行
+- 访问思源的基于块的文档结构
+- 与思源的菜单系统和 UI 集成
 
-### Block-based Architecture
-- SiYuan uses a block-based content structure (blocks, documents, notebooks)
-- Each block has a unique ID and can be independently manipulated
-- Plugin hooks allow reacting to block events and modifications
+### 基于块的架构
+- 思源使用基于块的内容结构（块、文档、笔记本）
+- 每个块都有唯一 ID 并且可以独立操作
+- 插件钩子允许对块事件和修改做出反应
 
-### Feature Modules Overview
-1. **Page Lock** - Encrypt and lock specific pages
-2. **Table of Contents** - Generate document TOC
-3. **Image Compressor** - Compress images within documents
-4. **Doc Navigation** - Hierarchical document navigation
-5. **Shortcut Manager** - Custom shortcut keys
-6. **Word Query** - Dictionary lookup with translation
-7. **QR Code Generator** - Generate QR codes from text
-8. **Unit Converter** - Convert between different units
-9. **Disk Browser** - Browse local filesystem
-10. **Code Image Generator** - Convert code to styled images
-11. **AI Content Generator** - Generate content using AI APIs
-12. **Statistics** - Document and workspace statistics
-13. **Pronunciation** - Text to pronunciation translation
-14. **Encryption** - Encrypt/decrypt text content
-15. **Video Manager** - Manage and categorize videos
+### 功能模块概述
+1. **页面锁** - 加密和锁定特定页面
+2. **目录** - 生成文档目录
+3. **图片压缩器** - 压缩文档中的图片
+4. **文档导航** - 分层文档导航
+5. **快捷键管理器** - 自定义快捷键
+6. **单词查询** - 带翻译的字典查找
+7. **二维码生成器** - 从文本生成二维码
+8. **单位转换器** - 不同单位之间的转换
+9. **磁盘浏览器** - 浏览本地文件系统
+10. **代码图片生成器** - 将代码转换为样式化图片
+11. **AI 内容生成器** - 使用 AI API 生成内容
+12. **统计** - 文档和工作区统计
+13. **发音** - 文本到发音转换
+14. **加密** - 加密/解密文本内容
+15. **视频管理器** - 管理和分类视频
 
-## Important Constraints
+## 重要约束
 
-### SiYuan Version Requirements
-- **Minimum App Version**: 2.10.14
-- Plugin must be compatible with all SiYuan platforms (desktop, mobile, browser)
+### 思源版本要求
+- **最低应用版本**：2.10.14
+- 插件必须与所有思源平台（桌面、移动、浏览器）兼容
 
-### Performance Constraints
-- Large features must have toggle switches in SuperPanel
-- AI API configurations centralized for efficiency
-- Lazy loading recommended for heavy components
+### 性能约束
+- 大型功能必须在超级面板中有切换开关
+- 为提高效率集中 AI API 配置
+- 建议对重型组件进行延迟加载
 
-### Security Considerations
-- No direct file system access beyond SiYuan's sandbox
-- Sensitive data (API keys) stored in plugin settings, not code
-- User input validation for all external API interactions
+### 安全考虑
+- 除思源沙箱外没有直接文件系统访问
+- 敏感数据（API 密钥）存储在插件设置中，而不是代码中
+- 所有外部 API 交互的用户输入验证
 
-### Compatibility
-- Must work across all SiYuan frontends (desktop, mobile, web)
-- Graceful degradation when features are disabled
-- Backward compatibility with older plugin versions
+### 兼容性
+- 必须在所有思源前端（桌面、移动、Web）上工作
+- 功能禁用时的优雅降级
+- 与旧插件版本的向后兼容性
 
-## External Dependencies
+## 外部依赖
 
-### AI API Providers
-- **Tongyi (通义千问)** - Alibaba's AI model
-- **OpenAI** - GPT models
-- **DeepSeek** - DeepSeek AI models
-- **Custom Endpoints** - User-defined API endpoints
+### AI API 提供商
+- **通义千问** - 阿里巴巴的 AI 模型
+- **OpenAI** - GPT 模型
+- **DeepSeek** - DeepSeek AI 模型
+- **自定义端点** - 用户定义的 API 端点
 
-### Data Persistence
-- SiYuan's built-in plugin data storage
-- No external databases or storage services
+### 数据持久化
+- 思源内置的插件数据存储
+- 没有外部数据库或存储服务
 
-### File System Access
-- Limited to SiYuan's designated directories
-- Video files and images accessed through SiYuan's file API
+### 文件系统访问
+- 限于思源指定的目录
+- 通过思源的文件 API 访问视频文件和图片
