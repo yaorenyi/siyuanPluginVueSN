@@ -1713,6 +1713,72 @@
   }
 }
 
+// 编辑模式：自定义提问输入框样式
+.edit-custom-input {
+  margin-top: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--b3-theme-surface-lighter) 0%, var(--b3-theme-surface) 100%);
+  border: 2px dashed var(--b3-theme-primary-light);
+  border-radius: 10px;
+  animation: slideDown 0.3s ease-out;
+
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .user-input {
+    min-height: 60px;
+    background: var(--b3-theme-background);
+    border: 2px solid var(--b3-theme-surface-light);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.2s;
+
+    &:focus {
+      border-color: var(--b3-theme-primary);
+      box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.15);
+    }
+
+    &::placeholder {
+      color: var(--b3-theme-on-surface-light);
+      opacity: 0.7;
+    }
+  }
+
+  .btn-generate {
+    align-self: flex-end;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--b3-theme-primary) 0%, var(--b3-theme-primary-dark) 100%);
+    color: var(--b3-theme-on-primary);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.3);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 59, 130, 246), 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-stop {
+    align-self: flex-end;
+  }
+}
+
 // 加载动画 - tiny尺寸
 .loading-spinner-tiny {
   width: 14px;

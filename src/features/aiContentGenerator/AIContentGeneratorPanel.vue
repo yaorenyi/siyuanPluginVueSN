@@ -356,17 +356,39 @@
         </button>
       </div>
 
-      <!-- 编辑模式提示信息 -->
-      <div v-if="editMode && editTargetDoc" class="edit-mode-info">
-        <div class="doc-meta-info">
-          <div class="meta-item">
-            <svg width="14" height="14"><use xlink:href="#iconFile"></use></svg>
-            <span>{{ i18n.documentTitle || '文档标题' }}: <strong>{{ editTargetDoc.title }}</strong></span>
-          </div>
-          <div class="meta-item">
-            <svg width="14" height="14"><use xlink:href="#iconClock"></use></svg>
-            <span>{{ i18n.editModeHint || '使用AI编辑工具对文档进行智能优化' }}</span>
-          </div>
+      <!-- 编辑模式：自定义提问输入框 -->
+      <div v-if="editMode && editTargetDoc" class="edit-custom-input">
+        <div class="input-wrapper">
+          <textarea
+            v-model="editCustomInput"
+            class="user-input"
+            :placeholder="i18n.editCustomPlaceholder || '输入自定义编辑指令，例如：将文档改为口语化风格、添加更多示例...'"
+            rows="2"
+            @keydown.ctrl.enter="handleCustomEdit"
+            :disabled="isGenerating"
+          ></textarea>
+          <button
+            v-if="!isGenerating"
+            class="btn-generate"
+            @click="handleCustomEdit"
+            :disabled="!editCustomInput.trim()"
+          >
+            <svg width="18" height="18">
+              <use xlink:href="#iconSend"></use>
+            </svg>
+            <span>{{ i18n.execute || '执行' }}</span>
+          </button>
+          <button
+            v-else
+            class="btn-stop"
+            @click="handleStop"
+            :title="i18n.stopGeneration || '停止生成'"
+          >
+            <svg width="18" height="18">
+              <use xlink:href="#iconClose"></use>
+            </svg>
+            <span>{{ i18n.stop || '停止' }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -590,6 +612,7 @@ const isUndoing = ref(false);
 // AI智能编辑状态
 const isAnalyzing = ref(false);
 const aiSuggestions = ref<string | null>(null);
+const editCustomInput = ref(''); // 编辑模式自定义提问输入
 
 // 编辑历史（用于撤回/重做）
 interface EditHistory {
@@ -712,6 +735,7 @@ const toggleEditMode = () => {
 const clearEditState = () => {
   editTargetDoc.value = null;
   originalContent.value = '';
+  editCustomInput.value = ''; // 清理自定义提问输入
 };
 
 
@@ -1396,6 +1420,71 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | '
     console.error('AI编辑失败:', error);
     errorMessage.value = (error as Error).message || 'AI编辑失败';
     showMessage('AI编辑失败: ' + errorMessage.value, 3000, 'error');
+  } finally {
+    isGenerating.value = false;
+    abortController.value = null;
+  }
+};
+
+/**
+ * 编辑模式：自定义提问处理
+ */
+const handleCustomEdit = async () => {
+  if (!editTargetDoc.value) {
+    showMessage('请先选择要编辑的文档', 2000, 'info');
+    return;
+  }
+
+  if (!editCustomInput.value.trim()) {
+    showMessage('请输入编辑指令', 2000, 'info');
+    return;
+  }
+
+  // 移动端：自动收起设置面板
+  if (isMobile.value) {
+    showSettings.value = false;
+  }
+
+  // 创建新的 AbortController
+  abortController.value = new AbortController();
+
+  isGenerating.value = true;
+  generatedContent.value = '';
+  displayedContent.value = '';
+  errorMessage.value = '';
+  aiSuggestions.value = null;
+
+  try {
+    const options: GenerateOptions = {
+      userInput: `请根据以下指令对文档进行编辑。保持Markdown格式，直接输出编辑后的完整文档内容：
+
+编辑指令：${editCustomInput.value}
+
+原文档：
+${editTargetDoc.value.content}`,
+      systemPrompt: '你是一个专业的文档编辑助手，擅长根据用户指令优化Markdown文档。请直接输出编辑后的完整文档，不要添加任何解释性文字。',
+      temperature: 0.4,
+      maxTokens: maxTokens.value,
+      signal: abortController.value?.signal,
+      onChunk: (chunk: string) => {
+        displayedContent.value += chunk;
+        generatedContent.value += chunk;
+      }
+    };
+
+    await props.onGenerate(options);
+
+    // 执行成功后清空输入框
+    editCustomInput.value = '';
+    showMessage('✓ 自定义编辑完成', 2000, 'info');
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      console.log('用户取消了自定义编辑');
+      return;
+    }
+    console.error('自定义编辑失败:', error);
+    errorMessage.value = (error as Error).message || '自定义编辑失败';
+    showMessage('自定义编辑失败: ' + errorMessage.value, 3000, 'error');
   } finally {
     isGenerating.value = false;
     abortController.value = null;
