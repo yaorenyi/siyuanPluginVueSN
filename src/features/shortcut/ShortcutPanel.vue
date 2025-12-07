@@ -152,7 +152,8 @@
                   :title="isFavorite(shortcut.id) ? '取消收藏' : '收藏'"
                   @click="toggleFavorite(shortcut.id)"
                 >
-                  <svg class="shortcut-icon"><use :xlink:href="isFavorite(shortcut.id) ? '#iconStar' : '#iconStarOutline'"></use></svg>
+                  <span class="star-icon" v-if="isFavorite(shortcut.id)">★</span>
+                  <span class="star-icon" v-else>☆</span>
                 </button>
                 <button
                   class="action-btn copy-btn"
@@ -1313,7 +1314,7 @@ const showCopyTip = () => {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
-  opacity: 0.6;
+  opacity: 1;
   transition: opacity 0.2s;
 }
 
@@ -1347,6 +1348,12 @@ const showCopyTip = () => {
 
 .favorite-btn.active:hover {
   color: #ffed4e;
+}
+
+.star-icon {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
 }
 
 .copy-btn:active {
