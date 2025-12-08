@@ -1155,7 +1155,8 @@
     }
   }
 
-  &.btn-insert {
+  &.btn-insert,
+  &.btn-insert-subdoc {
     background: var(--b3-theme-success-lighter);
     color: var(--b3-theme-success);
     border-color: var(--b3-theme-success-light);
@@ -2411,5 +2412,139 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
+  }
+}
+
+// 自定义输入对话框样式
+.input-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.input-dialog {
+  background: var(--b3-theme-background);
+  border-radius: 8px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.input-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--b3-theme-on-background);
+  }
+}
+
+.btn-close-dialog {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--b3-theme-on-surface);
+  border-radius: 4px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--b3-theme-surface-lighter);
+  }
+}
+
+.input-dialog-content {
+  padding: 20px;
+}
+
+.input-dialog-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--b3-theme-background);
+  color: var(--b3-theme-on-background);
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: var(--b3-theme-primary);
+  }
+}
+
+.input-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--b3-theme-surface-lighter);
+  background: var(--b3-theme-surface);
+}
+
+.btn-cancel,
+.btn-confirm {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--b3-theme-on-surface);
+  border: 1px solid var(--b3-theme-surface-lighter);
+
+  &:hover {
+    background: var(--b3-theme-surface-lighter);
+  }
+}
+
+.btn-confirm {
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
+  border: 1px solid var(--b3-theme-primary);
+
+  &:hover:not(:disabled) {
+    background: var(--b3-theme-primary-dark);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// 移动端对话框优化
+.body--mobile {
+  .input-dialog {
+    min-width: 280px;
+  }
+
+  .input-dialog-input {
+    padding: 12px;
+    font-size: 16px; // 防止iOS缩放
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    padding: 12px 20px;
+    min-width: 80px;
   }
 }

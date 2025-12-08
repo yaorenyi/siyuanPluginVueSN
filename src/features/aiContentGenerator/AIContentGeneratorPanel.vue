@@ -348,6 +348,12 @@
             <svg width="14" height="14"><use xlink:href="#iconRefresh"></use></svg>
             {{ i18n.rewrite || '改写' }}
           </button>
+          <button class="btn-ai-action" @click="aiEditAction('summary')" :disabled="isGenerating" :title="i18n.aiSummary || 'AI总结文档'">
+            <svg width="14" height="14" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M13,12.5L11.5,14L10,12.5V16H8V12.5L10,14L11.5,12.5L13,14V16H15V12.5L13,12.5Z" />
+            </svg>
+            {{ i18n.summary || '总结' }}
+          </button>
           <button class="btn-ai-action btn-analyze" @click="analyzeDocument" :disabled="isGenerating || isAnalyzing" :title="i18n.aiAnalyze || 'AI分析建议'">
             <div v-if="isAnalyzing" class="loading-spinner-tiny"></div>
             <svg v-else width="14" height="14"><use xlink:href="#iconInfo"></use></svg>
@@ -429,6 +435,18 @@
                   <use xlink:href="#iconCheck"></use>
                 </svg>
                 {{ i18n.applyEdit || '应用' }}
+              </button>
+              <button
+                class="btn-action btn-insert-subdoc"
+                @click="insertSubDocument"
+                :disabled="!editTargetDoc || isInsertingSubDoc || isGenerating"
+                :title="i18n.insertSubDocument || '插入子文档'"
+              >
+                <div v-if="isInsertingSubDoc" class="loading-spinner-small"></div>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M20,18H4V6H20M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M13,12H16V15H18V12H21V10H18V7H16V10H13V12Z" />
+                </svg>
+                {{ i18n.insertSubDoc || '子文档' }}
               </button>
               <button
                 v-if="lastEditHistory && editMode"
@@ -531,6 +549,39 @@
         </div>
       </div>
     </div>
+
+    <!-- 自定义输入对话框 -->
+    <div v-if="showDialog" class="input-dialog-overlay" @click.self="cancelInputDialog">
+      <div class="input-dialog">
+        <div class="input-dialog-header">
+          <h3>{{ inputDialogTitle }}</h3>
+          <button class="btn-close-dialog" @click="cancelInputDialog">
+            <svg width="16" height="16">
+              <use xlink:href="#iconClose"></use>
+            </svg>
+          </button>
+        </div>
+        <div class="input-dialog-content">
+          <input
+            ref="dialogInput"
+            v-model="inputDialogValue"
+            type="text"
+            class="input-dialog-input"
+            :placeholder="inputDialogPlaceholder"
+            @keydown.enter="confirmInputDialog"
+            @keydown.esc="cancelInputDialog"
+          />
+        </div>
+        <div class="input-dialog-footer">
+          <button class="btn-cancel" @click="cancelInputDialog">
+            {{ i18n.cancel || '取消' }}
+          </button>
+          <button class="btn-confirm" @click="confirmInputDialog" :disabled="!inputDialogValue.trim()">
+            {{ i18n.confirm || '确定' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -589,6 +640,15 @@ const originalContent = ref(''); // 文档原始内容
 const hasContentChanged = ref(false);
 const isApplying = ref(false);
 const isUndoing = ref(false);
+const isInsertingSubDoc = ref(false); // 插入子文档状态
+
+// 自定义输入对话框状态
+const showDialogInput = ref<HTMLInputElement | null>(null);
+const showDialog = ref(false);
+const inputDialogTitle = ref('');
+const inputDialogPlaceholder = ref('');
+const inputDialogValue = ref('');
+let inputDialogResolve: ((value: string | null) => void) | null = null;
 
 // AI智能编辑状态
 const isAnalyzing = ref(false);
@@ -641,6 +701,57 @@ const CURRENT_PROMPT_STORAGE_KEY = 'ai-content-generator-current-prompt';
 // 引用当前文档
 const referencedDocTitle = ref('');
 const referencedDocContent = ref('');
+
+/**
+ * 自定义输入对话框函数（兼容移动端）
+ * @param title 对话框标题
+ * @param defaultValue 默认值
+ * @param placeholder 输入框占位符
+ * @returns Promise，返回用户输入的值或null（如果取消）
+ */
+const customPrompt = (title: string, defaultValue: string = '', placeholder: string = ''): Promise<string | null> => {
+  return new Promise((resolve) => {
+    inputDialogTitle.value = title;
+    inputDialogPlaceholder.value = placeholder;
+    inputDialogValue.value = defaultValue;
+    showDialog.value = true;
+    inputDialogResolve = resolve;
+
+    // 在下一个tick中聚焦输入框
+    nextTick(() => {
+      if (showDialogInput.value) {
+        showDialogInput.value.focus();
+        // 选中全部文本
+        showDialogInput.value.select();
+      }
+    });
+  });
+};
+
+/**
+ * 确认输入对话框
+ */
+const confirmInputDialog = () => {
+  if (inputDialogResolve) {
+    const value = inputDialogValue.value.trim();
+    inputDialogResolve(value ? value : null);
+  }
+  showDialog.value = false;
+  inputDialogValue.value = '';
+  inputDialogResolve = null;
+};
+
+/**
+ * 取消输入对话框
+ */
+const cancelInputDialog = () => {
+  if (inputDialogResolve) {
+    inputDialogResolve(null);
+  }
+  showDialog.value = false;
+  inputDialogValue.value = '';
+  inputDialogResolve = null;
+};
 
 /**
  * 移除Markdown内容中的Frontmatter（YAML元数据）
@@ -1347,7 +1458,7 @@ const undoEdit = async () => {
 /**
  * AI智能编辑功能
  */
-const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | 'translate' | 'rewrite') => {
+const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | 'translate' | 'rewrite' | 'summary') => {
   if (!editTargetDoc.value) {
     showMessage('请先选择要编辑的文档', 2000, 'info');
     return;
@@ -1364,7 +1475,8 @@ const aiEditAction = async (action: 'polish' | 'expand' | 'condense' | 'fix' | '
     condense: '请对以下文档进行精简，去除冗余内容，保留核心要点，使表达更加简洁有力。保持Markdown格式，直接输出精简后的完整文档内容：',
     fix: '请对以下文档进行错误检查和修正，包括拼写错误、语法错误、逻辑错误等。保持Markdown格式，直接输出修正后的完整文档内容：',
     translate: '请将以下文档翻译成中文（如果原文是中文则翻译成英文）。保持原有的Markdown格式和文档结构，只翻译文本内容。直接输出翻译后的完整文档内容：',
-    rewrite: '请用不同的表达方式重写以下文档，保持核心意思不变，但使用全新的语言风格和句式结构。保持Markdown格式，直接输出改写后的完整文档内容：'
+    rewrite: '请用不同的表达方式重写以下文档，保持核心意思不变，但使用全新的语言风格和句式结构。保持Markdown格式，直接输出改写后的完整文档内容：',
+    summary: '请为以下文档生成一个简洁的总结，包括主要内容和关键要点。总结应该清晰明了，突出文档的核心信息。保持Markdown格式，直接输出总结内容：'
   };
 
   // 创建新的 AbortController
@@ -1515,6 +1627,64 @@ const analyzeDocument = async () => {
     showMessage('文档分析失败: ' + (error as Error).message, 3000, 'error');
   } finally {
     isAnalyzing.value = false;
+  }
+};
+
+/**
+ * 插入子文档功能
+ */
+const insertSubDocument = async () => {
+  if (!editTargetDoc.value || !generatedContent.value) {
+    showMessage('请先选择文档并生成内容', 2000, 'info');
+    return;
+  }
+
+  // 获取父文档的人性化路径，提取文档名
+  const parentHPath = await api.getHPathByID(editTargetDoc.value.id);
+  const parentDocName = parentHPath ? parentHPath.split('/').pop() || '文档' : '文档';
+
+  // 生成子文档名称：父文档名 + 总结
+  const subDocTitle = `${parentDocName}总结`;
+
+  // 添加时间戳以避免重复
+  const timestamp = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-');
+  const finalSubDocTitle = `${subDocTitle}_${timestamp}`;
+
+  isInsertingSubDoc.value = true;
+
+  try {
+    // 转换为思源兼容的 Markdown 格式
+    const siyuanContent = convertToSiyuanMarkdown(generatedContent.value);
+
+    // 获取父文档信息
+    const parentDoc = await api.getBlockByID(editTargetDoc.value.id);
+    if (!parentDoc || !parentDoc.box) {
+      throw new Error('无法获取父文档信息');
+    }
+
+    const notebookId = parentDoc.box;
+
+    // 构建子文档路径：在父文档下创建子文档
+    // 思源的路径格式：/笔记本/父文档路径/子文档名
+    const subDocPath = `${parentHPath}/${finalSubDocTitle}`;
+
+    // 创建子文档
+    const subDocId = await api.createDocWithMd(
+      notebookId,
+      subDocPath,
+      siyuanContent
+    );
+
+    if (subDocId) {
+      showMessage(`✓ 已在文档"${parentDoc.content || editTargetDoc.value.title}"下创建子文档: ${finalSubDocTitle}`, 3000, 'info');
+    } else {
+      throw new Error('创建子文档失败');
+    }
+  } catch (error) {
+    console.error('插入子文档失败:', error);
+    showMessage('插入子文档失败: ' + (error as Error).message, 3000, 'error');
+  } finally {
+    isInsertingSubDoc.value = false;
   }
 };
 
