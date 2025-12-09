@@ -11,7 +11,6 @@ let container: HTMLElement | null = null
  * @param plugin 插件实例
  */
 export function registerCodeImageGenerator(plugin: SiYuanPluginViteVueSN) {
-  console.log('注册代码图片生成器功能')
 
   // 添加右侧边栏面板
   plugin.addDock({
@@ -59,5 +58,4 @@ export function registerCodeImageGenerator(plugin: SiYuanPluginViteVueSN) {
     }
   })
 
-  console.log('代码图片生成器功能注册完成')
 }

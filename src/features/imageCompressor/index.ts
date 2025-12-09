@@ -7,7 +7,6 @@ import { Plugin, showMessage } from 'siyuan'
  * 注册图片压缩功能
  */
 export function registerImageCompressor(plugin: Plugin) {
-  console.log('注册图片压缩功能')
 
   // 添加快捷键命令
   plugin.addCommand({

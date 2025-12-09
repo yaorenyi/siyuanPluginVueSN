@@ -46,7 +46,6 @@ export async function registerShortcut(plugin: Plugin) {
   // 添加右侧边栏 Dock
   addShortcutDock(plugin, manager)
 
-  console.log('快捷键模块已注册')
 }
 
 /**

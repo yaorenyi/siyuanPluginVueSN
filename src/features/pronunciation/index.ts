@@ -162,7 +162,7 @@ export class Pronunciation {
    */
   private async callAPI(prompt: string): Promise<string> {
     const config = this.getApiConfig();
-    
+
     switch (config.provider) {
       case 'tongyi':
         return await this.callTongyiAPI(prompt, config);
@@ -186,7 +186,7 @@ export class Pronunciation {
     }
 
     const apiUrl = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
-    
+
     const requestBody = {
       model: config.model || 'qwen-plus',
       input: {
@@ -248,7 +248,7 @@ export class Pronunciation {
     }
 
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
-    
+
     const requestBody = {
       model: config.model || 'gpt-3.5-turbo',
       messages: [
@@ -297,7 +297,7 @@ export class Pronunciation {
     }
 
     const apiUrl = 'https://api.deepseek.com/v1/chat/completions';
-    
+
     const requestBody = {
       model: config.model || 'deepseek-chat',
       messages: [
@@ -421,6 +421,5 @@ export function registerPronunciation(plugin: Plugin) {
   // 保存实例到插件对象中
   (plugin as any).__pronunciation = pronunciation;
 
-  console.log('谐音翻译模块已注册');
   return pronunciation;
 }

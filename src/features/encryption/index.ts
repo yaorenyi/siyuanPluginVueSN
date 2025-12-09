@@ -141,10 +141,10 @@ export class Encryption {
     }
 
     const range = selection.getRangeAt(0)
-    
+
     // 获取编辑器元素
     const editableElement = range.commonAncestorContainer.parentElement?.closest('[contenteditable="true"]')
-    
+
     // 删除选中内容并插入新文本
     range.deleteContents()
     const textNode = document.createTextNode(newText)
@@ -165,7 +165,7 @@ export class Encryption {
         data: newText
       })
       editableElement.dispatchEvent(inputEvent)
-      
+
       // 额外触发一个change事件确保保存
       const changeEvent = new Event('change', { bubbles: true })
       editableElement.dispatchEvent(changeEvent)
@@ -300,7 +300,7 @@ export class Encryption {
 
       const dialog = document.createElement('div')
       dialog.style.cssText = 'background: var(--b3-theme-background); border-radius: 8px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;'
-      
+
       // 初始状态：输入密码
       dialog.innerHTML = `
         <div id="decryptContent">
@@ -312,12 +312,12 @@ export class Encryption {
               ${this.plugin.i18n.enterPasswordToDecrypt || '请输入密码以解密内容'}
             </p>
           </div>
-          
+
           <div style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 500; color: var(--b3-theme-on-background);">
               ${this.plugin.i18n.decryptPassword}
             </label>
-            <input type="password" id="passwordInput" placeholder="${this.plugin.i18n.enterPassword}" 
+            <input type="password" id="passwordInput" placeholder="${this.plugin.i18n.enterPassword}"
               style="width: 100%; padding: 10px 12px; border: 1px solid var(--b3-theme-surface-lighter); border-radius: 6px; box-sizing: border-box; font-size: 14px; background: var(--b3-theme-surface); color: var(--b3-theme-on-background);" />
             <div id="errorMsg" style="margin-top: 8px; color: var(--b3-card-error-color); font-size: 12px; display: none;"></div>
           </div>
@@ -529,7 +529,6 @@ let encryptionInstance: Encryption | null = null
 export async function registerEncryption(plugin: Plugin) {
   encryptionInstance = new Encryption(plugin)
   await encryptionInstance.init()
-  console.log('加密功能已注册')
 }
 
 /**

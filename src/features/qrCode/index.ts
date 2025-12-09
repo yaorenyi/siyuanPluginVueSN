@@ -17,7 +17,6 @@ export function registerQRCode(pluginInstance: Plugin) {
     handleEditorContextMenu(event)
   })
 
-  console.log('✅ 二维码生成功能已注册')
 }
 
 /**

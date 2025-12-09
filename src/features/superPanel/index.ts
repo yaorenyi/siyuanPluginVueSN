@@ -15,7 +15,6 @@ let panelContainer: HTMLElement | null = null
  * 注册超级面板功能
  */
 export function registerSuperPanel(plugin: Plugin) {
-  console.log('注册超级面板功能')
 
   // 添加右侧边栏图标
   const topBarElement = plugin.addTopBar({

@@ -11,7 +11,6 @@ import { DiskBrowserStorage } from './storage'
  * 注册本地磁盘浏览器功能
  */
 export function registerDiskBrowser(plugin: Plugin) {
-  console.log('注册本地磁盘浏览器功能')
 
   // 初始化存储
   const storage = new DiskBrowserStorage(plugin)
@@ -52,5 +51,4 @@ export function registerDiskBrowser(plugin: Plugin) {
     },
   })
 
-  console.log('本地磁盘浏览器功能已注册')
 }

@@ -590,6 +590,5 @@ export function registerWordQuery(plugin: Plugin) {
   // 保存实例到插件对象中，以便在其他地方使用
   (plugin as any).__wordQuery = query;
 
-  console.log('单词查询模块已注册');
   return query;
 }

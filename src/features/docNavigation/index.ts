@@ -29,7 +29,6 @@ export function registerDocNavigation(plugin: Plugin) {
     await updateDocNavigationDebounced(plugin, detail.protyle)
   })
 
-  console.log('文档层级导航功能已注册')
 }
 
 /**

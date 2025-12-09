@@ -10,7 +10,6 @@ let statisticsInstance: Statistics | null = null
  * 注册数据统计功能
  */
 export function registerStatistics(plugin: Plugin) {
-  console.log('注册数据统计功能')
   statisticsInstance = new Statistics(plugin)
   statisticsInstance.init()
 }

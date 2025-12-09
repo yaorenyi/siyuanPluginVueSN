@@ -108,7 +108,7 @@ export class AIContentGenerator {
   private async handleAIQuery(selectedText: string) {
     try {
       showMessage('🤖 AI正在思考...', 2000, 'info');
-      
+
       // 显示加载弹窗
       this.showAIQueryDialog(selectedText);
     } catch (error) {
@@ -241,7 +241,7 @@ export class AIContentGenerator {
           fullContent += chunk;
           // 使用marked渲染Markdown
           resultContent.innerHTML = marked.parse(fullContent) as string;
-          
+
           // 如果还在加载状态，切换到内容显示
           if (loadingArea.style.display !== 'none') {
             loadingArea.style.display = 'none';
@@ -754,7 +754,7 @@ ${options.userInput}`;
     signal?: AbortSignal
   ): Promise<string> {
     console.log('DeepSeek流式API请求开始');
-    
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -797,13 +797,13 @@ ${options.userInput}`;
 
         for (const line of lines) {
           if (!line.trim()) continue;
-          
+
           // DeepSeek可能不使用data:前缀，尝试直接解析
           let dataStr = line;
           if (line.startsWith('data:')) {
             dataStr = line.slice(5).trim();
           }
-          
+
           if (dataStr === '[DONE]') {
             console.log('DeepSeek发送完成信号');
             continue;
@@ -987,6 +987,5 @@ export function registerAIContentGenerator(plugin: Plugin) {
   // 保存实例到插件对象中，以便在其他地方使用
   (plugin as any).__aiContentGenerator = generator;
 
-  console.log('AI内容生成模块已注册');
   return generator;
 }
