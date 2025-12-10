@@ -338,7 +338,13 @@ async function unlockPageDirectly(plugin: Plugin, docId: string, password: strin
     // 移除遮罩层
     const mask = protyle.element?.querySelector('.page-lock-mask')
     if (mask) {
-      mask.remove()
+      // 添加解锁动画
+      mask.classList.add('unlocking')
+      setTimeout(() => {
+        mask.remove()
+      }, 800)
+    } else {
+      mask?.remove()
     }
     // 显示编辑器内容
     const wysiwyg = protyle.wysiwyg?.element
@@ -384,14 +390,47 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   const mask = document.createElement('div')
   mask.className = 'page-lock-mask'
 
+  // 创建动态背景
+  const bgAnimation = document.createElement('div')
+  bgAnimation.className = 'page-lock-bg-animation'
+  mask.appendChild(bgAnimation)
+
+  // 创建浮动粒子容器
+  const particleContainer = document.createElement('div')
+  particleContainer.className = 'particle-container'
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div')
+    particle.className = 'particle'
+    particle.style.setProperty('--delay', `${Math.random() * 2}s`)
+    particle.style.setProperty('--x', `${Math.random() * 100}%`)
+    particleContainer.appendChild(particle)
+  }
+  mask.appendChild(particleContainer)
+
   // 创建遮罩内容
   const maskContent = document.createElement('div')
   maskContent.className = 'page-lock-mask__content'
 
+  // 创建脉冲光环
+  const pulseRing = document.createElement('div')
+  pulseRing.className = 'pulse-ring'
+  maskContent.appendChild(pulseRing)
+
+  // 创建图标容器
+  const iconContainer = document.createElement('div')
+  iconContainer.className = 'icon-container'
+
   // 创建图标
-  const iconElement = createIconElement('mdi:shield-lock', 48, '#ef4444')
+  const iconElement = createIconElement('mdi:shield-lock', 64, '#ef4444')
   iconElement.classList.add('page-lock-mask__icon')
-  maskContent.appendChild(iconElement)
+  iconContainer.appendChild(iconElement)
+
+  // 添加图标光晕效果
+  const iconGlow = document.createElement('div')
+  iconGlow.className = 'icon-glow'
+  iconContainer.appendChild(iconGlow)
+
+  maskContent.appendChild(iconContainer)
 
   // 创建标题
   const title = document.createElement('h3')
@@ -402,8 +441,17 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   // 创建文本
   const text = document.createElement('p')
   text.className = 'page-lock-mask__text'
-  text.textContent = plugin.i18n.pleaseUnlock || '请输入密码解锁页面'
+  text.innerHTML = `
+    ${plugin.i18n.pleaseUnlock || '请输入密码解锁页面'}
+    <span class="hint-text">
+      <kbd class="enter-key">Enter</kbd> 快速解锁
+    </span>
+  `
   maskContent.appendChild(text)
+
+  // 创建输入框容器
+  const inputContainer = document.createElement('div')
+  inputContainer.className = 'input-container'
 
   // 创建密码输入框
   const passwordInput = document.createElement('input')
@@ -411,18 +459,58 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   passwordInput.className = 'page-lock-mask__input'
   passwordInput.placeholder = '请输入解锁密码'
   passwordInput.autocomplete = 'current-password'
-  maskContent.appendChild(passwordInput)
+
+  // 添加输入框图标
+  const inputIcon = createIconElement('mdi:lock', 16, 'rgba(255,255,255,0.4)')
+  inputIcon.style.position = 'absolute'
+  inputIcon.style.left = '14px'
+  inputIcon.style.top = '50%'
+  inputIcon.style.transform = 'translateY(-50%)'
+  inputIcon.style.pointerEvents = 'none'
+
+  // 设置输入框左侧内边距为图标留出空间
+  passwordInput.style.paddingLeft = '40px'
+  passwordInput.style.position = 'relative'
+
+  inputContainer.appendChild(inputIcon)
+  inputContainer.appendChild(passwordInput)
+
+  // 创建输入框焦点效果
+  const inputFocus = document.createElement('div')
+  inputFocus.className = 'input-focus-effect'
+  inputContainer.appendChild(inputFocus)
+
+  maskContent.appendChild(inputContainer)
+
+  // 创建按钮容器
+  const buttonContainer = document.createElement('div')
+  buttonContainer.className = 'button-container'
 
   // 创建解锁按钮
   const unlockBtn = document.createElement('button')
   unlockBtn.className = 'page-lock-mask__btn'
-  unlockBtn.textContent = '解锁页面'
-  maskContent.appendChild(unlockBtn)
+  unlockBtn.innerHTML = `
+    <span class="btn-text">解锁页面</span>
+    <div class="btn-ripple"></div>
+  `
+  buttonContainer.appendChild(unlockBtn)
+  maskContent.appendChild(buttonContainer)
 
   // 添加解锁按钮事件
-  unlockBtn.addEventListener('click', async () => {
+  unlockBtn.addEventListener('click', async (e) => {
+    // 按钮涟漪效果
+    const ripple = unlockBtn.querySelector('.btn-ripple')
+    ripple.style.setProperty('--x', `${e.offsetX}px`)
+    ripple.style.setProperty('--y', `${e.offsetY}px`)
+    ripple.classList.add('active')
+
     await unlockPageDirectly(plugin, docId, passwordInput.value, protyle)
-    passwordInput.value = '' // 清空输入框
+    passwordInput.value = ''
+
+    // 清除涟漪效果
+    setTimeout(() => {
+      ripple.classList.remove('active')
+    }, 600)
   })
 
   // 添加回车键事件
@@ -436,6 +524,15 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   mask.appendChild(maskContent)
   protyle.element?.appendChild(mask)
 
+  // 添加鼠标跟踪效果
+  mask.addEventListener('mousemove', (e) => {
+    const rect = mask.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    mask.style.setProperty('--mouse-x', `${x}%`)
+    mask.style.setProperty('--mouse-y', `${y}%`)
+  })
+
   // 添加样式
   injectLockPageStyles()
 
@@ -443,7 +540,9 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   setTimeout(() => {
     passwordInput.focus()
     passwordInput.setSelectionRange(passwordInput.value.length, passwordInput.value.length)
-  }, 100)
+    // 添加输入框聚焦动画
+    passwordInput.classList.add('focused')
+  }, 150)
 }
 
 /**
@@ -458,124 +557,507 @@ function injectLockPageStyles() {
   const style = document.createElement('style')
   style.id = styleId
   style.textContent = `
+    /* 成功解锁动画 */
+    .page-lock-mask.unlocking {
+      animation: unlockFadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes unlockFadeOut {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.1);
+      }
+    }
+
+    /* 主遮罩层 - 玻璃态效果 */
     .page-lock-mask {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: var(--b3-theme-background);
+      background: linear-gradient(135deg,
+        rgba(var(--b3-theme-background-rgb, 30, 30, 30), 0.95) 0%,
+        rgba(var(--b3-theme-surface-rgb, 40, 40, 40), 0.95) 100%);
+      backdrop-filter: blur(20px) saturate(1.5);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 100;
+      overflow: hidden;
     }
 
+    /* 动态背景动画 */
+    .page-lock-bg-animation {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1) 0%,
+        transparent 50%
+      );
+      animation: backgroundShift 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    /* 浮动粒子效果 */
+    .particle-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+      border-radius: 50%;
+      left: var(--x);
+      top: 100%;
+      animation: floatUp linear infinite;
+      animation-duration: 3s;
+      animation-delay: var(--delay);
+      filter: blur(1px);
+    }
+
+    @keyframes floatUp {
+      to {
+        transform: translateY(-100vh) translateX(-10px);
+        opacity: 0;
+      }
+    }
+
+    /* 遮罩内容容器 */
     .page-lock-mask__content {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
-      padding: 40px;
+      gap: 28px;
+      padding: 50px;
+      background: rgba(var(--b3-theme-surface-rgb, 40, 40, 40), 0.6);
+      border: 1px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
+      border-radius: 24px;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(30px) saturate(1.8);
+      animation: contentEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+    }
+
+    @keyframes contentEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* 脉冲光环 */
+    .pulse-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      border: 2px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulseRing 2s ease-out infinite;
+      pointer-events: none;
+    }
+
+    .pulse-ring::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      border: 1px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulseRing 2s ease-out 0.5s infinite;
+    }
+
+    @keyframes pulseRing {
+      0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    /* 图标容器 */
+    .icon-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
     }
 
     .page-lock-mask__icon {
-      width: 64px;
-      height: 64px;
+      width: 72px;
+      height: 72px;
       color: var(--b3-theme-primary);
-      opacity: 0.6;
+      filter: drop-shadow(0 0 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.5));
+      animation: iconGlow 2s ease-in-out infinite;
     }
 
+    @keyframes iconGlow {
+      0%, 100% {
+        filter: drop-shadow(0 0 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.5));
+      }
+      50% {
+        filter: drop-shadow(0 0 30px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.8));
+      }
+    }
+
+    .icon-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(
+        circle,
+        rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3) 0%,
+        transparent 70%
+      );
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: iconGlowPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes iconGlowPulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+      }
+    }
+
+    /* 标题样式 */
     .page-lock-mask__title {
       margin: 0;
-      font-size: 20px;
-      font-weight: 500;
+      font-size: 24px;
+      font-weight: 600;
       color: var(--b3-theme-on-background);
+      background: linear-gradient(135deg,
+        var(--b3-theme-primary) 0%,
+        var(--b3-theme-primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: titleShimmer 3s ease-in-out infinite;
     }
 
+    @keyframes titleShimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    /* 文本样式 */
     .page-lock-mask__text {
       margin: 0;
-      font-size: 14px;
+      font-size: 16px;
       color: var(--b3-theme-on-surface);
+      opacity: 0.8;
+      animation: textFadeIn 1s ease-out 0.3s both;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hint-text {
+      font-size: 13px;
+      color: var(--b3-theme-primary);
       opacity: 0.7;
+      animation: hintPulse 2s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .enter-key {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
+      border: 1px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--b3-theme-primary);
+      animation: keyPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes keyPulse {
+      0%, 100% {
+        background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
+        transform: translateY(0);
+      }
+      50% {
+        background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+        transform: translateY(-2px);
+      }
+    }
+
+    @keyframes hintPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes textFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 0.8; transform: translateY(0); }
+    }
+
+    /* 输入框容器 */
+    .input-container {
+      position: relative;
+      width: 360px;
+      max-width: 90%;
+      animation: inputSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+    }
+
+    @keyframes inputSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .page-lock-mask__input {
-      width: 320px;
-      max-width: 90%;
-      padding: 14px 18px;
-      border: 2px solid var(--b3-border-color);
-      border-radius: 10px;
-      background: var(--b3-theme-surface);
+      width: 100%;
+      padding: 16px 20px 16px 20px;
+      border: 2px solid rgba(var(--b3-border-color-rgb, 100, 100, 100), 0.3);
+      border-radius: 12px;
+      background: rgba(var(--b3-theme-surface-rgb, 40, 40, 40), 0.8);
       color: var(--b3-theme-on-surface);
-      font-size: 15px;
+      font-size: 16px;
       outline: none;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-sizing: border-box;
       font-family: inherit;
+      backdrop-filter: blur(10px);
     }
 
     .page-lock-mask__input:focus {
       border-color: var(--b3-theme-primary);
-      box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.12);
+      background: rgba(var(--b3-theme-surface-rgb, 40, 40, 40), 0.9);
+      box-shadow:
+        0 0 0 4px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.15),
+        0 10px 30px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
+      transform: translateY(-2px);
+    }
+
+    .page-lock-mask__input:focus ~ .icon-container svg {
+      color: var(--b3-theme-primary) !important;
+      filter: drop-shadow(0 0 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.6));
+    }
+
+    .page-lock-mask__input:focus + .input-focus-effect,
+    .page-lock-mask__input.focused + .input-focus-effect {
+      opacity: 1;
+      transform: scale(1);
     }
 
     .page-lock-mask__input::placeholder {
       color: var(--b3-theme-on-surface-variant);
-      opacity: 0.6;
+      opacity: 0.5;
+      transition: opacity 0.3s ease;
+    }
+
+    .page-lock-mask__input:focus::placeholder {
+      opacity: 0.3;
+    }
+
+    .input-focus-effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 2px solid var(--b3-theme-primary);
+      border-radius: 12px;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      box-shadow:
+        0 0 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3),
+        inset 0 0 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1);
+    }
+
+    /* 按钮容器 */
+    .button-container {
+      position: relative;
+      animation: buttonSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+    }
+
+    @keyframes buttonSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .page-lock-mask__btn {
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
-      background: linear-gradient(135deg, var(--b3-theme-primary) 0%, var(--b3-theme-primary-light) 100%);
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background: linear-gradient(135deg,
+        var(--b3-theme-primary) 0%,
+        var(--b3-theme-primary-light) 50%,
+        var(--b3-theme-primary) 100%);
+      background-size: 200% 100%;
       color: var(--b3-theme-on-primary);
       border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:
+        0 8px 20px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .page-lock-mask__btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow:
+        0 12px 30px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      background-position: 100% 0;
     }
 
     .page-lock-mask__btn:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+      transform: translateY(-1px) scale(0.98);
+      box-shadow:
+        0 4px 15px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4),
+        inset 0 2px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-text {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 按钮涟漪效果 */
+    .btn-ripple {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+      pointer-events: none;
+    }
+
+    .btn-ripple.active {
+      width: 300px;
+      height: 300px;
     }
 
     /* 响应式设计 */
     @media (max-width: 480px) {
       .page-lock-mask__content {
-        gap: 16px;
+        gap: 20px;
         padding: 30px 20px;
+        margin: 20px;
       }
 
-      .page-lock-mask__input {
-        width: 280px;
-        max-width: 95%;
-        padding: 12px 16px;
-        font-size: 14px;
-      }
-
-      .page-lock-mask__btn {
-        padding: 10px 20px;
-        font-size: 13px;
+      .page-lock-mask__icon {
+        width: 56px;
+        height: 56px;
       }
 
       .page-lock-mask__title {
-        font-size: 18px;
+        font-size: 20px;
       }
 
       .page-lock-mask__text {
-        font-size: 13px;
+        font-size: 14px;
+      }
+
+      .hint-text {
+        font-size: 12px;
+      }
+
+      .enter-key {
+        font-size: 10px;
+        padding: 1px 6px;
+      }
+
+      .input-container {
+        width: 280px;
+        max-width: 95%;
+      }
+
+      .page-lock-mask__input {
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+
+      .page-lock-mask__btn {
+        padding: 14px 28px;
+        font-size: 14px;
+      }
+
+      .particle {
+        display: none;
       }
     }
   `
