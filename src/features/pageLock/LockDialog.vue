@@ -24,7 +24,9 @@
           <!-- 更新密码模式：先输入旧密码 -->
           <div v-if="isUpdateMode" class="page-lock-dialog__field">
             <label class="field-label">
-              <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              <span class="lock-icon">
+                <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              </span>
               {{ i18n.oldPasswordPlaceholder || '旧密码' }}
             </label>
             <input
@@ -41,7 +43,9 @@
           <!-- 新密码输入 -->
           <div class="page-lock-dialog__field">
             <label v-if="isLockMode || isUpdateMode" class="field-label">
-              <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              <span class="lock-icon">
+                <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              </span>
               {{ isUpdateMode ? (i18n.newPasswordPlaceholder || '新密码') : (i18n.passwordPlaceholder || '密码') }}
             </label>
             <input
@@ -58,7 +62,9 @@
           <!-- 锁定或更新模式：需要确认密码 -->
           <div v-if="isLockMode || isUpdateMode" class="page-lock-dialog__field">
             <label class="field-label">
-              <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              <span class="lock-icon">
+                <svg class="icon"><use xlink:href="#iconLock"></use></svg>
+              </span>
               {{ i18n.confirmPasswordPlaceholder || '确认密码' }}
             </label>
             <input
@@ -259,11 +265,49 @@ const handleConfirm = () => {
     border-radius: 12px;
     flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+    animation: iconPulse 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s linear infinite;
+    }
 
     .icon {
       width: 20px;
       height: 20px;
       color: var(--b3-theme-on-primary);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  @keyframes iconPulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 4px 12px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.4);
+    }
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) rotate(45deg);
     }
   }
 
@@ -357,6 +401,42 @@ const handleConfirm = () => {
       width: 15px;
       height: 15px;
       color: var(--b3-theme-primary);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 1px 2px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1));
+    }
+  }
+}
+
+/* 锁定图标优化样式 */
+.lock-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.08);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+  }
+}
+
+.page-lock-dialog__field:focus-within {
+  .field-label {
+    .icon {
+      transform: scale(1.1);
+      filter: drop-shadow(0 2px 4px rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2));
+    }
+
+    .lock-icon::before {
+      opacity: 1;
+      transform: scale(1.2);
     }
   }
 }
@@ -468,6 +548,7 @@ const handleConfirm = () => {
     .header-icon {
       width: 28px;
       height: 28px;
+      animation: none; /* 移动端禁用动画以提升性能 */
 
       .icon {
         width: 16px;
@@ -477,6 +558,35 @@ const handleConfirm = () => {
 
     h3 {
       font-size: 15px;
+    }
+  }
+
+  .page-lock-dialog__field {
+    .field-label {
+      .icon {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+
+  /* 移动端锁定图标优化 */
+  .lock-icon {
+    &::before {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .page-lock-dialog__field:focus-within {
+    .field-label {
+      .icon {
+        transform: scale(1.05); /* 移动端减少缩放幅度 */
+      }
+
+      .lock-icon::before {
+        transform: scale(1.1);
+      }
     }
   }
 
