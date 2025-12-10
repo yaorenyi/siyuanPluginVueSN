@@ -77,6 +77,19 @@
                   <option :value="1000">1s</option>
                 </select>
               </div>
+              <div class="option-item sort-option">
+                <span>排序:</span>
+                <select v-model="options.sort" class="sort-select">
+                  <option value="date_modified">修改时间</option>
+                  <option value="name">名称</option>
+                  <option value="path">路径</option>
+                  <option value="size">大小</option>
+                </select>
+                <label class="ascending-label">
+                  <input type="checkbox" v-model="options.ascending" />
+                  <span>升序</span>
+                </label>
+              </div>
             </div>
 
             <!-- 服务状态提示 -->
@@ -244,7 +257,9 @@ const options = reactive({
   regex: false,
   maxResults: 100,
   autoSearch: true,
-  debounceDelay: 500
+  debounceDelay: 500,
+  sort: 'date_modified' as 'name' | 'path' | 'size' | 'date_modified',
+  ascending: false
 })
 
 // 从插件存储加载配置
@@ -331,7 +346,9 @@ const handleSearch = async () => {
       matchWholeWord: options.matchWholeWord,
       matchPath: options.matchPath,
       regex: options.regex,
-      maxResults: options.maxResults
+      maxResults: options.maxResults,
+      sort: options.sort,
+      ascending: options.ascending
     }, config)
   } catch (error) {
     errorMessage.value = (error as Error).message || '搜索失败'
@@ -751,6 +768,29 @@ onUnmounted(() => {
 
 .debounce-delay {
   margin-left: 8px;
+}
+
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sort-select {
+  padding: 2px 8px;
+  border: 1px solid var(--b3-border-color);
+  border-radius: 4px;
+  background: var(--b3-theme-background);
+  color: var(--b3-theme-on-background);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ascending-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
 }
 
 /* 服务警告 */
