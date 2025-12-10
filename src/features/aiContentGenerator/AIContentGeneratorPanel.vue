@@ -169,23 +169,34 @@
               </button>
             </div>
 
-            <div v-if="savedPrompts.length === 0" class="empty-prompts">
-              <p>{{ i18n.noSavedPrompts || '暂无保存的提示词，请在对话设置中保存' }}</p>
+            <!-- 搜索框 -->
+            <div v-if="savedPrompts.length > 5" class="prompt-search-wrapper">
+              <input
+                v-model="promptSearchQuery"
+                type="text"
+                class="prompt-search-input"
+                :placeholder="i18n.searchPrompts || '搜索提示词...'"
+              />
+            </div>
+
+            <div v-if="filteredPrompts.length === 0" class="empty-prompts">
+              <p v-if="savedPrompts.length === 0">{{ i18n.noSavedPrompts || '暂无保存的提示词，请在对话设置中保存' }}</p>
+              <p v-else>{{ i18n.noMatchingPrompts || '没有找到匹配的提示词' }}</p>
             </div>
 
             <div v-else class="prompt-list">
               <div
-                v-for="(prompt, index) in savedPrompts"
-                :key="index"
+                v-for="(prompt, index) in paginatedPrompts"
+                :key="prompt.id || index"
                 class="prompt-item"
-                @click="loadPrompt(index)"
+                @click="loadPrompt(getOriginalIndex(prompt))"
               >
                 <div class="prompt-item-header">
                   <span class="prompt-name">{{ prompt.name }}</span>
                   <div class="prompt-item-actions">
                     <button
                       class="btn-edit-prompt"
-                      @click.stop="editPrompt(index)"
+                      @click.stop="editPrompt(getOriginalIndex(prompt))"
                       :title="i18n.edit || '编辑'"
                     >
                       <svg width="14" height="14">
@@ -194,7 +205,7 @@
                     </button>
                     <button
                       class="btn-delete-prompt"
-                      @click.stop="deletePrompt(index)"
+                      @click.stop="deletePrompt(getOriginalIndex(prompt))"
                       :title="i18n.delete || '删除'"
                     >
                       <svg width="14" height="14">
@@ -208,6 +219,27 @@
                   <span>{{ i18n.temperature || '创造性' }}: {{ prompt.temperature }}</span>
                   <span>{{ i18n.maxTokens || '最大长度' }}: {{ prompt.maxTokens }}</span>
                 </div>
+              </div>
+
+              <!-- 分页控制 -->
+              <div v-if="totalPages > 1" class="prompt-pagination">
+                <button
+                  class="btn-page"
+                  @click="currentPage = Math.max(1, currentPage - 1)"
+                  :disabled="currentPage === 1"
+                  :title="i18n.previousPage || '上一页'"
+                >
+                  ‹
+                </button>
+                <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+                <button
+                  class="btn-page"
+                  @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                  :disabled="currentPage === totalPages"
+                  :title="i18n.nextPage || '下一页'"
+                >
+                  ›
+                </button>
               </div>
             </div>
           </div>
@@ -694,6 +726,54 @@ const savedPrompts = ref<SavedPrompt[]>([]);
 const showPromptSelector = ref(false);
 const newPromptName = ref('');
 const currentPromptName = ref(''); // 当前选中的提示词名称
+
+// 提示词搜索和分页状态
+const promptSearchQuery = ref('');
+const currentPage = ref(1);
+const ITEMS_PER_PAGE = 10; // 每页显示数量
+
+// 过滤后的提示词
+const filteredPrompts = computed(() => {
+  if (!promptSearchQuery.value.trim()) {
+    return savedPrompts.value;
+  }
+
+  const query = promptSearchQuery.value.toLowerCase().trim();
+  return savedPrompts.value.filter(prompt =>
+    prompt.name.toLowerCase().includes(query) ||
+    prompt.systemPrompt.toLowerCase().includes(query)
+  );
+});
+
+// 分页后的提示词
+const paginatedPrompts = computed(() => {
+  const start = (currentPage.value - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  return filteredPrompts.value.slice(start, end);
+});
+
+// 总页数
+const totalPages = computed(() => {
+  return Math.ceil(filteredPrompts.value.length / ITEMS_PER_PAGE) || 1;
+});
+
+// 获取原始索引（用于处理过滤后的列表）
+const getOriginalIndex = (prompt: SavedPrompt) => {
+  return savedPrompts.value.findIndex(p => p.id === prompt.id);
+};
+
+// 监听搜索查询变化，重置页码
+watch(promptSearchQuery, () => {
+  currentPage.value = 1;
+});
+
+// 监听提示词选择面板显示状态，重置搜索
+watch(showPromptSelector, (newVal) => {
+  if (newVal) {
+    promptSearchQuery.value = '';
+    currentPage.value = 1;
+  }
+});
 
 // 需求3：持久化当前提示词选择
 const CURRENT_PROMPT_STORAGE_KEY = 'ai-content-generator-current-prompt';

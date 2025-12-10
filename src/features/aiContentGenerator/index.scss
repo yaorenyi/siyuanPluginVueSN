@@ -190,14 +190,16 @@
 .compact-toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
+  flex-wrap: wrap;
 
   // 提示词选择器包装
   .prompt-selector-wrapper {
     position: relative;
     flex-shrink: 0;
     margin-bottom: 0;
+    min-width: 140px;
   }
 
   // 紧凑按钮通用样式
@@ -216,9 +218,12 @@
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
-    min-width: 80px;
-    max-width: 140px;
+    min-width: 140px;
+    max-width: 350px;
+    width: auto;
     overflow: hidden;
+    position: relative;
+    flex: 0 0 auto;
 
     &:hover {
       border-color: var(--b3-theme-primary);
@@ -236,18 +241,21 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 80px;
+      flex: 1;
       color: var(--b3-theme-primary);
       font-weight: 500;
+      min-width: 0;
     }
 
     .prompt-count-compact {
-      padding: 1px 4px;
+      padding: 1px 6px;
       background: var(--b3-theme-primary-lighter);
       color: var(--b3-theme-primary);
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 10px;
       font-weight: 600;
+      margin-left: 4px;
+      flex-shrink: 0;
     }
   }
 
@@ -260,24 +268,36 @@
 
   // 清除按钮（内联）
   .btn-clear-inline {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px;
-    margin-left: 2px;
+    width: 20px;
+    height: 20px;
     background: transparent;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
     color: var(--b3-theme-on-surface);
-    opacity: 0.5;
+    opacity: 0.3;
     transition: all 0.2s;
+    z-index: 2;
 
     &:hover {
       opacity: 1;
       background: var(--b3-theme-error-lighter);
       color: var(--b3-theme-error);
     }
+  }
+
+  // 按钮悬停时显示清除按钮
+  .btn-prompt-compact:hover .btn-clear-inline,
+  .btn-reference-compact:hover .btn-clear-inline,
+  .btn-doc-compact:hover .btn-clear-inline {
+    opacity: 0.8;
   }
 
   // 紧凑输入框
@@ -537,6 +557,7 @@
 .prompt-selector-wrapper {
   position: relative;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 // 引用当前文档按钮样式（修复问题2）
@@ -670,7 +691,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   z-index: 100;
-  max-height: 400px;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
   animation: slideDown 0.2s ease-out;
@@ -710,25 +731,93 @@
   font-size: 12px;
 }
 
+// 搜索框样式
+.prompt-search-wrapper {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+}
+
+.prompt-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--b3-theme-surface-light);
+  border-radius: 6px;
+  background: var(--b3-theme-surface);
+  color: var(--b3-theme-on-surface);
+  font-size: 12px;
+  outline: none;
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: var(--b3-theme-primary);
+    background: var(--b3-theme-background);
+  }
+
+  &::placeholder {
+    color: var(--b3-theme-on-surface);
+    opacity: 0.5;
+  }
+}
+
 .prompt-list {
   overflow-y: auto;
   padding: 8px;
-  max-height: 340px;
+  max-height: 420px;
+}
+
+// 分页控件样式
+.prompt-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 8px;
+  border-top: 1px solid var(--b3-theme-surface-lighter);
+  margin-top: 8px;
+}
+
+.btn-page {
+  padding: 4px 10px;
+  background: var(--b3-theme-surface);
+  border: 1px solid var(--b3-theme-surface-light);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--b3-theme-on-surface);
+  font-size: 14px;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--b3-theme-primary);
+    color: var(--b3-theme-on-primary);
+    border-color: var(--b3-theme-primary);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.page-info {
+  font-size: 12px;
+  color: var(--b3-theme-on-surface);
+  opacity: 0.7;
+  font-weight: 500;
 }
 
 .prompt-item {
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
   background: var(--b3-theme-surface);
   border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     border-color: var(--b3-theme-primary);
     background: var(--b3-theme-surface-light);
-    transform: translateX(4px);
+    transform: translateX(2px);
   }
 
   &:last-child {
@@ -740,26 +829,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .prompt-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--b3-theme-on-surface);
 }
 
 .prompt-item-actions {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .btn-edit-prompt,
 .btn-delete-prompt {
-  padding: 4px;
+  padding: 3px;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   color: var(--b3-theme-on-surface);
   opacity: 0.6;
@@ -781,11 +870,11 @@
 }
 
 .prompt-item-preview {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--b3-theme-on-surface);
   opacity: 0.7;
-  margin-bottom: 6px;
-  line-height: 1.4;
+  margin-bottom: 4px;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -795,8 +884,8 @@
 
 .prompt-item-meta {
   display: flex;
-  gap: 12px;
-  font-size: 10px;
+  gap: 8px;
+  font-size: 9px;
   color: var(--b3-theme-primary);
   opacity: 0.8;
 }
@@ -2051,15 +2140,25 @@
     }
 
     .prompt-selector-panel {
-      max-height: 60vh;
+      max-height: 70vh;
+
+      // 移动端搜索框优化
+      .prompt-search-wrapper {
+        padding: 10px 12px;
+      }
+
+      .prompt-search-input {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
 
       .prompt-list {
-        max-height: calc(60vh - 60px);
+        max-height: calc(70vh - 120px);
       }
 
       .prompt-item {
-        padding: 14px;
-        margin-bottom: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
 
         &:active {
           background: var(--b3-theme-primary-lighter);
@@ -2067,11 +2166,32 @@
       }
 
       .prompt-name {
-        font-size: 14px;
+        font-size: 13px;
       }
 
       .prompt-item-preview {
-        font-size: 13px;
+        font-size: 12px;
+      }
+
+      .prompt-item-meta {
+        font-size: 10px;
+      }
+
+      // 移动端分页优化
+      .prompt-pagination {
+        padding: 14px 8px;
+        gap: 16px;
+
+        .btn-page {
+          padding: 8px 14px;
+          font-size: 16px;
+          min-width: 44px;
+          min-height: 36px;
+        }
+
+        .page-info {
+          font-size: 13px;
+        }
       }
     }
   }
