@@ -17,7 +17,10 @@ inclusion: always
 - **@iconify/vue**: Icon system (preferred over custom icons)
 - **browser-image-compression**: Image compression
 - **qrcode**: QR code generation
-- **marked**: Markdown parsing
+- **markdown-it**: Advanced Markdown parsing with plugins
+  - **markdown-it-anchor**: Add anchors to headings
+  - **markdown-it-toc-done-right**: Generate table of contents
+- **marked**: Legacy Markdown parsing (being replaced by markdown-it)
 - **html2canvas**: Screenshot/image generation
 - **highlight.js**: Code syntax highlighting
 

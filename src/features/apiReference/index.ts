@@ -13,10 +13,12 @@ export function registerApiReference(plugin: Plugin) {
 
   // 注册全局快捷键 Ctrl+Alt+A 打开API参考面板
   document.addEventListener('keydown', (event) => {
-    // 检测 Ctrl+Alt+A 组合键
-    if (event.ctrlKey && event.altKey && event.key === 'A') {
+    // 检测 Ctrl+Alt+A 组合键 (支持大小写)
+    if (event.ctrlKey && event.altKey && (event.key === 'A' || event.key === 'a')) {
       event.preventDefault()
+      event.stopPropagation()
       showApiReferencePanel(plugin)
+      console.log('[API Reference] Shortcut triggered: Ctrl+Alt+A')
     }
   })
 
