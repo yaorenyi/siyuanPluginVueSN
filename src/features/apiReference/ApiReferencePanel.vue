@@ -152,20 +152,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// ============================================================================
 // TOC Tree 组件
-// ============================================================================
 const TocTree = defineComponent({
   name: 'TocTree',
   props: {
-    items: {
-      type: Array as () => TocItem[],
-      required: true
-    },
-    activeSlug: {
-      type: String,
-      default: ''
-    }
+    items: { type: Array as () => TocItem[], required: true },
+    activeSlug: { type: String, default: '' }
   },
   emits: ['navigate'],
   setup(props, { emit }) {
@@ -192,9 +184,7 @@ const TocTree = defineComponent({
   }
 })
 
-// ============================================================================
 // 响应式数据
-// ============================================================================
 const storage = createApiReferenceStorage(props.plugin)
 const contentRef = ref<HTMLElement>()
 const providers = ref<ApiProvider[]>([])
@@ -202,43 +192,31 @@ const selectedProvider = ref<ApiProvider>()
 const showAddDialog = ref(false)
 const tocItems = ref<TocItem[]>([])
 const activeHeading = ref<string>('')
+const newProvider = ref({ name: '', icon: '📄', content: '' })
 
-const newProvider = ref({
-  name: '',
-  icon: '📄',
-  content: ''
-})
-
-// ============================================================================
 // 计算属性
-// ============================================================================
 const renderedMarkdown = computed(() => {
   if (!selectedProvider.value) return ''
-  
-  const content = selectedProvider.value.description || ''
-  return renderMarkdown(content)
+  return renderMarkdown(selectedProvider.value.description || '')
 })
 
 const hasToc = computed(() => tocItems.value.length > 0)
+const canAddProvider = computed(() => newProvider.value.name.trim() && newProvider.value.content.trim())
 
-const canAddProvider = computed(() => {
-  return newProvider.value.name.trim() && newProvider.value.content.trim()
-})
-
-// ============================================================================
 // 生命周期
-// ============================================================================
 onMounted(async () => {
-  await initializeProviders()
-  await loadProviders()
+  await initializeDefaultProviders(props.plugin)
+  const storedProviders = await storage.getProviders()
+  providers.value = storedProviders
+  if (providers.value.length > 0) {
+    await selectProvider(providers.value[0].id)
+  }
 })
 
 // 监听选中的提供者变化
 watch(selectedProvider, (newProvider) => {
   if (newProvider) {
-    const content = newProvider.description || ''
-    tocItems.value = extractToc(content)
-    
+    tocItems.value = extractToc(newProvider.description || '')
     nextTick(() => {
       highlightCodeBlocks()
       setupScrollSpy()
@@ -248,125 +226,55 @@ watch(selectedProvider, (newProvider) => {
   }
 }, { immediate: true })
 
-// ============================================================================
-// 初始化和加载
-// ============================================================================
-async function initializeProviders() {
-  try {
-    await initializeDefaultProviders(props.plugin)
-    console.log('[API Reference] Default providers initialized')
-  } catch (error) {
-    console.error('[API Reference] Failed to initialize providers:', error)
-  }
-}
-
-async function loadProviders() {
-  try {
-    const storedProviders = await storage.getProviders()
-    providers.value = storedProviders
-    
-    if (providers.value.length > 0) {
-      await selectProvider(providers.value[0].id)
-    }
-    
-    console.log('[API Reference] Loaded providers:', providers.value.length)
-  } catch (error) {
-    console.error('[API Reference] Failed to load providers:', error)
-  }
-}
-
-// ============================================================================
 // Provider 管理
-// ============================================================================
 async function selectProvider(providerId: string) {
   const provider = providers.value.find(p => p.id === providerId)
   if (!provider) return
   
-  try {
-    const content = await storage.getMarkdownContent(providerId)
-    if (content) {
-      provider.description = content
-    }
-    
-    selectedProvider.value = provider
-    console.log('[API Reference] Selected provider:', providerId)
-  } catch (error) {
-    console.error('[API Reference] Failed to load provider content:', error)
-    selectedProvider.value = provider
-  }
+  const content = await storage.getMarkdownContent(providerId)
+  if (content) provider.description = content
+  selectedProvider.value = provider
 }
 
 async function addProvider() {
   if (!canAddProvider.value) return
   
-  try {
-    const providerId = generateProviderId(newProvider.value.name)
-    
-    const provider: ApiProvider = {
-      id: providerId,
-      name: newProvider.value.name,
-      description: newProvider.value.content,
-      icon: newProvider.value.icon,
-      version: '',
-      documentationUrl: '',
-      baseUrl: '',
-      authType: 'none',
-      categories: []
-    }
-    
-    const updatedProviders = [...providers.value, provider]
-    await storage.saveProviders(updatedProviders)
-    await storage.saveMarkdownContent(providerId, newProvider.value.content)
-    
-    providers.value = updatedProviders
-    selectedProvider.value = provider
-    
-    hideAddProviderDialog()
-    
-    console.log('[API Reference] Added new provider:', provider.name)
-  } catch (error) {
-    console.error('[API Reference] Failed to add provider:', error)
+  const providerId = newProvider.value.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + Date.now()
+  const provider: ApiProvider = {
+    id: providerId,
+    name: newProvider.value.name,
+    description: newProvider.value.content,
+    icon: newProvider.value.icon,
+    version: '',
+    documentationUrl: '',
+    baseUrl: '',
+    authType: 'none',
+    categories: []
   }
+  
+  const updatedProviders = [...providers.value, provider]
+  await storage.saveProviders(updatedProviders)
+  await storage.saveMarkdownContent(providerId, newProvider.value.content)
+  
+  providers.value = updatedProviders
+  selectedProvider.value = provider
+  hideAddProviderDialog()
 }
 
 async function removeProvider(providerId: string) {
-  if (!confirm(props.i18n.apiReference?.confirmDelete || '确定要删除此API文档吗？')) {
-    return
-  }
+  if (!confirm(props.i18n.apiReference?.confirmDelete || '确定要删除此API文档吗？')) return
   
-  try {
-    await storage.removeProvider(providerId)
-    
-    providers.value = providers.value.filter(p => p.id !== providerId)
-    
-    if (selectedProvider.value?.id === providerId) {
-      selectedProvider.value = providers.value.length > 0 ? providers.value[0] : undefined
-    }
-    
-    console.log('[API Reference] Removed provider:', providerId)
-  } catch (error) {
-    console.error('[API Reference] Failed to remove provider:', error)
+  await storage.removeProvider(providerId)
+  providers.value = providers.value.filter(p => p.id !== providerId)
+  
+  if (selectedProvider.value?.id === providerId) {
+    selectedProvider.value = providers.value.length > 0 ? providers.value[0] : undefined
   }
 }
 
-function generateProviderId(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim() + '-' + Date.now()
-}
-
-// ============================================================================
 // 对话框管理
-// ============================================================================
 function showAddProviderDialog() {
-  newProvider.value = {
-    name: '',
-    icon: '📄',
-    content: ''
-  }
+  newProvider.value = { name: '', icon: '📄', content: '' }
   showAddDialog.value = true
 }
 
@@ -374,12 +282,9 @@ function hideAddProviderDialog() {
   showAddDialog.value = false
 }
 
-// ============================================================================
 // 内容交互
-// ============================================================================
 function handleContentClick(event: Event) {
   const target = event.target as HTMLElement
-  
   if (target.tagName === 'A') {
     const href = target.getAttribute('href')
     if (href && href.startsWith('http')) {
@@ -392,15 +297,13 @@ function handleContentClick(event: Event) {
 function highlightCodeBlocks() {
   nextTick(() => {
     const codeBlocks = contentRef.value?.querySelectorAll('pre code')
-    if (codeBlocks) {
-      codeBlocks.forEach((block) => {
-        try {
-          hljs.highlightElement(block as HTMLElement)
-        } catch (err) {
-          console.warn('Failed to highlight code block:', err)
-        }
-      })
-    }
+    codeBlocks?.forEach((block) => {
+      try {
+        hljs.highlightElement(block as HTMLElement)
+      } catch (err) {
+        console.warn('Failed to highlight code block:', err)
+      }
+    })
   })
 }
 
@@ -424,17 +327,11 @@ function setupScrollSpy() {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           const id = entry.target.getAttribute('id')
-          if (id) {
-            activeHeading.value = id
-          }
+          if (id) activeHeading.value = id
         }
       })
     },
-    {
-      root: container,
-      rootMargin: '-80px 0px -80% 0px',
-      threshold: 0
-    }
+    { root: container, rootMargin: '-80px 0px -80% 0px', threshold: 0 }
   )
 
   headings.forEach((heading) => observer.observe(heading))
@@ -446,5 +343,5 @@ function handleClose() {
 </script>
 
 <style scoped lang="scss">
-@import "./index.scss";
+@use "./index.scss";
 </style>

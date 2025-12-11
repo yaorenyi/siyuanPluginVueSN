@@ -596,6 +596,7 @@
   "enableEncryptionDesc": "Encrypt and decrypt selected text with AES-256-GCM algorithm",
   "enableApiReference": "Enable API Reference",
   "enableApiReferenceDesc": "Multi-API usage reference supporting SiYuan, OpenAI, GitHub and more",
+  "openApiReference": "Open API Reference",
   "apiReference": {
     "title": "API Reference",
     "shortcutHint": "Quickly open this panel",

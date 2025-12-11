@@ -615,6 +615,7 @@
   "enableEncryptionDesc": "使用 AES-256-GCM 算法对选中文本进行加密和解密",
   "enableApiReference": "启用API参考功能",
   "enableApiReferenceDesc": "多API使用方式参考，支持思源、OpenAI、GitHub等",
+  "openApiReference": "打开API参考",
   "apiReference": {
     "title": "API使用参考",
     "shortcutHint": "快速打开此面板",

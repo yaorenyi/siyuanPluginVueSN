@@ -10,15 +10,13 @@ import ApiReferencePanel from './ApiReferencePanel.vue'
  * 注册API参考模块
  */
 export function registerApiReference(plugin: Plugin) {
-
-  // 注册全局快捷键 Ctrl+Alt+A 打开API参考面板
-  document.addEventListener('keydown', (event) => {
-    // 检测 Ctrl+Alt+A 组合键 (支持大小写)
-    if (event.ctrlKey && event.altKey && (event.key === 'A' || event.key === 'a')) {
-      event.preventDefault()
-      event.stopPropagation()
+  // 使用思源的命令系统注册快捷键
+  plugin.addCommand({
+    langKey: 'openApiReference',
+    hotkey: '⌃⌥A', // Ctrl+Alt+A
+    callback: () => {
       showApiReferencePanel(plugin)
-      console.log('[API Reference] Shortcut triggered: Ctrl+Alt+A')
+      console.log('[API Reference] Command triggered')
     }
   })
 
