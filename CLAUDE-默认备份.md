@@ -94,12 +94,15 @@ src/
 - 功能导出 `register[FeatureName]()` 函数
 - 功能根据 `plugin.settings` 条件性注册
 - 所有功能从 `src/features/index.ts` 导出
+- 新功能必须在超级面板中有开关设置显示 。
 
 **3. 配置管理** (`src/config/settings.ts`)
 - 集中式设置接口：`PluginSettings`
 - 独立设置：字体、列表、标题、代码块
 - 默认值与保存的配置合并
 - 通过 Siyuan 的 `plugin.loadData()` / `plugin.saveData()` 持久化存储
+- API参考：docs/思源笔记 API 使用.md
+- 快捷键：实现遵循 ctrl+alt+？
 
 **4. Vue 应用结构**
 - 主应用在 `src/main.ts`（Vue 初始化）
