@@ -140,8 +140,8 @@ export const FEATURE_ICONS = {
     color: '#8b5cf6'
   },
 
-  // API使用参考
-  apiUsage: {
+  // API参考
+  apiReference: {
     icon: 'mdi:api',
     color: '#0ea5e9'
   }

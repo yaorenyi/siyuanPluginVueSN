@@ -448,13 +448,13 @@ const features = computed<Feature[]>(() => [
     actions: []
   },
   {
-    id: 'apiUsage',
-    iconKey: 'apiUsage',
-    title: props.i18n.apiUsage?.title || 'API使用参考',
-    desc: props.i18n.apiUsageDesc || '通过快捷键查看思源API使用方式参考',
-    enabled: props.settings.enableApiUsage,
+    id: 'apiReference',
+    iconKey: 'apiReference',
+    title: props.i18n.apiReference?.title || 'API参考',
+    desc: props.i18n.enableApiReferenceDesc || '多API使用方式参考，支持思源、OpenAI、GitHub等',
+    enabled: props.settings.enableApiReference,
     actions: [
-      { key: 'openApiUsage', label: '打开API参考', hotkey: 'Ctrl+Alt+A' }
+      { key: 'openApiReference', label: '打开API参考', hotkey: 'Ctrl+Alt+A' }
     ]
   }
 ])

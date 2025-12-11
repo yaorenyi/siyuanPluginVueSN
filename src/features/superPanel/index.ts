@@ -151,7 +151,7 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'video': 'enableVideo',
     'everythingSearch': 'enableEverythingSearch',
     'systemMonitor': 'enableSystemMonitor',
-    'apiUsage': 'enableApiUsage'
+    'apiReference': 'enableApiReference'
   }
 
   const settingKey = settingsMap[featureId]
@@ -225,10 +225,10 @@ function handleFeatureAction(_plugin: Plugin, action: string) {
       closeSuperPanel()
       break
 
-    case 'openApiUsage':
-      // 触发打开API使用参考
-      if ((_plugin as any).settings.enableApiUsage) {
-        window.dispatchEvent(new CustomEvent('openApiUsage'))
+    case 'openApiReference':
+      // 触发打开API参考
+      if ((_plugin as any).settings.enableApiReference) {
+        window.dispatchEvent(new CustomEvent('openApiReference'))
         closeSuperPanel()
       }
       break
