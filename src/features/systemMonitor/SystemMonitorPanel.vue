@@ -81,7 +81,7 @@ const memoryTotal = ref(0)
 const memoryUsed = ref(0)
 const memoryFree = ref(0)
 const lastUpdate = ref(Date.now())
-let updateTimer: number | null = null
+let updateTimer: ReturnType<typeof setInterval> | null = null
 
 // 格式化函数
 const formatPercentage = (value: number) => {
@@ -185,10 +185,10 @@ watch(effectiveUpdateInterval, (newInterval) => {
 <style scoped>
 .system-monitor-panel {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 0 3px 0;
+  padding: 0;
   height: 22px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 11px;
@@ -199,12 +199,11 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .system-monitor-panel.compact-mode {
   gap: 6px;
-  padding: 0 0 2px 0;
 }
 
 .monitor-item {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 4px;
   min-width: 90px;
 }
@@ -215,28 +214,25 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .monitor-label {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 2px;
   min-width: 30px;
-  line-height: 1;
 }
 
 .monitor-icon {
   font-size: 10px;
   opacity: 0.7;
-  line-height: 1;
 }
 
 .monitor-text {
   font-weight: 500;
   white-space: nowrap;
   font-size: 10px;
-  line-height: 1;
 }
 
 .monitor-value {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 4px;
   flex: 1;
 }
@@ -247,7 +243,6 @@ watch(effectiveUpdateInterval, (newInterval) => {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
   font-weight: 600;
   font-size: 10px;
-  line-height: 1;
 }
 
 .usage-bar {
@@ -256,8 +251,6 @@ watch(effectiveUpdateInterval, (newInterval) => {
   background: var(--b3-theme-surface-lighter);
   border-radius: 2px;
   overflow: hidden;
-  align-self: flex-end;
-  margin-bottom: 2px;
 }
 
 .usage-bar-fill {
@@ -280,7 +273,6 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .memory-details {
   display: flex;
-  align-items: flex-end;
   gap: 8px;
   font-size: 11px;
   opacity: 0.8;
@@ -288,18 +280,15 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .detail-item {
   display: flex;
-  align-items: flex-end;
   gap: 2px;
 }
 
 .detail-label {
   font-weight: 500;
-  line-height: 1;
 }
 
 .detail-value {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
-  line-height: 1;
 }
 
 .update-time {
@@ -307,6 +296,5 @@ watch(effectiveUpdateInterval, (newInterval) => {
   opacity: 0.6;
   margin-left: auto;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
-  line-height: 1;
 }
 </style>
