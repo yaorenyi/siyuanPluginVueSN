@@ -149,7 +149,8 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'pronunciation': 'enablePronunciation',
     'encryption': 'enableEncryption',
     'video': 'enableVideo',
-    'everythingSearch': 'enableEverythingSearch'
+    'everythingSearch': 'enableEverythingSearch',
+    'systemMonitor': 'enableSystemMonitor'
   }
 
   const settingKey = settingsMap[featureId]
@@ -161,13 +162,14 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
 
     const success = await pluginSample.updateSettings(newSettings)
     if (success) {
-      showMessage(
-        enabled
-          ? (plugin.i18n as any).featureEnabled || '功能已启用，请重启插件生效'
-          : (plugin.i18n as any).featureDisabled || '功能已禁用，请重启插件生效',
-        3000,
-        'info'
-      )
+
+        showMessage(
+          enabled
+            ? (plugin.i18n as any).featureEnabled || '功能已启用，请重启插件生效'
+            : (plugin.i18n as any).featureDisabled || '功能已禁用，请重启插件生效',
+          3000,
+          'info'
+        )
       // 不关闭面板，让用户可以继续操作
     } else {
       showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
@@ -260,3 +262,5 @@ async function handleUpdateAiSettings(
     showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
   }
 }
+
+

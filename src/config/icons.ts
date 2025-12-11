@@ -132,6 +132,12 @@ export const FEATURE_ICONS = {
   everythingSearch: {
     icon: 'mdi:file-search',
     color: '#3b82f6'
+  },
+
+  // 系统监控
+  systemMonitor: {
+    icon: 'mdi:monitor-dashboard',
+    color: '#8b5cf6'
   }
 } as const
 

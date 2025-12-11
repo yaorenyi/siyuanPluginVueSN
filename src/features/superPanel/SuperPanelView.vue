@@ -438,6 +438,14 @@ const features = computed<Feature[]>(() => [
     actions: [
       { key: 'openEverythingSearch', label: '打开搜索', hotkey: 'Ctrl+Alt+E' }
     ]
+  },
+  {
+    id: 'systemMonitor',
+    iconKey: 'systemMonitor',
+    title: props.i18n.systemMonitor?.title || '系统监控',
+    desc: props.i18n.systemMonitor?.description || '在状态栏显示 CPU 和内存使用情况',
+    enabled: props.settings.enableSystemMonitor,
+    actions: []
   }
 ])
 
@@ -772,57 +780,57 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
     width: 100vw;
     right: 0;
   }
-  
+
   .super-panel-header {
     padding: 12px 16px;
   }
-  
+
   .super-panel-title {
     font-size: 14px;
     gap: 8px;
   }
-  
+
   .super-panel-settings,
   .super-panel-refresh,
   .super-panel-close {
     width: 28px;
     height: 28px;
   }
-  
+
   .super-panel-content {
     grid-template-columns: 1fr;
     padding: 12px;
     gap: 8px;
   }
-  
+
   .ai-settings-header {
     padding: 10px 12px;
     font-size: 13px;
   }
-  
+
   .ai-settings-content {
     padding: 12px;
     gap: 12px;
   }
-  
+
   .setting-label {
     font-size: 12px;
   }
-  
+
   .setting-select,
   .setting-input {
     padding: 6px 10px;
     font-size: 12px;
   }
-  
+
   .setting-select {
     padding-right: 32px;
   }
-  
+
   .toggle-visibility-btn {
     padding: 6px 10px;
   }
-  
+
   .setting-desc {
     font-size: 11px;
   }
@@ -833,11 +841,11 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
   .super-panel-header {
     padding: 10px 12px;
   }
-  
+
   .super-panel-title {
     font-size: 13px;
     gap: 6px;
-    
+
     span {
       max-width: 150px;
       overflow: hidden;
@@ -845,28 +853,28 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
       white-space: nowrap;
     }
   }
-  
+
   .header-actions {
     gap: 4px;
   }
-  
+
   .super-panel-settings,
   .super-panel-refresh,
   .super-panel-close {
     width: 24px;
     height: 24px;
   }
-  
+
   .super-panel-content {
     padding: 8px;
     gap: 6px;
   }
-  
+
   .ai-settings-header {
     padding: 8px 10px;
     font-size: 12px;
   }
-  
+
   .ai-settings-content {
     padding: 10px;
     gap: 10px;

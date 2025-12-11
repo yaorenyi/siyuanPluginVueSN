@@ -626,5 +626,25 @@
   "aiQuery": "AI Query",
   "toggleTheme": "Toggle Theme",
   "defaultTheme": "Default",
-  "githubTheme": "GitHub"
+  "githubTheme": "GitHub",
+  "systemMonitor": {
+    "title": "System Monitor",
+    "description": "Display CPU and memory usage in status bar",
+    "cpu": "CPU",
+    "memory": "Memory",
+    "used": "Used",
+    "free": "Free",
+    "total": "Total",
+    "settings": "System Monitor Settings",
+    "settingsDesc": "Configure CPU and memory monitoring display options",
+    "enableSystemMonitor": "Enable System Monitor",
+    "enableSystemMonitorDesc": "Display CPU and memory usage in status bar",
+    "updateInterval": "Update Interval",
+    "showCpuUsage": "Show CPU Usage",
+    "showMemoryUsage": "Show Memory Usage",
+    "showMemoryDetails": "Show Memory Details",
+    "compactMode": "Compact Mode",
+    "enabled": "System monitor enabled",
+    "disabled": "System monitor disabled"
+  }
 }

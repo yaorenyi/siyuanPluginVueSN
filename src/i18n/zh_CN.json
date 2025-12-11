@@ -645,5 +645,25 @@
   "aiQuery": "AI查询",
   "toggleTheme": "切换主题",
   "defaultTheme": "默认",
-  "githubTheme": "GitHub"
+  "githubTheme": "GitHub",
+  "systemMonitor": {
+    "title": "系统监控",
+    "description": "在状态栏显示 CPU 和内存使用情况",
+    "cpu": "CPU",
+    "memory": "内存",
+    "used": "已用",
+    "free": "可用",
+    "total": "总计",
+    "settings": "系统监控设置",
+    "settingsDesc": "配置 CPU 和内存监控显示选项",
+    "enableSystemMonitor": "启用系统监控功能",
+    "enableSystemMonitorDesc": "在状态栏显示 CPU 和内存使用情况",
+    "updateInterval": "更新间隔",
+    "showCpuUsage": "显示 CPU 使用率",
+    "showMemoryUsage": "显示内存使用率",
+    "showMemoryDetails": "显示内存详情",
+    "compactMode": "紧凑模式",
+    "enabled": "系统监控已启用",
+    "disabled": "系统监控已禁用"
+  }
 }

@@ -8,7 +8,11 @@
       "Bash(npm run build)",
       "WebFetch(domain:platform.minimaxi.com)",
       "WebFetch(domain:tophub.today)",
-      "WebFetch(domain:rebang.today)"
+      "WebFetch(domain:rebang.today)",
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm run dev:*)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm build)"
     ],
     "deny": [],
     "ask": []
