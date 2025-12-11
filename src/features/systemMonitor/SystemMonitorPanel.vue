@@ -2,29 +2,19 @@
   <div class="system-monitor-panel" :class="{ 'compact-mode': compactMode }">
     <!-- CPU使用率 -->
     <div v-if="showCpuUsage" class="monitor-item cpu-usage">
-      <div class="monitor-label">
-        <span class="monitor-icon">⚡</span>
-        <span class="monitor-text">{{ i18n?.systemMonitor?.cpu || 'CPU' }}</span>
-      </div>
-      <div class="monitor-value">
-        <span class="usage-value">{{ formatPercentage(cpuUsage) }}</span>
-        <div class="usage-bar">
-          <div class="usage-bar-fill" :style="{ width: `${cpuUsage}%` }" :class="getUsageClass(cpuUsage)"></div>
-        </div>
+      <span class="monitor-text">{{ i18n?.systemMonitor?.cpu || 'CPU' }}</span>
+      <span class="usage-value">{{ formatPercentage(cpuUsage) }}</span>
+      <div class="usage-bar">
+        <div class="usage-bar-fill" :style="{ width: `${cpuUsage}%` }" :class="getUsageClass(cpuUsage)"></div>
       </div>
     </div>
 
     <!-- 内存使用率 -->
     <div v-if="showMemoryUsage" class="monitor-item memory-usage">
-      <div class="monitor-label">
-        <span class="monitor-icon">💾</span>
-        <span class="monitor-text">{{ i18n?.systemMonitor?.memory || '内存' }}</span>
-      </div>
-      <div class="monitor-value">
-        <span class="usage-value">{{ formatPercentage(memoryUsage) }}</span>
-        <div class="usage-bar">
-          <div class="usage-bar-fill" :style="{ width: `${memoryUsage}%` }" :class="getUsageClass(memoryUsage)"></div>
-        </div>
+      <span class="monitor-text">{{ i18n?.systemMonitor?.memory || '内存' }}</span>
+      <span class="usage-value">{{ formatPercentage(memoryUsage) }}</span>
+      <div class="usage-bar">
+        <div class="usage-bar-fill" :style="{ width: `${memoryUsage}%` }" :class="getUsageClass(memoryUsage)"></div>
       </div>
     </div>
 
@@ -191,7 +181,7 @@ watch(effectiveUpdateInterval, (newInterval) => {
   padding: 12px 8px 4px 8px;
   height: 28px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--b3-theme-on-surface);
   background: transparent;
   user-select: none;
@@ -203,8 +193,8 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .monitor-item {
   display: flex;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: center;
+  gap: 2px;
   min-width: 90px;
   line-height: 1.2;
   padding-top: 2px;
@@ -215,28 +205,17 @@ watch(effectiveUpdateInterval, (newInterval) => {
   min-width: 80px;
 }
 
-.monitor-label {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-width: 30px;
-}
-
-.monitor-icon {
-  font-size: 10px;
-  opacity: 0.7;
-}
-
 .monitor-text {
   font-weight: 500;
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 11px;
+  margin-right: 1px;
 }
 
 .monitor-value {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 
@@ -245,15 +224,16 @@ watch(effectiveUpdateInterval, (newInterval) => {
   text-align: right;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .usage-bar {
   width: 32px;
-  height: 4px;
+  height: 6px;
   background: var(--b3-theme-surface-lighter);
   border-radius: 2px;
   overflow: hidden;
+  align-self: center;
 }
 
 .usage-bar-fill {
@@ -277,7 +257,7 @@ watch(effectiveUpdateInterval, (newInterval) => {
 .memory-details {
   display: flex;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.8;
 }
 
@@ -295,7 +275,7 @@ watch(effectiveUpdateInterval, (newInterval) => {
 }
 
 .update-time {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.6;
   margin-left: auto;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', monospace;
