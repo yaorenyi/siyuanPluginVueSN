@@ -81,7 +81,7 @@ const memoryTotal = ref(0)
 const memoryUsed = ref(0)
 const memoryFree = ref(0)
 const lastUpdate = ref(Date.now())
-let updateTimer: number | null = null
+let updateTimer: ReturnType<typeof setInterval> | null = null
 
 // 格式化函数
 const formatPercentage = (value: number) => {
