@@ -191,14 +191,10 @@ const TocTree = defineComponent({
     const handleMouseEnter = (event: Event) => {
       const target = event.currentTarget as HTMLElement
       if (target) {
-        target.style.backgroundColor = 'rgba(13, 110, 253, 0.08)'
         target.style.transform = 'translateX(4px)'
-        target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)'
         const indicator = target.querySelector('.toc-indicator') as HTMLElement
         if (indicator) {
-          indicator.style.backgroundColor = '#0d6efd'
           indicator.style.transform = 'scale(1.2)'
-          indicator.style.boxShadow = '0 0 6px rgba(13, 110, 253, 0.4)'
         }
       }
     }
@@ -207,14 +203,10 @@ const TocTree = defineComponent({
       const target = event.currentTarget as HTMLElement
       const isActive = props.activeSlug === item.slug
       if (target && !isActive) {
-        // 恢复原始背景色
-        target.style.backgroundColor = item.level === 1 ? 'rgba(0, 0, 0, 0.02)' : 'transparent'
         target.style.transform = 'translateX(0)'
-        target.style.boxShadow = 'none'
         const indicator = target.querySelector('.toc-indicator') as HTMLElement
         if (indicator) {
           indicator.style.transform = 'scale(1)'
-          indicator.style.boxShadow = item.level === 1 ? '0 0 4px rgba(13, 110, 253, 0.3)' : 'none'
         }
       }
     }
@@ -223,54 +215,21 @@ const TocTree = defineComponent({
       const isActive = props.activeSlug === item.slug
       const hasChildren = item.children && item.children.length > 0
 
-      return h('li', { 
+      return h('li', {
         class: `toc-item toc-level-${item.level}`,
-        'data-slug': item.slug,
-        'data-level': item.level
+        'data-slug': item.slug
       }, [
         h('div', {
           class: { 'toc-link': true, 'active': isActive },
-          'data-slug': item.slug,
-          'data-level': item.level,
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            padding: item.level === 1 ? '8px 16px' : '6px 16px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            marginLeft: item.level > 1 ? `${(item.level - 1) * 20}px` : '0',
-            fontSize: item.level === 1 ? '15px' : item.level === 2 ? '14px' : item.level === 3 ? '13px' : '12px',
-            fontWeight: item.level === 1 ? '700' : item.level === 2 ? '600' : item.level === 3 ? '500' : '400',
-            backgroundColor: isActive ? 'rgba(13, 110, 253, 0.12)' : (item.level === 1 ? 'rgba(0, 0, 0, 0.02)' : 'transparent'),
-            borderLeft: isActive ? '3px solid #0d6efd' : 'none',
-            color: isActive ? '#0d6efd' : (item.level === 1 ? '#222' : item.level === 2 ? '#333' : '#666'),
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            WebkitFontSmoothing: 'antialiased',
-            MozOsxFontSmoothing: 'grayscale',
-            margin: '1px 0'
-          },
           onClick: (e: Event) => handleClick(item.slug, e),
           onMouseenter: (e: Event) => handleMouseEnter(e),
           onMouseleave: (e: Event) => handleMouseLeave(e, item)
         }, [
-          h('div', { 
-            class: 'toc-indicator',
-            style: {
-              width: item.level === 1 ? '7px' : item.level === 2 ? '6px' : item.level === 3 ? '5px' : '4px',
-              height: item.level === 1 ? '7px' : item.level === 2 ? '6px' : item.level === 3 ? '5px' : '4px',
-              borderRadius: '50%',
-              backgroundColor: item.level === 1 ? '#0d6efd' : item.level === 2 ? '#0d6efd' : item.level === 3 ? '#6c757d' : '#adb5bd',
-              marginRight: '12px',
-              flexShrink: '0',
-              transition: 'all 0.2s ease',
-              opacity: item.level === 1 ? '1' : item.level === 2 ? '0.8' : item.level === 3 ? '0.6' : '0.4',
-              boxShadow: item.level === 1 ? '0 0 4px rgba(13, 110, 253, 0.3)' : 'none'
-            }
+          h('div', {
+            class: 'toc-indicator'
           }),
-          h('span', { 
-            class: 'toc-text',
-            style: { flex: '1' }
+          h('span', {
+            class: 'toc-text'
           }, item.text)
         ]),
         hasChildren ? h('ul', { class: 'toc-children' }, item.children!.map(renderItem)) : null

@@ -414,7 +414,7 @@
     background: var(--b3-theme-surface, rgba(0, 0, 0, 0.05));
     color: var(--b3-theme-text, #333);
     transform: translateX(4px);
-    
+
     .toc-indicator {
       background: var(--b3-theme-primary, #0d6efd);
       transform: scale(1.2);
@@ -422,14 +422,14 @@
   }
 
   &.active {
-    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+    background: var(--b3-theme-primary-lighter, rgba(13, 110, 253, 0.1));
     color: var(--b3-theme-primary, #0d6efd);
     font-weight: 600;
     border-left: 3px solid var(--b3-theme-primary, #0d6efd);
-    
+
     .toc-indicator {
       background: var(--b3-theme-primary, #0d6efd);
-      box-shadow: 0 0 8px rgba(13, 110, 253, 0.4);
+      box-shadow: 0 0 8px var(--b3-theme-primary-glow, rgba(13, 110, 253, 0.4));
     }
   }
 
@@ -450,107 +450,124 @@
   }
 }
 
-// 不同层级的样式区分 - 使用更兼容的CSS变量
-.toc-level-1 > .toc-link {
-  font-weight: 700;
-  font-size: 12px;
-  margin: 4px 0;
-  padding: 8px 10px;
-  background: var(--b3-theme-surface, rgba(0, 0, 0, 0.02));
-  border-radius: 6px;
-  
-  .toc-indicator {
-    width: 6px;
-    height: 6px;
-    background: var(--b3-theme-primary, #0d6efd);
-    opacity: 0.8;
-    box-shadow: 0 0 3px rgba(13, 110, 253, 0.3);
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text, #333);
+// 不同层级的样式区分 - 使用思源笔记的CSS变量以支持暗黑主题
+.toc-level-1 {
+  .toc-link {
     font-weight: 700;
+    font-size: 13px;
+    margin: 4px 0;
+    padding: 8px 10px;
+    background: var(--b3-theme-surface);
+    border-radius: 6px;
+    color: var(--b3-theme-text);
+
+    .toc-indicator {
+      width: 6px;
+      height: 6px;
+      background: var(--b3-theme-primary);
+      opacity: 0.9;
+      box-shadow: 0 0 3px var(--b3-theme-primary-glow);
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text);
+      font-weight: 700;
+    }
   }
 }
 
-.toc-level-2 > .toc-link {
-  margin-left: 16px;
-  font-size: 11px;
-  font-weight: 500;
-  
-  .toc-indicator {
-    width: 5px;
-    height: 5px;
-    background: var(--b3-theme-primary, #0d6efd);
-    opacity: 0.6;
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text, #444);
+.toc-level-2 {
+  padding-left: 16px;
+
+  .toc-link {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--b3-theme-text-secondary);
+
+    .toc-indicator {
+      width: 5px;
+      height: 5px;
+      background: var(--b3-theme-primary);
+      opacity: 0.7;
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text-secondary);
+    }
   }
 }
 
-.toc-level-3 > .toc-link {
-  margin-left: 32px;
-  font-size: 10px;
-  
-  .toc-indicator {
-    width: 4px;
-    height: 4px;
-    background: var(--b3-theme-text-lighter, #666);
-    opacity: 0.7;
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text-lighter, #555);
+.toc-level-3 {
+  padding-left: 32px;
+
+  .toc-link {
+    font-size: 11px;
+    color: var(--b3-theme-text-tertiary);
+
+    .toc-indicator {
+      width: 4px;
+      height: 4px;
+      background: var(--b3-theme-text-hint);
+      opacity: 0.7;
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text-tertiary);
+    }
   }
 }
 
-.toc-level-4 > .toc-link {
-  margin-left: 48px;
-  font-size: 10px;
-  
-  .toc-indicator {
-    width: 3px;
-    height: 3px;
-    background: var(--b3-theme-text-lighter, #888);
-    opacity: 0.5;
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text-lighter, #666);
+.toc-level-4 {
+  padding-left: 48px;
+
+  .toc-link {
+    font-size: 10px;
+
+    .toc-indicator {
+      width: 3px;
+      height: 3px;
+      opacity: 0.5;
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text-tertiary);
+    }
   }
 }
 
-.toc-level-5 > .toc-link {
-  margin-left: 64px;
-  font-size: 9px;
-  
-  .toc-indicator {
-    width: 2px;
-    height: 2px;
-    background: var(--b3-theme-text-lighter, #aaa);
-    opacity: 0.4;
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text-lighter, #777);
+.toc-level-5 {
+  padding-left: 64px;
+
+  .toc-link {
+    font-size: 9px;
+
+    .toc-indicator {
+      width: 2px;
+      height: 2px;
+      opacity: 0.4;
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text-hint);
+    }
   }
 }
 
-.toc-level-6 > .toc-link {
-  margin-left: 80px;
-  font-size: 9px;
-  
-  .toc-indicator {
-    width: 2px;
-    height: 2px;
-    background: var(--b3-theme-text-lighter, #ccc);
-    opacity: 0.3;
-  }
-  
-  .toc-text {
-    color: var(--b3-theme-text-lighter, #888);
+.toc-level-6 {
+  padding-left: 80px;
+
+  .toc-link {
+    font-size: 9px;
+
+    .toc-indicator {
+      width: 2px;
+      height: 2px;
+      opacity: 0.3;
+    }
+
+    .toc-text {
+      color: var(--b3-theme-text-disabled);
+    }
   }
 }
 
