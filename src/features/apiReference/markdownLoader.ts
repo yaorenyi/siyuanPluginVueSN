@@ -34,11 +34,27 @@ function slugify(s: string): string {
     .toLowerCase()
 }
 
+// 创建唯一 slug 生成器，用于处理重复标题
+const anchorSlugCounts = new Map<string, number>()
+
+function uniqueSlugify(s: string): string {
+  const baseSlug = slugify(s)
+  
+  if (anchorSlugCounts.has(baseSlug)) {
+    const count = anchorSlugCounts.get(baseSlug)! + 1
+    anchorSlugCounts.set(baseSlug, count)
+    return `${baseSlug}-${count}`
+  } else {
+    anchorSlugCounts.set(baseSlug, 0)
+    return baseSlug
+  }
+}
+
 // 配置 anchor 插件（为标题添加锚点，但不添加链接）
 md.use(markdownItAnchor, {
   permalink: false, // 禁用永久链接，避免标题变成链接
   level: [1, 2, 3, 4, 5, 6],
-  slugify
+  slugify: uniqueSlugify
 })
 
 // 配置 TOC 插件（生成目录）
@@ -68,6 +84,8 @@ function escapeHtml(text: string): string {
  */
 export function renderMarkdown(content: string): string {
   try {
+    // 重置 slug 计数器，确保每次渲染都从头开始
+    anchorSlugCounts.clear()
     return md.render(content)
   } catch (error) {
     console.error('Failed to render markdown:', error)
@@ -94,6 +112,7 @@ export function extractToc(content: string): TocItem[] {
   const tokens = md.parse(content, {})
   const toc: TocItem[] = []
   const stack: TocItem[] = []
+  const slugCounts = new Map<string, number>() // 用于跟踪重复的 slug
 
   console.log('[API Reference] Parsing tokens, total:', tokens.length)
 
@@ -119,11 +138,22 @@ export function extractToc(content: string): TocItem[] {
         continue
       }
 
-      const slug = slugify(text)
+      // 生成基础 slug
+      let baseSlug = slugify(text)
+      let uniqueSlug = baseSlug
 
-      console.log(`[API Reference] Found heading: level=${level}, text="${text}", slug="${slug}"`)
+      // 处理重复的 slug，添加数字后缀
+      if (slugCounts.has(baseSlug)) {
+        const count = slugCounts.get(baseSlug)! + 1
+        slugCounts.set(baseSlug, count)
+        uniqueSlug = `${baseSlug}-${count}`
+      } else {
+        slugCounts.set(baseSlug, 0)
+      }
 
-      const item: TocItem = { level, text, slug }
+      console.log(`[API Reference] Found heading: level=${level}, text="${text}", slug="${uniqueSlug}"`)
+
+      const item: TocItem = { level, text, slug: uniqueSlug }
 
       // 找到合适的父级
       while (stack.length > 0 && stack[stack.length - 1].level >= level) {

@@ -188,7 +188,7 @@ const TocTree = defineComponent({
       emit('navigate', slug)
     }
 
-    const handleMouseEnter = (event: Event, item: TocItem) => {
+    const handleMouseEnter = (event: Event) => {
       const target = event.currentTarget as HTMLElement
       if (target) {
         target.style.backgroundColor = 'rgba(13, 110, 253, 0.08)'
@@ -251,7 +251,7 @@ const TocTree = defineComponent({
             margin: '1px 0'
           },
           onClick: (e: Event) => handleClick(item.slug, e),
-          onMouseenter: (e: Event) => handleMouseEnter(e, item),
+          onMouseenter: (e: Event) => handleMouseEnter(e),
           onMouseleave: (e: Event) => handleMouseLeave(e, item)
         }, [
           h('div', { 

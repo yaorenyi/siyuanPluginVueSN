@@ -179,14 +179,66 @@ Authorization: token YOUR_TOKEN
     version: '1.0.0',
     documentationUrl: 'https://github.com/siyuan-note/siyuan/blob/master/API.md',
     baseUrl: 'http://127.0.0.1:6806',
-    authType: 'token',
-    categories: ['notebook', 'document', 'block', 'query', 'system']
+    authType: 'bearer' as const,
+    categories: []
   }
 
-  await storage.saveProviders([defaultProvider])
+  // 创建一个包含重复标题的测试提供者，用于验证唯一 slug 生成
+  const testProvider = {
+    id: 'duplicate-headings-test',
+    name: '重复标题测试',
+    description: `# API 测试文档
+
+## 概述
+
+这是一个测试文档，包含重复的标题。
+
+## 配置
+
+### 基本配置
+
+这是第一个基本配置部分。
+
+### 高级配置
+
+这是高级配置部分。
+
+## 使用方法
+
+### 基本配置
+
+这是第二个基本配置部分（重复标题）。
+
+### 示例代码
+
+\`\`\`javascript
+console.log('Hello World')
+\`\`\`
+
+## 配置
+
+这是第二个配置部分（重复标题）。
+
+### 基本配置
+
+这是第三个基本配置部分（重复标题）。
+
+## 总结
+
+文档总结内容。`,
+    icon: '🧪',
+    version: '1.0.0',
+    documentationUrl: '',
+    baseUrl: '',
+    authType: 'none' as const,
+    categories: []
+  }
+
+  await storage.saveProviders([defaultProvider, testProvider])
   await storage.saveMarkdownContent(defaultProvider.id, defaultProvider.description)
+  await storage.saveMarkdownContent(testProvider.id, testProvider.description)
   
-  return [defaultProvider]
+  return [defaultProvider, testProvider]
 }
 
 /**
