@@ -14,7 +14,10 @@
       "Bash(pnpm run lint:*)",
       "Bash(pnpm build)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm exec find:*)"
+      "Bash(pnpm exec find:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

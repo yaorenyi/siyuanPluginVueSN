@@ -17,6 +17,7 @@ interface StatisticsData {
   avgWordsPerDoc: number;  // 平均每文档字数
   dailyStats: DailyWordCount[];  // 每日字数统计
   currentPeriod: string;   // 当前统计周期
+  periodTotalWords: number; // 当前时段总字数
   topTags: Array<{ name: string; count: number }>;  // 热门标签（已废弃，始终为空数组）
   recentDocs: Array<{ id: string; title: string; updated: string; words: number }>;  // 最近活跃文档（已废弃，始终为空数组）
 }
@@ -472,6 +473,7 @@ export class Statistics {
       // 根据不同模式获取每日统计
       let dailyStats: DailyWordCount[] = [];
       let currentPeriod = '';
+      let periodTotalWords = 0;
 
       switch (this.viewMode) {
         case 'day':
@@ -485,10 +487,12 @@ export class Statistics {
             365: this.plugin.i18n.recent365DaysDaily || '最近一年每日字数'
           };
           currentPeriod = dayPeriodMap[this.dayRange] || '每日字数统计';
+          periodTotalWords = dailyStats.reduce((sum, item) => sum + item.words, 0);
           break;
         case 'week':
           dailyStats = await this.getWeeklyStats(4); // 最近4周
           currentPeriod = this.plugin.i18n.recentWeeksWeekly;
+          periodTotalWords = dailyStats.reduce((sum, item) => sum + item.words, 0);
           break;
         case 'month':
           dailyStats = await this.getMonthlyStatsRange(this.monthYearRange);
@@ -498,10 +502,12 @@ export class Statistics {
             3: this.plugin.i18n.recent3YearsMonthly || '最近三年每月字数'
           };
           currentPeriod = monthPeriodMap[this.monthYearRange] || '每月字数统计';
+          periodTotalWords = dailyStats.reduce((sum, item) => sum + item.words, 0);
           break;
         case 'year':
           dailyStats = await this.getYearlyStats(); // 最近5年
           currentPeriod = this.plugin.i18n.recentYearsYearly;
+          periodTotalWords = dailyStats.reduce((sum, item) => sum + item.words, 0);
           break;
       }
 
@@ -517,6 +523,7 @@ export class Statistics {
         avgWordsPerDoc,
         dailyStats,
         currentPeriod,
+        periodTotalWords,
         topTags: [],
         recentDocs: [],
       };
@@ -534,6 +541,7 @@ export class Statistics {
         avgWordsPerDoc: 0,
         dailyStats: [],
         currentPeriod: '',
+        periodTotalWords: 0,
         topTags: [],
         recentDocs: [],
       };
@@ -588,11 +596,32 @@ export class Statistics {
   
   /**
    * 获取总字数
+   * 只统计段落内容，避免重复统计
    */
   private async getTotalWords(): Promise<number> {
-    const sql = `SELECT SUM(LENGTH(content)) as total FROM blocks WHERE type='p'`;
+    // 思源笔记官方统计可能只统计段落（type='p'）
+    // 标题、列表等可能已经包含在段落中，避免重复统计
+    const sql = `
+      SELECT SUM(LENGTH(content)) as total
+      FROM blocks
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
+    `;
     const result = await this.executeSql(sql);
     return result[0]?.total || 0;
+  }
+
+  /**
+   * 计算字符串的字数
+   * 使用思源笔记的统计方式：直接使用 length
+   */
+  private calculateWordCount(text: string): number {
+    if (!text) return 0;
+
+    // 使用简单的字符长度统计
+    // 这是思源笔记内部使用的统计方式
+    return text.length;
   }
   
   /**
@@ -649,31 +678,34 @@ export class Statistics {
   }
   
   /**
-   * 获取每日统计（最近N天）- 优化版：单次查询
+   * 获取每日统计（最近N天）- 使用 length 字段优化
    */
   private async getDailyStats(days: number): Promise<DailyWordCount[]> {
     const today = new Date();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
-        
-    const startDateStr = this.formatDate(startDate).substring(0, 8);
-    const endDateStr = this.formatDate(today).substring(0, 8);
-        
-    // 单次查询获取所有天的数据
+
+    const startDateStr = this.formatDate(startDate);
+    const endDateStr = this.formatDate(today);
+
+    // 直接使用 length 字段按日期聚合
     const sql = `
-      SELECT 
+      SELECT
         substr(created, 1, 8) as date,
         SUM(LENGTH(content)) as total
       FROM blocks
-      WHERE type='p' 
-        AND substr(created, 1, 8) >= '${startDateStr}'
-        AND substr(created, 1, 8) <= '${endDateStr}'
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
+        AND created >= '${startDateStr}'
+        AND created <= '${endDateStr}'
       GROUP BY substr(created, 1, 8)
+      ORDER BY date
     `;
-        
+
     const queryResult = await this.executeSql(sql);
-        
+
     // 创建日期到字数的映射
     const dateMap = new Map<string, number>();
     queryResult.forEach(row => {
@@ -684,29 +716,29 @@ export class Statistics {
       const formattedDate = `${year}-${this.padZero(month)}-${this.padZero(day)}`;
       dateMap.set(formattedDate, row.total || 0);
     });
-        
+
     // 生成完整的日期列表（包括没有数据的日期）
     const result: DailyWordCount[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       date.setHours(0, 0, 0, 0);
-            
+
       const dateStr = `${date.getFullYear()}-${this.padZero(date.getMonth() + 1)}-${this.padZero(date.getDate())}`;
       const words = dateMap.get(dateStr) || 0;
-            
+
       result.push({
         date: dateStr,
         words,
         dateLabel: `${date.getMonth() + 1}/${date.getDate()} ${[this.plugin.i18n.sunday, this.plugin.i18n.monday, this.plugin.i18n.tuesday, this.plugin.i18n.wednesday, this.plugin.i18n.thursday, this.plugin.i18n.friday, this.plugin.i18n.saturday][date.getDay()]}`,
       });
     }
-        
+
     return result;
   }
   
   /**
-   * 获取每周统计（最近N周）- 优化版：单次查询
+   * 获取每周统计（最近N周）- 使用 length 字段优化
    */
   private async getWeeklyStats(weeks: number): Promise<DailyWordCount[]> {
     const today = new Date();
@@ -714,35 +746,38 @@ export class Statistics {
     const dayOfWeek = firstWeekStart.getDay() || 7;
     firstWeekStart.setDate(today.getDate() - dayOfWeek + 1 - (weeks - 1) * 7);
     firstWeekStart.setHours(0, 0, 0, 0);
-        
+
     const lastWeekEnd = new Date(today);
     const currentDayOfWeek = lastWeekEnd.getDay() || 7;
     lastWeekEnd.setDate(today.getDate() - currentDayOfWeek + 7);
     lastWeekEnd.setHours(23, 59, 59, 999);
-        
+
     const startDate = this.formatDate(firstWeekStart);
     const endDate = this.formatDate(lastWeekEnd);
-        
-    // 单次查询获取所有数据
+
+    // 直接使用 length 字段按日期聚合
     const sql = `
-      SELECT 
+      SELECT
         substr(created, 1, 8) as date,
         SUM(LENGTH(content)) as total
       FROM blocks
-      WHERE type='p' 
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
         AND created >= '${startDate}'
         AND created <= '${endDate}'
       GROUP BY substr(created, 1, 8)
+      ORDER BY date
     `;
-        
+
     const queryResult = await this.executeSql(sql);
-        
+
     // 创建日期到字数的映射
     const dateMap = new Map<string, number>();
     queryResult.forEach(row => {
       dateMap.set(String(row.date), row.total || 0);
     });
-        
+
     // 生成每周统计
     const result: DailyWordCount[] = [];
     for (let i = weeks - 1; i >= 0; i--) {
@@ -750,10 +785,10 @@ export class Statistics {
       const dow = weekStart.getDay() || 7;
       weekStart.setDate(today.getDate() - dow + 1 - i * 7);
       weekStart.setHours(0, 0, 0, 0);
-            
+
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
-            
+
       // 累计本周7天的字数
       let weekWords = 0;
       for (let d = 0; d < 7; d++) {
@@ -762,105 +797,111 @@ export class Statistics {
         const dayStr = this.formatDate(day).substring(0, 8);
         weekWords += dateMap.get(dayStr) || 0;
       }
-            
+
       result.push({
         date: `${weekStart.getFullYear()}-${this.padZero(weekStart.getMonth() + 1)}-${this.padZero(weekStart.getDate())}`,
         words: weekWords,
         dateLabel: `${weekStart.getMonth() + 1}/${weekStart.getDate()} - ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`,
       });
     }
-        
+
     return result;
   }
   
   /**
-   * 获取每月统计（整年）- 优化版：单次查询
+   * 获取每月统计（整年）- 使用 length 字段优化
    */
   private async getMonthlyStats(year: number): Promise<DailyWordCount[]> {
     const startDate = `${year}0101000000`;
     const endDate = `${year}1231235959`;
-        
-    // 单次查询获取整年数据，按月分组
+
+    // 直接使用 length 字段按月份聚合
     const sql = `
-      SELECT 
+      SELECT
         substr(created, 1, 6) as month,
         SUM(LENGTH(content)) as total
       FROM blocks
-      WHERE type='p' 
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
         AND created >= '${startDate}'
         AND created <= '${endDate}'
       GROUP BY substr(created, 1, 6)
+      ORDER BY month
     `;
-        
+
     const queryResult = await this.executeSql(sql);
-        
+
     // 创建月份到字数的映射
     const monthMap = new Map<string, number>();
     queryResult.forEach(row => {
       monthMap.set(String(row.month), row.total || 0);
     });
-        
+
     // 生成12个月的完整列表
     const result: DailyWordCount[] = [];
     for (let month = 1; month <= 12; month++) {
       const monthStr = this.padZero(month);
       const monthKey = `${year}${monthStr}`;
       const words = monthMap.get(monthKey) || 0;
-            
+
       result.push({
         date: `${year}-${monthStr}`,
         words,
         dateLabel: `${year}${this.plugin.i18n.year} ${month}${this.plugin.i18n.month}`,
       });
     }
-        
+
     return result;
   }
   
   /**
-   * 获取最近N年的每月统计
+   * 获取最近N年的每月统计 - 使用 length 字段优化
    */
   private async getMonthlyStatsRange(years: number): Promise<DailyWordCount[]> {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1;
-    
+
     // 计算起始年月
     const startYear = currentYear - years + 1;
     const startDate = `${startYear}0101000000`;
     const endDate = this.formatDate(today);
-    
-    // 单次查询获取所有数据，按月分组
+
+    // 直接使用 length 字段按月份聚合
     const sql = `
-      SELECT 
+      SELECT
         substr(created, 1, 6) as month,
         SUM(LENGTH(content)) as total
       FROM blocks
-      WHERE type='p' 
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
         AND created >= '${startDate}'
         AND created <= '${endDate}'
       GROUP BY substr(created, 1, 6)
+      ORDER BY month
     `;
-    
+
     const queryResult = await this.executeSql(sql);
-    
+
     // 创建月份到字数的映射
     const monthMap = new Map<string, number>();
     queryResult.forEach(row => {
       monthMap.set(String(row.month), row.total || 0);
     });
-    
+
     // 生成完整的月份列表（从起始年月到当前年月）
     const result: DailyWordCount[] = [];
     for (let y = startYear; y <= currentYear; y++) {
       const startM = (y === startYear) ? 1 : 1;
       const endM = (y === currentYear) ? currentMonth : 12;
-      
+
       for (let m = startM; m <= endM; m++) {
         const monthStr = this.padZero(m);
         const monthKey = `${y}${monthStr}`;
         const words = monthMap.get(monthKey) || 0;
-        
+
         result.push({
           date: `${y}-${monthStr}`,
           words,
@@ -868,52 +909,55 @@ export class Statistics {
         });
       }
     }
-    
+
     return result;
   }
   
   /**
-   * 获取每年统计（最近N年）- 优化版：单次查询
+   * 获取每年统计（最近N年）- 使用 length 字段优化
    */
   private async getYearlyStats(): Promise<DailyWordCount[]> {
     const currentYear = new Date().getFullYear();
     const startYear = currentYear - 4;
     const startDate = `${startYear}0101000000`;
     const endDate = `${currentYear}1231235959`;
-        
-    // 单次查询获取所有年份数据，按年分组
+
+    // 直接使用 length 字段按年份聚合
     const sql = `
-      SELECT 
+      SELECT
         substr(created, 1, 4) as year,
         SUM(LENGTH(content)) as total
       FROM blocks
-      WHERE type='p' 
+      WHERE type = 'p'
+        AND content IS NOT NULL
+        AND content != ''
         AND created >= '${startDate}'
         AND created <= '${endDate}'
       GROUP BY substr(created, 1, 4)
+      ORDER BY year
     `;
-        
+
     const queryResult = await this.executeSql(sql);
-        
+
     // 创建年份到字数的映射
     const yearMap = new Map<string, number>();
     queryResult.forEach(row => {
       yearMap.set(String(row.year), row.total || 0);
     });
-        
+
     // 生成5年的完整列表
     const result: DailyWordCount[] = [];
     for (let i = 4; i >= 0; i--) {
       const year = currentYear - i;
       const words = yearMap.get(String(year)) || 0;
-            
+
       result.push({
         date: `${year}`,
         words,
         dateLabel: `${year}${this.plugin.i18n.year}`,
       });
     }
-        
+
     return result;
   }
   

@@ -105,10 +105,16 @@
           </button>
         </div>
 
-        <!-- 时段平均每日字数 -->
-        <div v-if="periodAvgWords > 0" class="period-avg-card">
-          <span class="avg-label">{{ getPeriodAvgLabel() }}</span>
-          <span class="avg-value">{{ formatNumber(periodAvgWords) }} {{ i18n.words || '字' }}</span>
+        <!-- 时段统计：平均字数和总字数 -->
+        <div v-if="periodAvgWords > 0 || (stats && stats.periodTotalWords > 0)" class="period-stats-cards">
+          <div v-if="periodAvgWords > 0" class="period-stat-card">
+            <span class="stat-label">{{ getPeriodAvgLabel() }}</span>
+            <span class="stat-value">{{ formatNumber(periodAvgWords) }} {{ i18n.words || '字' }}</span>
+          </div>
+          <div v-if="stats && stats.periodTotalWords > 0" class="period-stat-card">
+            <span class="stat-label">{{ getPeriodTotalLabel() }}</span>
+            <span class="stat-value">{{ formatNumber(stats.periodTotalWords) }} {{ i18n.words || '字' }}</span>
+          </div>
         </div>
 
         <!-- 日视图范围选择 -->
@@ -230,6 +236,7 @@ interface StatisticsData {
   avgWordsPerDoc: number
   dailyStats: DailyWordCount[]
   currentPeriod: string
+  periodTotalWords: number
   topTags: Array<{ name: string; count: number }>
   recentDocs: Array<{ id: string; title: string; updated: string; words: number }>
 }
@@ -315,6 +322,17 @@ function getPeriodAvgLabel(): string {
     'year': props.i18n.yearlyAvgWords || '年均字数',
   }
   return labels[viewMode.value] || props.i18n.avgWords || '平均字数'
+}
+
+// 获取时段总字数标签
+function getPeriodTotalLabel(): string {
+  const labels: Record<string, string> = {
+    'day': props.i18n.periodTotalWords || '总字数',
+    'week': props.i18n.periodTotalWords || '总字数',
+    'month': props.i18n.periodTotalWords || '总字数',
+    'year': props.i18n.periodTotalWords || '总字数',
+  }
+  return labels[viewMode.value] || '总字数'
 }
 
 // 监听视图模式变化
@@ -880,13 +898,19 @@ defineExpose({
     }
   }
 
-  .period-avg-card {
+  .period-stats-cards {
     display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .period-stat-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     padding: 12px 16px;
-    margin-top: 12px;
     background: var(--b3-theme-surface);
     border: 1px solid var(--b3-border-color);
     border-radius: 6px;
@@ -898,13 +922,14 @@ defineExpose({
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .avg-label {
+    .stat-label {
       font-size: 12px;
       font-weight: 500;
       color: var(--b3-theme-on-surface);
+      margin-bottom: 4px;
     }
 
-    .avg-value {
+    .stat-value {
       font-size: 16px;
       font-weight: 700;
       color: var(--b3-theme-primary);
