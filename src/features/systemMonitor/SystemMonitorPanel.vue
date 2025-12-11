@@ -188,8 +188,8 @@ watch(effectiveUpdateInterval, (newInterval) => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0;
-  height: 22px;
+  padding: 12px 8px 4px 8px;
+  height: 28px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 11px;
   color: var(--b3-theme-on-surface);
@@ -203,9 +203,12 @@ watch(effectiveUpdateInterval, (newInterval) => {
 
 .monitor-item {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   min-width: 90px;
+  line-height: 1.2;
+  padding-top: 2px;
+  padding-bottom: 3px;
 }
 
 .monitor-item.compact-mode {
