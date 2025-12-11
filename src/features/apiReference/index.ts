@@ -5,14 +5,11 @@
 import { Plugin } from 'siyuan'
 import { createApp, h } from 'vue'
 import ApiReferencePanel from './ApiReferencePanel.vue'
-import { registerApiProviders } from './register'
 
 /**
  * 注册API参考模块
  */
 export function registerApiReference(plugin: Plugin) {
-  // 注册API提供者
-  registerApiProviders()
 
   // 注册全局快捷键 Ctrl+Alt+A 打开API参考面板
   document.addEventListener('keydown', (event) => {
@@ -62,6 +59,7 @@ function showApiReferencePanel(plugin: Plugin) {
     setup() {
       return () => h(ApiReferencePanel, {
         i18n: plugin.i18n,
+        plugin: plugin,
         onClose: () => {
           // 清理并移除遮罩层
           app.unmount()

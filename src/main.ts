@@ -4,6 +4,7 @@ import {
 import { createApp } from 'vue'
 import App from './App.vue'
 import type PluginSample from '@/index'
+import 'highlight.js/styles/github-dark.css'
 
 let plugin: Plugin | null = null
 export function usePlugin(pluginProps?: Plugin): Plugin {

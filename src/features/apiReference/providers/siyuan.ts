@@ -1,745 +1,638 @@
 /**
- * 思源笔记 API 提供者
+ * 思源笔记 API 提供者 - Markdown 格式
+ * 提供思源笔记 API 的完整参考文档
  */
-import type { ApiProvider } from '../types'
 
-export const siyuanApiProvider: ApiProvider = {
-  id: 'siyuan',
-  name: 'SiYuan',
-  description: '思源笔记 API - 本地知识管理工具的完整 API 接口',
-  icon: '📝',
-  version: '1.0.0',
-  documentationUrl: 'https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md',
-  baseUrl: 'http://127.0.0.1:6806',
-  authType: 'apiKey',
-  categories: [
+export const siyuanMarkdownContent = `# 思源笔记 API 参考文档
+
+思源笔记提供了丰富的 HTTP API 接口，用于操作笔记本、文档、块等核心功能。
+
+## 基本信息
+
+- **基础URL**: http://127.0.0.1:6806
+- **认证方式**: Token
+- **版本**: v2.x
+- **官方文档**: https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md
+
+## 认证
+
+### 获取 Token
+
+在思源笔记设置 -> 关于 -> API token 中获取访问令牌。
+
+### 请求头设置
+
+\`\`\`http
+Authorization: Token YOUR_API_TOKEN
+Content-Type: application/json
+\`\`\`
+
+### 基本请求示例
+
+\`\`\`bash
+curl -X POST http://127.0.0.1:6806/api/query/sql \\
+  -H "Authorization: Token YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"stmt": "SELECT * FROM blocks LIMIT 10"}'
+\`\`\`
+
+## 笔记本管理
+
+### 获取笔记本列表
+
+\`\`\`http
+POST /api/notebook/lsNotebooks
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{}
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "notebooks": [
+      {
+        "id": "20210808180117-czj9bvb",
+        "name": "思源笔记用户指南",
+        "icon": "1f4d4",
+        "sort": 0,
+        "closed": false
+      }
+    ]
+  }
+}
+\`\`\`
+
+### 打开笔记本
+
+\`\`\`http
+POST /api/notebook/openNotebook
+\`\`\`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必需 | 描述 |
+|--------|------|------|------|
+| notebook | string | 是 | 笔记本 ID |
+
+#### 示例请求
+
+\`\`\`json
+{
+  "notebook": "20210808180117-czj9bvb"
+}
+\`\`\`
+
+### 关闭笔记本
+
+\`\`\`http
+POST /api/notebook/closeNotebook
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "notebook": "20210808180117-czj9bvb"
+}
+\`\`\`
+
+## 文档管理
+
+### 创建文档
+
+\`\`\`http
+POST /api/filetree/createDoc
+\`\`\`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必需 | 描述 |
+|--------|------|------|------|
+| notebook | string | 是 | 笔记本 ID |
+| path | string | 是 | 文档路径 |
+| title | string | 否 | 文档标题 |
+| md | string | 否 | Markdown 内容 |
+
+#### 示例请求
+
+\`\`\`json
+{
+  "notebook": "20210808180117-czj9bvb",
+  "path": "/新建文档",
+  "title": "我的新文档",
+  "md": "# 标题\\n\\n这是内容"
+}
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "id": "20230101120000-abcdefg"
+  }
+}
+\`\`\`
+
+### 删除文档
+
+\`\`\`http
+POST /api/filetree/removeDoc
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "notebook": "20210808180117-czj9bvb",
+  "path": "/要删除的文档"
+}
+\`\`\`
+
+### 重命名文档
+
+\`\`\`http
+POST /api/filetree/renameDoc
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "notebook": "20210808180117-czj9bvb",
+  "path": "/原文档名",
+  "title": "新文档名"
+}
+\`\`\`
+
+## 块操作
+
+### 插入块
+
+\`\`\`http
+POST /api/block/insertBlock
+\`\`\`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必需 | 描述 |
+|--------|------|------|------|
+| dataType | string | 是 | 块类型：markdown, dom |
+| data | string | 是 | 块内容 |
+| nextID | string | 否 | 插入位置的下一个块 ID |
+| previousID | string | 否 | 插入位置的上一个块 ID |
+| parentID | string | 否 | 父块 ID |
+
+#### 示例请求
+
+\`\`\`json
+{
+  "dataType": "markdown",
+  "data": "这是一个新的段落",
+  "parentID": "20230101120000-abcdefg"
+}
+\`\`\`
+
+### 更新块
+
+\`\`\`http
+POST /api/block/updateBlock
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "dataType": "markdown",
+  "data": "更新后的内容",
+  "id": "20230101120001-hijklmn"
+}
+\`\`\`
+
+### 删除块
+
+\`\`\`http
+POST /api/block/deleteBlock
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "id": "20230101120001-hijklmn"
+}
+\`\`\`
+
+### 获取块信息
+
+\`\`\`http
+POST /api/block/getBlockInfo
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "id": "20230101120001-hijklmn"
+}
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "id": "20230101120001-hijklmn",
+    "rootID": "20230101120000-abcdefg",
+    "parentID": "20230101120000-abcdefg",
+    "type": "p",
+    "content": "这是段落内容"
+  }
+}
+\`\`\`
+
+## SQL 查询
+
+### 执行 SQL 查询
+
+\`\`\`http
+POST /api/query/sql
+\`\`\`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必需 | 描述 |
+|--------|------|------|------|
+| stmt | string | 是 | SQL 语句 |
+
+#### 示例请求
+
+\`\`\`json
+{
+  "stmt": "SELECT * FROM blocks WHERE content LIKE '%思源%' LIMIT 10"
+}
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": [
     {
-      id: 'notebook',
-      title: '📚 笔记本操作',
-      description: '管理笔记本的 CRUD 操作',
-      endpoints: [
-        {
-          id: 'lsNotebooks',
-          name: '列出笔记本',
-          method: 'POST',
-          endpoint: '/api/notebook/lsNotebooks',
-          description: '获取所有笔记本列表',
-          examples: [
-            {
-              title: '基本用法',
-              description: '获取所有笔记本',
-              method: 'POST',
-              endpoint: '/api/notebook/lsNotebooks',
-              response: {
-                code: 0,
-                data: {
-                  notebooks: [
-                    {
-                      id: '20210817205410-2kvfpfn',
-                      name: '测试笔记本',
-                      icon: '1f41b',
-                      sort: 0,
-                      closed: false
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: 'createNotebook',
-          name: '创建笔记本',
-          method: 'POST',
-          endpoint: '/api/notebook/createNotebook',
-          description: '创建新的笔记本',
-          parameters: [
-            {
-              name: 'name',
-              type: 'string',
-              required: true,
-              description: '笔记本名称'
-            }
-          ],
-          examples: [
-            {
-              title: '创建笔记本',
-              description: '创建一个名为"新笔记本"的笔记本',
-              method: 'POST',
-              endpoint: '/api/notebook/createNotebook',
-              body: {
-                name: '新笔记本名称'
-              },
-              response: {
-                code: 0,
-                data: {
-                  notebook: {
-                    id: '20220126215949-r1wvoch',
-                    name: '新笔记本名称',
-                    icon: '',
-                    sort: 0,
-                    closed: false
-                  }
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: 'openNotebook',
-          name: '打开笔记本',
-          method: 'POST',
-          endpoint: '/api/notebook/openNotebook',
-          description: '打开已关闭的笔记本',
-          parameters: [
-            {
-              name: 'notebook',
-              type: 'string',
-              required: true,
-              description: '笔记本ID'
-            }
-          ],
-          examples: [
-            {
-              title: '打开笔记本',
-              description: '通过ID打开笔记本',
-              method: 'POST',
-              endpoint: '/api/notebook/openNotebook',
-              body: {
-                notebook: '20210817205410-2kvfpfn'
-              }
-            }
-          ]
-        },
-        {
-          id: 'closeNotebook',
-          name: '关闭笔记本',
-          method: 'POST',
-          endpoint: '/api/notebook/closeNotebook',
-          description: '关闭指定的笔记本',
-          parameters: [
-            {
-              name: 'notebook',
-              type: 'string',
-              required: true,
-              description: '笔记本ID'
-            }
-          ],
-          examples: [
-            {
-              title: '关闭笔记本',
-              description: '通过ID关闭笔记本',
-              method: 'POST',
-              endpoint: '/api/notebook/closeNotebook',
-              body: {
-                notebook: '20210817205410-2kvfpfn'
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'document',
-      title: '📄 文档操作',
-      description: '文档的创建、重命名、删除等操作',
-      endpoints: [
-        {
-          id: 'createDocWithMd',
-          name: '创建文档',
-          method: 'POST',
-          endpoint: '/api/filetree/createDocWithMd',
-          description: '通过 Markdown 内容创建新文档',
-          parameters: [
-            {
-              name: 'notebook',
-              type: 'string',
-              required: true,
-              description: '笔记本ID'
-            },
-            {
-              name: 'path',
-              type: 'string',
-              required: true,
-              description: '文档路径'
-            },
-            {
-              name: 'markdown',
-              type: 'string',
-              required: true,
-              description: 'Markdown 内容'
-            }
-          ],
-          examples: [
-            {
-              title: '创建文档',
-              description: '创建一个包含 Markdown 内容的新文档',
-              method: 'POST',
-              endpoint: '/api/filetree/createDocWithMd',
-              body: {
-                notebook: '20210817205410-2kvfpfn',
-                path: '/新文档',
-                markdown: '# 文档标题\n\n内容...'
-              },
-              response: {
-                code: 0,
-                data: '20210914223645-oj2vnx2'
-              }
-            }
-          ]
-        },
-        {
-          id: 'renameDocByID',
-          name: '重命名文档',
-          method: 'POST',
-          endpoint: '/api/filetree/renameDocByID',
-          description: '通过 ID 重命名文档',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '文档ID'
-            },
-            {
-              name: 'title',
-              type: 'string',
-              required: true,
-              description: '新标题'
-            }
-          ],
-          examples: [
-            {
-              title: '重命名文档',
-              description: '修改文档标题',
-              method: 'POST',
-              endpoint: '/api/filetree/renameDocByID',
-              body: {
-                id: '20210914223645-oj2vnx2',
-                title: '新标题'
-              }
-            }
-          ]
-        },
-        {
-          id: 'removeDocByID',
-          name: '删除文档',
-          method: 'POST',
-          endpoint: '/api/filetree/removeDocByID',
-          description: '通过 ID 删除文档',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '文档ID'
-            }
-          ],
-          examples: [
-            {
-              title: '删除文档',
-              description: '删除指定的文档',
-              method: 'POST',
-              endpoint: '/api/filetree/removeDocByID',
-              body: {
-                id: '20210914223645-oj2vnx2'
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'block',
-      title: '🧱 块操作',
-      description: '块的插入、更新、删除、移动等操作',
-      endpoints: [
-        {
-          id: 'insertBlock',
-          name: '插入块',
-          method: 'POST',
-          endpoint: '/api/block/insertBlock',
-          description: '在指定位置插入新块',
-          parameters: [
-            {
-              name: 'dataType',
-              type: 'string',
-              required: true,
-              description: '数据类型，如 markdown'
-            },
-            {
-              name: 'data',
-              type: 'string',
-              required: true,
-              description: '插入的内容'
-            },
-            {
-              name: 'previousID',
-              type: 'string',
-              required: false,
-              description: '前一块ID'
-            },
-            {
-              name: 'parentID',
-              type: 'string',
-              required: false,
-              description: '父块ID'
-            }
-          ],
-          examples: [
-            {
-              title: '插入块',
-              description: '在当前块后插入新内容',
-              method: 'POST',
-              endpoint: '/api/block/insertBlock',
-              body: {
-                dataType: 'markdown',
-                data: '插入的内容',
-                previousID: '前一块ID',
-                parentID: '父块ID'
-              }
-            }
-          ]
-        },
-        {
-          id: 'updateBlock',
-          name: '更新块',
-          method: 'POST',
-          endpoint: '/api/block/updateBlock',
-          description: '更新指定块的内容',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '块ID'
-            },
-            {
-              name: 'dataType',
-              type: 'string',
-              required: true,
-              description: '数据类型，如 markdown'
-            },
-            {
-              name: 'data',
-              type: 'string',
-              required: true,
-              description: '新内容'
-            }
-          ],
-          examples: [
-            {
-              title: '更新块',
-              description: '修改指定块的内容',
-              method: 'POST',
-              endpoint: '/api/block/updateBlock',
-              body: {
-                id: '块ID',
-                dataType: 'markdown',
-                data: '新内容'
-              }
-            }
-          ]
-        },
-        {
-          id: 'deleteBlock',
-          name: '删除块',
-          method: 'POST',
-          endpoint: '/api/block/deleteBlock',
-          description: '删除指定的块',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '块ID'
-            }
-          ],
-          examples: [
-            {
-              title: '删除块',
-              description: '删除指定的块',
-              method: 'POST',
-              endpoint: '/api/block/deleteBlock',
-              body: {
-                id: '块ID'
-              }
-            }
-          ]
-        },
-        {
-          id: 'moveBlock',
-          name: '移动块',
-          method: 'POST',
-          endpoint: '/api/block/moveBlock',
-          description: '移动块到新位置',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '待移动块ID'
-            },
-            {
-              name: 'previousID',
-              type: 'string',
-              required: false,
-              description: '前一块ID'
-            },
-            {
-              name: 'parentID',
-              type: 'string',
-              required: false,
-              description: '父块ID'
-            }
-          ],
-          examples: [
-            {
-              title: '移动块',
-              description: '将块移动到新位置',
-              method: 'POST',
-              endpoint: '/api/block/moveBlock',
-              body: {
-                id: '待移动块ID',
-                previousID: '前一块ID',
-                parentID: '父块ID'
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'attribute',
-      title: '🏷️ 属性操作',
-      description: '块的属性设置和获取',
-      endpoints: [
-        {
-          id: 'setBlockAttrs',
-          name: '设置块属性',
-          method: 'POST',
-          endpoint: '/api/attr/setBlockAttrs',
-          description: '为块设置自定义属性',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '块ID'
-            },
-            {
-              name: 'attrs',
-              type: 'object',
-              required: true,
-              description: '属性对象'
-            }
-          ],
-          examples: [
-            {
-              title: '设置属性',
-              description: '为块设置自定义属性',
-              method: 'POST',
-              endpoint: '/api/attr/setBlockAttrs',
-              body: {
-                id: '块ID',
-                attrs: {
-                  'custom-attr1': '值'
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: 'getBlockAttrs',
-          name: '获取块属性',
-          method: 'POST',
-          endpoint: '/api/attr/getBlockAttrs',
-          description: '获取块的所有属性',
-          parameters: [
-            {
-              name: 'id',
-              type: 'string',
-              required: true,
-              description: '块ID'
-            }
-          ],
-          examples: [
-            {
-              title: '获取属性',
-              description: '获取块的所有属性',
-              method: 'POST',
-              endpoint: '/api/attr/getBlockAttrs',
-              body: {
-                id: '块ID'
-              },
-              response: {
-                code: 0,
-                data: {
-                  'custom-attr1': '值',
-                  id: '20210912214605-uhi5gco',
-                  title: 'PDF 标注双链演示',
-                  type: 'doc',
-                  updated: '20210916120715'
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'sql',
-      title: '🔍 SQL查询',
-      description: '执行SQL语句查询数据库',
-      endpoints: [
-        {
-          id: 'querySql',
-          name: '执行SQL查询',
-          method: 'POST',
-          endpoint: '/api/query/sql',
-          description: '执行SQL语句查询数据库',
-          parameters: [
-            {
-              name: 'stmt',
-              type: 'string',
-              required: true,
-              description: 'SQL语句'
-            }
-          ],
-          examples: [
-            {
-              title: '查询标题',
-              description: '查询所有一级标题',
-              method: 'POST',
-              endpoint: '/api/query/sql',
-              body: {
-                stmt: "SELECT * FROM blocks WHERE type = 'h1' LIMIT 10"
-              },
-              response: {
-                code: 0,
-                data: [
-                  { 列: '值' }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'file',
-      title: '📁 文件操作',
-      description: '工作空间中的文件读写操作',
-      endpoints: [
-        {
-          id: 'getFile',
-          name: '获取文件',
-          method: 'POST',
-          endpoint: '/api/file/getFile',
-          description: '读取工作空间中的文件',
-          parameters: [
-            {
-              name: 'path',
-              type: 'string',
-              required: true,
-              description: '工作空间路径下的文件路径'
-            }
-          ],
-          examples: [
-            {
-              title: '读取文件',
-              description: '读取图片文件',
-              method: 'POST',
-              endpoint: '/api/file/getFile',
-              body: {
-                path: '/data/assets/example.png'
-              }
-            }
-          ]
-        },
-        {
-          id: 'putFile',
-          name: '写入文件',
-          method: 'POST',
-          endpoint: '/api/file/putFile',
-          description: '将文件写入工作空间',
-          parameters: [
-            {
-              name: 'path',
-              type: 'string',
-              required: true,
-              description: '工作空间路径下的文件路径'
-            },
-            {
-              name: 'file',
-              type: 'file',
-              required: true,
-              description: '文件数据（multipart/form-data）'
-            }
-          ],
-          examples: [
-            {
-              title: '上传文件',
-              description: '上传图片到资源文件夹',
-              method: 'POST',
-              endpoint: '/api/file/putFile',
-              body: 'multipart/form-data'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'notification',
-      title: '🔔 通知',
-      description: '显示通知消息和错误提示',
-      endpoints: [
-        {
-          id: 'pushMsg',
-          name: '推送消息',
-          method: 'POST',
-          endpoint: '/api/notification/pushMsg',
-          description: '显示通知消息',
-          parameters: [
-            {
-              name: 'msg',
-              type: 'string',
-              required: true,
-              description: '消息内容'
-            },
-            {
-              name: 'timeout',
-              type: 'number',
-              required: false,
-              description: '显示时长（毫秒）'
-            }
-          ],
-          examples: [
-            {
-              title: '显示成功消息',
-              description: '显示操作成功的提示',
-              method: 'POST',
-              endpoint: '/api/notification/pushMsg',
-              body: {
-                msg: '操作成功完成',
-                timeout: 3000
-              },
-              response: {
-                code: 0,
-                data: {
-                  id: '62jtmqi'
-                }
-              }
-            }
-          ]
-        },
-        {
-          id: 'pushErrMsg',
-          name: '推送错误消息',
-          method: 'POST',
-          endpoint: '/api/notification/pushErrMsg',
-          description: '显示错误通知',
-          parameters: [
-            {
-              name: 'msg',
-              type: 'string',
-              required: true,
-              description: '错误消息'
-            },
-            {
-              name: 'timeout',
-              type: 'number',
-              required: false,
-              description: '显示时长（毫秒）'
-            }
-          ],
-          examples: [
-            {
-              title: '显示错误消息',
-              description: '显示操作失败的错误提示',
-              method: 'POST',
-              endpoint: '/api/notification/pushErrMsg',
-              body: {
-                msg: '操作失败',
-                timeout: 5000
-              },
-              response: {
-                code: 0,
-                data: {
-                  id: 'qc9znut'
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'system',
-      title: '⚙️ 系统',
-      description: '系统信息和状态查询',
-      endpoints: [
-        {
-          id: 'version',
-          name: '获取系统版本',
-          method: 'GET',
-          endpoint: '/api/system/version',
-          description: '获取思源笔记版本号',
-          examples: [
-            {
-              title: '获取版本',
-              description: '获取当前思源笔记版本',
-              method: 'GET',
-              endpoint: '/api/system/version',
-              response: {
-                code: 0,
-                data: '1.3.5'
-              }
-            }
-          ]
-        },
-        {
-          id: 'currentTime',
-          name: '获取当前时间',
-          method: 'GET',
-          endpoint: '/api/system/currentTime',
-          description: '获取系统当前时间（毫秒）',
-          examples: [
-            {
-              title: '获取时间戳',
-              description: '获取当前时间戳',
-              method: 'GET',
-              endpoint: '/api/system/currentTime',
-              response: {
-                code: 0,
-                data: 1631850968131
-              }
-            }
-          ]
-        },
-        {
-          id: 'bootProgress',
-          name: '获取启动进度',
-          method: 'GET',
-          endpoint: '/api/system/bootProgress',
-          description: '获取系统启动进度',
-          examples: [
-            {
-              title: '获取启动进度',
-              description: '检查系统启动状态',
-              method: 'GET',
-              endpoint: '/api/system/bootProgress',
-              response: {
-                code: 0,
-                data: {
-                  details: 'Finishing boot...',
-                  progress: 100
-                }
-              }
-            }
-          ]
-        }
-      ]
+      "id": "20230101120001-hijklmn",
+      "parent_id": "20230101120000-abcdefg",
+      "root_id": "20230101120000-abcdefg",
+      "type": "p",
+      "content": "包含思源的内容"
     }
   ]
 }
+\`\`\`
+
+### 常用 SQL 查询示例
+
+#### 查询所有文档
+
+\`\`\`sql
+SELECT * FROM blocks WHERE type = 'd' ORDER BY created DESC
+\`\`\`
+
+#### 查询包含特定内容的块
+
+\`\`\`sql
+SELECT * FROM blocks WHERE content LIKE '%关键词%' AND type = 'p'
+\`\`\`
+
+#### 查询特定笔记本的文档
+
+\`\`\`sql
+SELECT * FROM blocks WHERE box = '笔记本ID' AND type = 'd'
+\`\`\`
+
+## 搜索功能
+
+### 全文搜索
+
+\`\`\`http
+POST /api/search/searchBlock
+\`\`\`
+
+#### 请求参数
+
+| 参数名 | 类型 | 必需 | 描述 |
+|--------|------|------|------|
+| query | string | 是 | 搜索关键词 |
+| types | object | 否 | 搜索类型配置 |
+
+#### 示例请求
+
+\`\`\`json
+{
+  "query": "思源笔记",
+  "types": {
+    "document": true,
+    "heading": true,
+    "paragraph": true
+  }
+}
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "blocks": [
+      {
+        "id": "20230101120001-hijklmn",
+        "rootID": "20230101120000-abcdefg",
+        "content": "包含思源笔记的内容",
+        "type": "p"
+      }
+    ]
+  }
+}
+\`\`\`
+
+## 模板功能
+
+### 渲染模板
+
+\`\`\`http
+POST /api/template/render
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "id": "20230101120001-hijklmn",
+  "path": "/templates/daily-note.md"
+}
+\`\`\`
+
+## 导出功能
+
+### 导出文档
+
+\`\`\`http
+POST /api/export/exportMd
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "id": "20230101120000-abcdefg"
+}
+\`\`\`
+
+### 导出为 PDF
+
+\`\`\`http
+POST /api/export/exportPDF
+\`\`\`
+
+#### 示例请求
+
+\`\`\`json
+{
+  "id": "20230101120000-abcdefg",
+  "savePath": "/path/to/save.pdf"
+}
+\`\`\`
+
+## 资源文件
+
+### 上传资源
+
+\`\`\`http
+POST /api/asset/upload
+\`\`\`
+
+#### 请求参数
+
+使用 multipart/form-data 格式上传文件。
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "succMap": {
+      "image.png": "assets/image-20230101120000-abcdefg.png"
+    }
+  }
+}
+\`\`\`
+
+## 系统信息
+
+### 获取系统信息
+
+\`\`\`http
+POST /api/system/getConf
+\`\`\`
+
+#### 示例响应
+
+\`\`\`json
+{
+  "code": 0,
+  "msg": "",
+  "data": {
+    "conf": {
+      "appearance": {
+        "mode": 0,
+        "themeDark": "midnight",
+        "themeLight": "daylight"
+      },
+      "editor": {
+        "fontSize": 16,
+        "lineHeight": 22
+      }
+    }
+  }
+}
+\`\`\`
+
+## 插件开发
+
+### 插件 API
+
+思源笔记为插件开发提供了专门的 API：
+
+#### 加载数据
+
+\`\`\`javascript
+const data = await plugin.loadData('key')
+\`\`\`
+
+#### 保存数据
+
+\`\`\`javascript
+await plugin.saveData('key', data)
+\`\`\`
+
+#### 添加菜单项
+
+\`\`\`javascript
+plugin.addTopBar({
+  icon: 'iconName',
+  title: '插件名称',
+  callback: () => {
+    // 点击回调
+  }
+})
+\`\`\`
+
+#### 监听事件
+
+\`\`\`javascript
+plugin.eventBus.on('ws-main', (event) => {
+  // 处理 WebSocket 事件
+})
+\`\`\`
+
+## 错误处理
+
+### 错误码说明
+
+- **0**: 成功
+- **-1**: 参数错误
+- **-2**: 权限不足
+- **-3**: 资源不存在
+- **-4**: 操作失败
+
+### 错误响应格式
+
+\`\`\`json
+{
+  "code": -1,
+  "msg": "参数错误：缺少必需参数 'id'",
+  "data": null
+}
+\`\`\`
+
+## 最佳实践
+
+### 1. 批量操作
+
+对于大量数据操作，建议使用批量 API 或 SQL 查询以提高性能。
+
+### 2. 错误处理
+
+始终检查 API 响应的 \`code\` 字段，确保操作成功。
+
+### 3. 权限控制
+
+确保 API token 的安全性，不要在客户端代码中暴露。
+
+### 4. 性能优化
+
+- 使用 SQL 查询替代多次 API 调用
+- 合理使用分页参数
+- 避免频繁的小量数据操作
+
+## 代码示例
+
+### JavaScript
+
+\`\`\`javascript
+// 获取笔记本列表
+async function getNotebooks() {
+  const response = await fetch('http://127.0.0.1:6806/api/notebook/lsNotebooks', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Token YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  
+  const data = await response.json()
+  return data.data.notebooks
+}
+
+// 创建文档
+async function createDoc(notebook, path, title, content) {
+  const response = await fetch('http://127.0.0.1:6806/api/filetree/createDoc', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Token YOUR_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      notebook,
+      path,
+      title,
+      md: content
+    })
+  })
+  
+  return await response.json()
+}
+\`\`\`
+
+### Python
+
+\`\`\`python
+import requests
+import json
+
+class SiyuanAPI:
+    def __init__(self, token, base_url='http://127.0.0.1:6806'):
+        self.token = token
+        self.base_url = base_url
+        self.headers = {
+            'Authorization': f'Token {token}',
+            'Content-Type': 'application/json'
+        }
+    
+    def post(self, endpoint, data=None):
+        url = f'{self.base_url}/api/{endpoint}'
+        response = requests.post(url, headers=self.headers, json=data or {})
+        return response.json()
+    
+    def get_notebooks(self):
+        return self.post('notebook/lsNotebooks')
+    
+    def create_doc(self, notebook, path, title, content):
+        return self.post('filetree/createDoc', {
+            'notebook': notebook,
+            'path': path,
+            'title': title,
+            'md': content
+        })
+    
+    def sql_query(self, stmt):
+        return self.post('query/sql', {'stmt': stmt})
+
+# 使用示例
+api = SiyuanAPI('YOUR_TOKEN')
+notebooks = api.get_notebooks()
+print(notebooks)
+\`\`\`
+
+---
+
+更多详细信息请参考 [思源笔记官方 API 文档](https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md)。
+`

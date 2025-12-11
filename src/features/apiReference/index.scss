@@ -1,0 +1,52 @@
+/**
+ * API 参考功能样式
+ */
+
+/* 滚动条样式 */
+.api-reference-panel .markdown-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.api-reference-panel .markdown-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.api-reference-panel .markdown-content-wrapper::-webkit-scrollbar-thumb {
+  background: var(--b3-theme-surface-lighter);
+  border-radius: 3px;
+}
+
+.api-reference-panel .markdown-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--b3-theme-on-surface);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .api-reference-panel {
+    .dialog {
+      width: 95%;
+      max-width: none;
+    }
+    
+    .form-textarea {
+      min-height: 100px;
+    }
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .api-reference-panel {
+    .api-reference-header,
+    .shortcut-hint,
+    .api-selector,
+    .dialog-overlay {
+      display: none !important;
+    }
+    
+    .markdown-content {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  }
+}
