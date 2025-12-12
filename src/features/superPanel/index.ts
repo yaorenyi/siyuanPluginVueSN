@@ -151,7 +151,8 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     'video': 'enableVideo',
     'everythingSearch': 'enableEverythingSearch',
     'systemMonitor': 'enableSystemMonitor',
-    'apiReference': 'enableApiReference'
+    'apiReference': 'enableApiReference',
+    'floatingToolbar': 'enableFloatingToolbar'
   }
 
   const settingKey = settingsMap[featureId]

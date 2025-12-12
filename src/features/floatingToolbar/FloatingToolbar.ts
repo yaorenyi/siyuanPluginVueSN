@@ -18,7 +18,7 @@ export class FloatingToolbar {
     /**
      * 初始化浮动工具栏增强
      */
-    init() {
+    init(): void {
         // 注册所有内置功能
         this.registerBuiltinActions()
         // 绑定事件监听器
@@ -34,7 +34,7 @@ export class FloatingToolbar {
         // 注册复制功能
         this.actionManager.registerAction({
             id: 'copy',
-            name: this.plugin.i18n.floatingToolbar?.copy || '复制',
+            name: (this.plugin.i18n as any).floatingToolbar?.copy || '复制',
             icon: '<svg><use xlink:href="#iconCopy"></use></svg>',
             hotkey: undefined,
             handler: this.copyText.bind(this)
@@ -218,7 +218,7 @@ export class FloatingToolbar {
     private async copyText(text: string) {
         try {
             await navigator.clipboard.writeText(text)
-            this.showMessage(this.plugin.i18n.floatingToolbar?.copySuccess || '已复制到剪贴板')
+            this.showMessage((this.plugin.i18n as any).floatingToolbar?.copySuccess || '已复制到剪贴板')
         } catch (error) {
             // 降级方案
             const textarea = document.createElement('textarea')
@@ -227,7 +227,7 @@ export class FloatingToolbar {
             textarea.select()
             document.execCommand('copy')
             document.body.removeChild(textarea)
-            this.showMessage(this.plugin.i18n.floatingToolbar?.copySuccess || '已复制到剪贴板')
+            this.showMessage((this.plugin.i18n as any).floatingToolbar?.copySuccess || '已复制到剪贴板')
         }
     }
 

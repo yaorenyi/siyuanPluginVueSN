@@ -456,6 +456,14 @@ const features = computed<Feature[]>(() => [
     actions: [
       { key: 'openApiReference', label: '打开API参考', hotkey: 'Ctrl+Alt+A' }
     ]
+  },
+  {
+    id: 'floatingToolbar',
+    iconKey: 'floatingToolbar',
+    title: props.i18n.floatingToolbar?.title || '浮动工具栏',
+    desc: props.i18n.floatingToolbarDescription || '选中文字时显示包含多种操作的工具栏',
+    enabled: props.settings.enableFloatingToolbar,
+    actions: []
   }
 ])
 

@@ -71,6 +71,16 @@ export default class PluginSample extends Plugin {
   }
 
   onunload() {
+    // 清理浮动工具栏资源
+    if ((this as any).__floatingToolbar) {
+      (this as any).__floatingToolbar.destroy()
+    }
+
+    // 清理通用设置资源
+    if ((this as any).__generalSettings) {
+      (this as any).__generalSettings.destroy()
+    }
+
     destroyCommands()
     destroy()
   }

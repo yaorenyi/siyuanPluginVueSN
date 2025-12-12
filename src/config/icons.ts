@@ -144,6 +144,12 @@ export const FEATURE_ICONS = {
   apiReference: {
     icon: 'mdi:api',
     color: '#0ea5e9'
+  },
+
+  // 浮动工具栏
+  floatingToolbar: {
+    icon: 'mdi:format-text',
+    color: '#f97316'
   }
 } as const
 
