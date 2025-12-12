@@ -1,5 +1,4 @@
 import { Plugin } from 'siyuan'
-import { fetchSyncPost } from '@/api'
 import { FloatingToolbar } from './FloatingToolbar'
 
 /**

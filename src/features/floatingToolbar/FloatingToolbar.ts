@@ -1,4 +1,5 @@
 import { Plugin } from 'siyuan'
+import { ToolbarAction, ToolbarActionManager } from './actions'
 
 /**
  * 浮动工具栏增强类
@@ -6,19 +7,52 @@ import { Plugin } from 'siyuan'
  */
 export class FloatingToolbar {
     private plugin: Plugin
-    private buttonsAdded: Set<string> = new Set()
+    private actionManager: ToolbarActionManager
     private isProcessing: boolean = false
 
     constructor(plugin: Plugin) {
         this.plugin = plugin
+        this.actionManager = new ToolbarActionManager(plugin)
     }
 
     /**
      * 初始化浮动工具栏增强
      */
     init() {
+        // 注册所有内置功能
+        this.registerBuiltinActions()
+        // 绑定事件监听器
         this.bindEvents()
+        // 添加样式
         this.addStyles()
+    }
+
+    /**
+     * 注册内置功能
+     */
+    private registerBuiltinActions() {
+        // 注册复制功能
+        this.actionManager.registerAction({
+            id: 'copy',
+            name: this.plugin.i18n.floatingToolbar?.copy || '复制',
+            icon: '<svg><use xlink:href="#iconCopy"></use></svg>',
+            hotkey: undefined,
+            handler: this.copyText.bind(this)
+        })
+    }
+
+    /**
+     * 注册新功能（供外部使用）
+     */
+    registerAction(action: ToolbarAction) {
+        this.actionManager.registerAction(action)
+    }
+
+    /**
+     * 移除功能
+     */
+    unregisterAction(actionId: string) {
+        this.actionManager.unregisterAction(actionId)
     }
 
     /**
@@ -104,60 +138,28 @@ export class FloatingToolbar {
         if (toolbar.hasAttribute('data-custom-buttons-added')) return
         toolbar.setAttribute('data-custom-buttons-added', 'true')
 
-        // 定义要添加的按钮
-        const buttons = [
-            {
-                id: 'custom-copy',
-                name: this.plugin.i18n.floatingToolbar?.copy || '复制',
-                icon: '<svg><use xlink:href="#iconCopy"></use></svg>',
-                handler: this.copyText.bind(this)
-            },
-            {
-                id: 'custom-highlight',
-                name: this.plugin.i18n.floatingToolbar?.highlight || '高亮',
-                icon: '<svg><use xlink:href="#iconMark"></use></svg>',
-                handler: this.highlightText.bind(this)
-            },
-            {
-                id: 'custom-search',
-                name: this.plugin.i18n.floatingToolbar?.search || '搜索',
-                icon: '<svg><use xlink:href="#iconSearch"></use></svg>',
-                handler: this.searchText.bind(this)
-            },
-            {
-                id: 'custom-translate',
-                name: this.plugin.i18n.floatingToolbar?.translate || '翻译',
-                icon: '<svg><use xlink:href="#iconLanguage"></use></svg>',
-                handler: this.translateText.bind(this)
-            },
-            {
-                id: 'custom-ai-process',
-                name: this.plugin.i18n.floatingToolbar?.aiProcess || 'AI处理',
-                icon: '<svg><use xlink:href="#iconSparkles"></use></svg>',
-                handler: this.processWithAI.bind(this)
-            }
-        ]
+        // 获取所有已注册的功能
+        const actions = this.actionManager.getAllActions()
 
-        // 反转数组并添加按钮
-        buttons.reverse()
-        buttons.forEach(button => {
+        // 反转数组并添加按钮（以便按注册顺序显示）
+        actions.reverse().forEach(action => {
             // 检查按钮是否已存在
-            if (toolbar.querySelector(`button[data-type="${button.id}"]`)) return
+            if (toolbar.querySelector(`button[data-type="${action.id}"]`)) return
 
             // 创建按钮HTML
             const buttonHTML = `
                 <button class="protyle-toolbar__item b3-tooltips b3-tooltips__ne custom-toolbar-button"
-                        data-type="${button.id}"
-                        aria-label="${button.name}"
+                        data-type="${action.id}"
+                        aria-label="${action.name}"
                         style="font-size:14px;">
-                    ${button.icon}
+                    ${action.icon}
                 </button>`
 
             // 在工具栏开头插入按钮
             toolbar.insertAdjacentHTML('afterbegin', buttonHTML)
 
             // 获取新创建的按钮并添加点击事件
-            const btnElement = toolbar.querySelector(`button[data-type="${button.id}"]`) as HTMLButtonElement
+            const btnElement = toolbar.querySelector(`button[data-type="${action.id}"]`) as HTMLButtonElement
             if (btnElement) {
                 btnElement.addEventListener('click', async (clickEvent) => {
                     clickEvent.stopPropagation()
@@ -166,8 +168,13 @@ export class FloatingToolbar {
                     // 获取选中的文本
                     const selectedText = this.getSelection(protyle)
                     // 执行按钮功能
-                    await button.handler(selectedText)
+                    await action.handler(selectedText)
                 })
+
+                // 添加快捷键提示
+                if (action.hotkey) {
+                    btnElement.setAttribute('data-hotkey', action.hotkey)
+                }
             }
         })
 
@@ -222,81 +229,6 @@ export class FloatingToolbar {
             document.body.removeChild(textarea)
             this.showMessage(this.plugin.i18n.floatingToolbar?.copySuccess || '已复制到剪贴板')
         }
-    }
-
-    /**
-     * 高亮文本
-     */
-    private async highlightText(text: string) {
-        const blockId = await this.getCurrentBlockId()
-        if (!blockId) {
-            this.showMessage(this.plugin.i18n.floatingToolbar?.cannotGetBlockId || '无法获取当前块ID')
-            return
-        }
-
-        try {
-            // 使用思源API更新块，添加高亮标记
-            const response = await fetch('/api/block/updateBlock', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id: blockId,
-                    dataType: 'markdown',
-                    data: `==${text}==`
-                })
-            })
-
-            if (response.ok) {
-                this.showMessage(this.plugin.i18n.floatingToolbar?.highlightSuccess || '已添加高亮')
-            } else {
-                this.showMessage(this.plugin.i18n.floatingToolbar?.highlightFailed || '高亮失败')
-            }
-        } catch (error) {
-            console.error('高亮文本失败:', error)
-            this.showMessage(this.plugin.i18n.floatingToolbar?.highlightFailed || '高亮失败')
-        }
-    }
-
-    /**
-     * 搜索文本
-     */
-    private searchText(text: string) {
-        // 在思源内搜索
-        const searchUrl = `/search?q=${encodeURIComponent(text)}`
-        window.open(searchUrl, '_blank')
-    }
-
-    /**
-     * 翻译文本
-     */
-    private translateText(text: string) {
-        // 打开谷歌翻译
-        const translateUrl = `https://translate.google.com/?sl=auto&tl=zh-CN&text=${encodeURIComponent(text)}`
-        window.open(translateUrl, '_blank')
-    }
-
-    /**
-     * AI处理文本
-     */
-    private processWithAI(text: string) {
-        // 显示开发中消息
-        this.showMessage(this.plugin.i18n.floatingToolbar?.aiProcessInDevelopment || 'AI处理功能开发中...')
-    }
-
-    /**
-     * 获取当前块ID
-     */
-    private async getCurrentBlockId(): Promise<string | null> {
-        const selection = window.getSelection()
-        if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0)
-            const element = range.startContainer.parentElement
-            const blockElement = element?.closest('[data-node-id]')
-            return blockElement?.getAttribute('data-node-id') || null
-        }
-        return null
     }
 
     /**
@@ -366,5 +298,8 @@ export class FloatingToolbar {
         if (style) {
             style.remove()
         }
+
+        // 清理功能管理器
+        this.actionManager.clear()
     }
 }

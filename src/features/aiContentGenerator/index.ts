@@ -59,12 +59,7 @@ export class AIContentGenerator {
     return this.apiKey || '';
   }
 
-  /**
-   * 获取自定义API端点
-   */
-  private getCustomApiEndpoint(): string {
-    return this.customApiEndpoint;
-  }
+
 
   /**
    * 初始化AI内容生成功能
