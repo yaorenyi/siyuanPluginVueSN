@@ -8,7 +8,6 @@
             <span class="label-icon">🎨</span>
             {{ i18n.codeBlockStyle || '代码块风格' }}
           </label>
-
           <!-- 风格卡片选择器 -->
           <div class="style-cards">
             <div
@@ -29,14 +28,12 @@
           </div>
         </div>
       </div>
-
       <!-- 高级设置 -->
       <div class="advanced-settings">
         <div class="setting-header">
           <span class="label-icon">⚙️</span>
           <span>{{ i18n.advancedSettings || '高级设置' }}</span>
         </div>
-
         <!-- 字体大小 -->
         <div class="setting-item">
           <label class="setting-label">
@@ -59,7 +56,6 @@
             </div>
           </div>
         </div>
-
         <!-- 内边距 -->
         <div class="setting-item">
           <label class="setting-label">
@@ -82,7 +78,6 @@
             </div>
           </div>
         </div>
-
         <!-- 代码块折叠设置 -->
         <div class="setting-item">
           <label class="setting-label">
@@ -103,7 +98,6 @@
             </span>
           </div>
         </div>
-
         <!-- 折叠高度设置 -->
         <div v-if="settings.enableCollapse" class="setting-item">
           <label class="setting-label">
@@ -127,7 +121,6 @@
           </div>
         </div>
       </div>
-
       <!-- 预览区域 -->
       <div class="preview-section">
         <div class="preview-toggle" @click="togglePreview">
@@ -147,12 +140,10 @@
                 </div>
                 <div class="mac-title">JavaScript</div>
               </div>
-
               <!-- GitHub 风格头部 -->
               <div v-if="settings.style === 'github'" class="github-header">
                 <span class="github-lang">JavaScript</span>
               </div>
-
               <!-- 卡通风格头部 -->
               <div v-if="settings.style === 'cartoon'" class="cartoon-header">
                 <div class="cartoon-decoration">
@@ -163,7 +154,6 @@
                 </div>
                 <div class="cartoon-title">✨ JavaScript ✨</div>
               </div>
-
               <!-- 代码内容 - 所有风格共用 -->
               <div class="code-content" :style="{ maxHeight: settings.enableCollapse ? settings.collapseHeight + 'px' : 'none', overflow: settings.enableCollapse ? 'hidden' : 'auto' }">
                 <div class="code-line">
@@ -239,7 +229,6 @@
                   </span>
                 </div>
               </div>
-
               <!-- 折叠预览指示器 -->
               <div v-if="settings.enableCollapse" class="collapse-preview-indicator">
                 <span class="collapse-text">{{ i18n.collapsePreview || '折叠预览' }}</span>
