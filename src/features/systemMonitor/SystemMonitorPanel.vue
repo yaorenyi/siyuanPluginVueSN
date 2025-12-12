@@ -12,11 +12,26 @@ function start(usageBtn: Element, cpu: Element, mem: Element) {
   if (intervalId) clearInterval(intervalId)
   started = true
   usageBtn.classList.remove('ft__secondary')
+
+  let prevCPU = process.cpuUsage()
+  let prevTime = Date.now()
+
   intervalId = setInterval(() => {
-    const cpuUsage = process.getCPUUsage()
+    const currCPU = process.cpuUsage()
+    const currTime = Date.now()
+    const timeDiff = currTime - prevTime
+
+    // 计算CPU使用率百分比
+    const cpuDiff = (currCPU.user + currCPU.system) - (prevCPU.user + prevCPU.system)
+    const cpuPercent = (cpuDiff / (timeDiff * 1000)) * 100 // 转换为百分比
+
     const memUsage = process.memoryUsage()
-    cpu.textContent = `${cpuUsage.percentCPUUsage.toFixed(1)}%`
+
+    cpu.textContent = `${cpuPercent.toFixed(1)}%`
     mem.textContent = `${(memUsage.rss / 1024 / 1024).toFixed(1)}M`
+
+    prevCPU = currCPU
+    prevTime = currTime
   }, 3000)
 }
 
