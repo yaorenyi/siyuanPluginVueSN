@@ -267,6 +267,7 @@
     "search": "Search",
     "translate": "Translate",
     "aiProcess": "AI Process",
+    "aiQuery": "AI Query",
     "copySuccess": "Copied to clipboard",
     "highlightSuccess": "Highlight added",
     "highlightFailed": "Failed to add highlight",

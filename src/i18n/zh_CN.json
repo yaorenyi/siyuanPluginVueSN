@@ -271,6 +271,7 @@
     "search": "搜索",
     "translate": "翻译",
     "aiProcess": "AI处理",
+    "aiQuery": "AI查询",
     "copySuccess": "已复制到剪贴板",
     "highlightSuccess": "已添加高亮",
     "highlightFailed": "高亮失败",
