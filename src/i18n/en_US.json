@@ -263,11 +263,13 @@
   "floatingToolbarDescription": "Show toolbar with various actions when text is selected",
   "floatingToolbar": {
     "copy": "Copy",
+    "qrcode": "Generate QR Code",
     "highlight": "Highlight",
     "search": "Search",
     "translate": "Translate",
     "aiProcess": "AI Process",
     "aiQuery": "AI Query",
+    "noTextSelected": "No text selected",
     "copySuccess": "Copied to clipboard",
     "highlightSuccess": "Highlight added",
     "highlightFailed": "Failed to add highlight",

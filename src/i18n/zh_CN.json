@@ -267,11 +267,13 @@
   "floatingToolbarDescription": "选中文字时显示包含多种操作的工具栏",
   "floatingToolbar": {
     "copy": "复制",
+    "qrcode": "生成二维码",
     "highlight": "高亮",
     "search": "搜索",
     "translate": "翻译",
     "aiProcess": "AI处理",
     "aiQuery": "AI查询",
+    "noTextSelected": "未选中文本",
     "copySuccess": "已复制到剪贴板",
     "highlightSuccess": "已添加高亮",
     "highlightFailed": "高亮失败",

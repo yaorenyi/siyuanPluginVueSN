@@ -4,7 +4,9 @@
       <!-- 对话框头部 -->
       <div class="dialog-header">
         <div class="dialog-title">
-          <svg class="dialog-icon"><use xlink:href="#iconQrcodeIcon"></use></svg>
+          <svg class="dialog-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M3,11H11V3H3M5,5H9V9H5M13,3V11H21V3M19,9H15V5H19M3,21H11V13H3M5,15H9V19H5M18,13H16V15H13V18H15V21H18V18H21V15H18M21,21H19V19H21V21Z"/>
+          </svg>
           <span>{{ i18n.qrcodeGenerate || '二维码生成' }}</span>
         </div>
         <button class="close-btn" @click="closeDialog" :title="i18n.close || '关闭'">

@@ -34,7 +34,7 @@
 import { usePlugin } from '@/main'
 import { onMounted, ref, watchEffect } from 'vue'
 import ImageViewer from '@/features/imageCompressor/ImageViewer.vue'
-import QRCodeDialog from '@/features/qrCode/QRCodeDialog.vue'
+import { QRCodeDialog } from '@/features/floatingToolbar'
 import VideoManager from '@/features/video/VideoManager.vue'
 import EverythingSearchDialog from '@/features/everythingSearch/EverythingSearchDialog.vue'
 import { everythingSearchVisible, hideEverythingSearch, showApiReferencePanel } from '@/features'
