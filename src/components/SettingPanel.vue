@@ -159,6 +159,21 @@
         </div>
         <div class="b3-label__text">{{ i18n.enableDiskBrowserDesc || '在右侧边栏显示本地磁盘列表，可快速打开文件夹' }}</div>
       </div>
+
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.enableFloatingToolbar }}
+          </span>
+          <span class="fn__space"></span>
+          <input
+            type="checkbox"
+            class="b3-switch fn__flex-center"
+            v-model="localSettings.enableFloatingToolbar"
+          />
+        </div>
+        <div class="b3-label__text">{{ i18n.floatingToolbarDescription }}</div>
+      </div>
       </div>
     </div>
 

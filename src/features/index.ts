@@ -22,3 +22,4 @@ export { registerEverythingSearch, showEverythingSearch, hideEverythingSearch, t
 export { registerSystemMonitor } from './systemMonitor'
 export { registerApiReference, showApiReferencePanel } from './apiReference'
 export { registerHighlight } from './highlight'
+export { registerFloatingToolbar } from './floatingToolbar'

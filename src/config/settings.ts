@@ -26,6 +26,7 @@ export interface PluginSettings {
   enableEverythingSearch: boolean // 是否启用Everything本地搜索功能
   enableSystemMonitor: boolean   // 是否启用系统监控功能
   enableApiReference: boolean    // 是否启用API参考功能
+  enableFloatingToolbar: boolean // 是否启用浮动工具栏功能
   videoCategories?: string[]     // 视频分类列表
   wordQueryApiKey: string        // 单词查询API密钥（已废弃，使用aiApiProvider和aiApiKey）
   compactMode: boolean           // 是否启用全局紧洛模式
@@ -90,6 +91,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   enableEverythingSearch: true,
   enableSystemMonitor: true,
   enableApiReference: true,
+  enableFloatingToolbar: true,
   videoCategories: ['默认分类', '教程', '演示', '其他'],
   wordQueryApiKey: 'sk-fae27cc50015409fb2524b0970d3f0b0',
   compactMode: true,
