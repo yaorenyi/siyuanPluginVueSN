@@ -3,8 +3,7 @@
     v-if="showMonitor"
     ref="monitorElement"
     class="status__resUsage"
-    style="font-size:12px;cursor:pointer;"
-    @click="toggleMonitor"
+    style="font-size:12px; cursor:default;"
   >
     <span class="ft__on-surface">CPU</span>&nbsp;
     <span class="fn__cpu">{{ cpuUsage }}</span>
@@ -63,14 +62,6 @@ function stop() {
     intervalId = null
   }
   showMonitor.value = false
-}
-
-function toggleMonitor() {
-  if (showMonitor.value) {
-    stop()
-  } else {
-    start()
-  }
 }
 
 onMounted(() => {
