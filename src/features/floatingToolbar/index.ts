@@ -1,6 +1,7 @@
 import { Plugin } from 'siyuan'
 import { FloatingToolbar } from './FloatingToolbar'
 import { createQRCodeAction } from './qrcode/qrcode-action'
+import { createPronunciationAction } from './pronunciation/pronunciation-action'
 import type PluginSample from '@/index'
 
 /**
@@ -20,9 +21,15 @@ export function registerFloatingToolbar(plugin: Plugin): void {
         floatingToolbar.registerAction(createQRCodeAction(plugin));
     }
 
+    // 注册谐音翻译功能（如果启用）
+    if (pluginInstance.settings?.enablePronunciation) {
+        floatingToolbar.registerAction(createPronunciationAction(plugin));
+    }
+
     // 将实例保存到插件对象中，以便在插件卸载时清理资源
     (plugin as any).__floatingToolbar = floatingToolbar;
 }
 
-// 导出二维码对话框组件供 App.vue 使用
+// 导出对话框组件供 App.vue 使用
 export { default as QRCodeDialog } from './qrcode/QRCodeDialog.vue'
+export { default as PronunciationDialog } from './pronunciation/PronunciationDialog.vue'

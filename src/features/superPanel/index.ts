@@ -265,9 +265,6 @@ async function handleUpdateAiSettings(
     if (pluginSample.__aiContentGenerator) {
       pluginSample.__aiContentGenerator.updateApiConfig(aiSettings.provider, aiSettings.model, aiSettings.apiKey, aiSettings.customEndpoint)
     }
-    if (pluginSample.__pronunciation) {
-      pluginSample.__pronunciation.updateApiConfig(aiSettings.provider, aiSettings.model, aiSettings.apiKey, aiSettings.customEndpoint)
-    }
   } else {
     showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
   }

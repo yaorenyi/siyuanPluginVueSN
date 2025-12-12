@@ -15,6 +15,16 @@
       @close="onCloseQRCodeDialog"
     />
 
+    <!-- 谐音翻译对话框 -->
+    <PronunciationDialog
+      :visible="showPronunciationDialog"
+      :content="pronunciationWord"
+      :plugin="plugin"
+      :i18n="plugin.i18n"
+      @update:visible="onPronunciationDialogVisibleChange"
+      @close="onClosePronunciationDialog"
+    />
+
     <!-- 视频管理器 -->
     <VideoManager
       :visible="showVideoManager"
@@ -34,7 +44,7 @@
 import { usePlugin } from '@/main'
 import { onMounted, ref, watchEffect } from 'vue'
 import ImageViewer from '@/features/imageCompressor/ImageViewer.vue'
-import { QRCodeDialog } from '@/features/floatingToolbar'
+import { QRCodeDialog, PronunciationDialog } from '@/features/floatingToolbar'
 import VideoManager from '@/features/video/VideoManager.vue'
 import EverythingSearchDialog from '@/features/everythingSearch/EverythingSearchDialog.vue'
 import { everythingSearchVisible, hideEverythingSearch, showApiReferencePanel } from '@/features'
@@ -45,6 +55,8 @@ const showImageViewer = ref(false)
 const showQRCodeDialog = ref(false)
 const showVideoManager = ref(false)
 const qrcodeContent = ref('')
+const showPronunciationDialog = ref(false)
+const pronunciationWord = ref('')
 
 console.log('plugin is ', plugin)
 
@@ -80,6 +92,21 @@ const onCloseVideoManager = () => {
 const openQRCodeDialog = (content: string) => {
   qrcodeContent.value = content
   showQRCodeDialog.value = true
+}
+
+// 打开谐音翻译对话框
+const openPronunciationDialog = (word: string) => {
+  pronunciationWord.value = word
+  showPronunciationDialog.value = true
+}
+
+// 谐音翻译对话框控制
+const onPronunciationDialogVisibleChange = (visible: boolean) => {
+  showPronunciationDialog.value = visible
+}
+
+const onClosePronunciationDialog = () => {
+  showPronunciationDialog.value = false
 }
 
 
@@ -122,6 +149,7 @@ onMounted(() => {
 onMounted(() => {
   window._sy_plugin_sample = {}
   window._sy_plugin_sample.openQRCodeDialog = openQRCodeDialog
+  window._sy_plugin_sample.openPronunciationDialog = openPronunciationDialog
 
   // 监听打开二维码对话框事件
   window.addEventListener('openQRCodeDialog', ((event: any) => {
@@ -129,6 +157,15 @@ onMounted(() => {
     if (content) {
       qrcodeContent.value = content
       showQRCodeDialog.value = true
+    }
+  }) as EventListener)
+
+  // 监听打开谐音翻译对话框事件
+  window.addEventListener('openPronunciationDialog', ((event: any) => {
+    const content = event.detail?.content
+    if (content) {
+      pronunciationWord.value = content
+      showPronunciationDialog.value = true
     }
   }) as EventListener)
 

@@ -264,6 +264,7 @@
   "floatingToolbar": {
     "copy": "Copy",
     "qrcode": "Generate QR Code",
+    "pronunciation": "Pronunciation Helper",
     "highlight": "Highlight",
     "search": "Search",
     "translate": "Translate",
