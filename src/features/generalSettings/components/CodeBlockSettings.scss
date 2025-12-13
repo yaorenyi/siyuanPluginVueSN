@@ -199,24 +199,7 @@
   transition: all 0.2s ease;
 }
 
-.range-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--b3-theme-primary);
-  cursor: pointer;
-  border: 2px solid var(--b3-theme-background);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-}
-
-.range-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
+.range-slider::-webkit-slider-thumb,
 .range-slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
@@ -228,6 +211,12 @@
   transition: all 0.2s ease;
 }
 
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.range-slider::-webkit-slider-thumb:hover,
 .range-slider::-moz-range-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -323,9 +312,6 @@
 }
 
 .preview-box.style-default .code-content {
-  padding: 10px 12px;
-  background: var(--b3-theme-surface-variant);
-  color: var(--b3-theme-on-surface);
   border-left: 2px solid var(--b3-theme-primary);
 }
 
@@ -357,23 +343,15 @@
   letter-spacing: 0.5px;
 }
 
-.preview-box.style-github .code-content {
-  padding: 10px 12px;
-  padding-top: 8px;
-  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
-  color: var(--b3-theme-on-surface);
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, #61afef, #98c379);
-    opacity: 0.6;
-  }
+.preview-box.style-github .code-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #61afef, #98c379);
+  opacity: 0.6;
 }
 
 /* Mac 风格 - 深色主题适配 */
@@ -460,23 +438,15 @@
   font-weight: 600;
 }
 
-.preview-box.style-mac .code-content {
-  padding: 10px 12px;
-  padding-top: 8px;
-  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
-  color: var(--b3-theme-on-surface);
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--b3-theme-outline), transparent);
-    opacity: 0.3;
-  }
+.preview-box.style-mac .code-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--b3-theme-outline), transparent);
+  opacity: 0.3;
 }
 
 /* 卡通风格 */
@@ -540,22 +510,14 @@
   letter-spacing: 0.5px;
 }
 
-.preview-box.style-cartoon .code-content {
-  padding: 10px 12px;
-  padding-top: 8px;
-  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
-  color: var(--b3-theme-on-surface);
-  position: relative;
-
-  &::before {
-    content: '✨';
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 10px;
-    opacity: 0.25;
-    animation: sparkle 3s ease-in-out infinite;
-  }
+.preview-box.style-cartoon .code-content::before {
+  content: '✨';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  opacity: 0.25;
+  animation: sparkle 3s ease-in-out infinite;
 }
 
 @keyframes sparkle {
@@ -563,13 +525,23 @@
   50% { opacity: 0.8; transform: rotate(180deg) scale(1.2); }
 }
 
+/* 所有风格共用的代码内容样式 */
 .code-content {
   margin: 0;
+  padding: 10px 12px;
+  padding-top: 8px;
   font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 11px;
   line-height: 1.5;
   color: var(--b3-theme-on-surface);
+  background: rgba(var(--b3-theme-on-surface-rgb, 0, 0, 0), 0.015);
   overflow-x: auto;
+  position: relative;
+}
+
+/* default 风格特殊背景 */
+.preview-box.style-default .code-content {
+  background: var(--b3-theme-surface-variant);
 }
 
 .code-line {
@@ -620,10 +592,7 @@
   color: #98c379;
 }
 
-.number {
-  color: #d19a66;
-}
-
+.number,
 .boolean {
   color: #d19a66;
 }
@@ -653,49 +622,7 @@
   opacity: 0;
 }
 
-/* 深色主题下的语法高亮调整 */
-@media (prefers-color-scheme: dark) {
-  .keyword {
-    color: #c678dd;
-  }
 
-  .function {
-    color: #61afef;
-  }
-
-  .variable {
-    color: #e06c75;
-  }
-
-  .string {
-    color: #98c379;
-  }
-
-  .number,
-  .boolean {
-    color: #d19a66;
-  }
-
-  .operator {
-    color: #56b6c2;
-  }
-
-  .punctuation {
-    color: #abb2bf;
-  }
-
-  .parameter {
-    color: #e5c07b;
-  }
-
-  .method {
-    color: #61afef;
-  }
-
-  .comment {
-    color: #5c6370;
-  }
-}
 
 /* 折叠设置样式 */
 .toggle-container {
@@ -813,18 +740,22 @@
 }
 
 @media (max-width: 400px) {
-  .codeblock-settings {
+  .codeblock-settings,
+  .advanced-settings {
     padding: 10px;
+  }
+
+  .advanced-settings {
+    gap: 10px;
+  }
+
+  .settings-container {
+    gap: 12px;
   }
 
   .style-cards {
     grid-template-columns: 1fr;
     gap: 6px;
-  }
-
-  .advanced-settings {
-    padding: 10px;
-    gap: 10px;
   }
 
   .style-card {
@@ -840,10 +771,6 @@
       text-align: left;
       font-size: 10px;
     }
-  }
-
-  .settings-container {
-    gap: 12px;
   }
 
   .code-line {
