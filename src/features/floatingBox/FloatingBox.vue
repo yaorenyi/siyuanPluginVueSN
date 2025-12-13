@@ -1,28 +1,24 @@
 <template>
-  <div class="floating-box-wrapper" ref="wrapperRef">
+  <div
+    class="floating-box-wrapper"
+    :class="{ collapsed: !isExpanded }"
+    ref="wrapperRef"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
+  >
     <!-- 悬浮触发按钮 -->
     <div
       class="floating-box-trigger"
       :class="{ expanded: isExpanded }"
-      @click.stop="toggleExpand"
-      @mouseenter="showTooltip = true"
-      @mouseleave="showTooltip = false"
     >
-      <svg v-if="!isExpanded" class="trigger-icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M3 3h8v8H3V3m2 2v4h4V5H5m8-2h8v8h-8V3m2 2v4h4V5h-4M3 13h8v8H3v-8m2 2v4h4v-4H5m8-2h8v8h-8v-8m2 2v4h4v-4h-4"/>
+      <svg class="trigger-icon" viewBox="0 0 24 24" width="16" height="16">
+        <path fill="currentColor" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
       </svg>
-      <svg v-else class="trigger-icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-      </svg>
-      <!-- 提示文字 -->
-      <Transition name="tooltip">
-        <span v-if="showTooltip && !isExpanded" class="trigger-tooltip">快捷工具</span>
-      </Transition>
     </div>
 
     <!-- 展开工具栏 -->
     <Transition name="toolbar">
-      <div v-if="isExpanded" class="floating-toolbar" @click.stop>
+      <div v-if="isExpanded" class="floating-toolbar">
         <!-- 工具按钮 -->
         <div
           v-for="tool in tools"
@@ -42,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { allTools } from './tools'
 import type { FloatingTool } from './types'
 
@@ -52,74 +48,59 @@ defineProps<{
 
 const wrapperRef = ref<HTMLElement | null>(null)
 const isExpanded = ref(false)
-const showTooltip = ref(false)
 const tools = ref<FloatingTool[]>(allTools)
 
-const toggleExpand = () => {
-  isExpanded.value = !isExpanded.value
-  showTooltip.value = false
+const handleMouseEnter = () => {
+  isExpanded.value = true
+}
+
+const handleMouseLeave = () => {
+  isExpanded.value = false
 }
 
 const handleToolClick = (tool: FloatingTool) => {
   tool.action()
-  isExpanded.value = false
 }
-
-// 点击外部关闭
-const handleClickOutside = (event: MouseEvent) => {
-  if (wrapperRef.value && !wrapperRef.value.contains(event.target as Node)) {
-    isExpanded.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
 </script>
 
 <style scoped lang="scss">
 .floating-box-wrapper {
   position: fixed;
-  right: 16px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  transition: opacity 0.3s ease;
+
+  &.collapsed {
+    opacity: 0.35;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
 
 .floating-box-trigger {
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.35);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-  }
-
-  &.expanded {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-    box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
-    border-radius: 50%;
-
-    &:hover {
-      box-shadow: 0 6px 20px rgba(238, 90, 36, 0.5);
-    }
+    transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.45);
   }
 }
 
@@ -127,66 +108,31 @@ onUnmounted(() => {
   transition: transform 0.3s ease;
 }
 
-.trigger-tooltip {
-  position: absolute;
-  right: 54px;
-  white-space: nowrap;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  pointer-events: none;
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 6px solid transparent;
-    border-left-color: rgba(0, 0, 0, 0.8);
-    border-right: none;
-  }
-}
-
-.tooltip-enter-active,
-.tooltip-leave-active {
-  transition: all 0.2s ease;
-}
-
-.tooltip-enter-from,
-.tooltip-leave-to {
-  opacity: 0;
-  transform: translateX(8px);
-}
-
 .floating-toolbar {
   position: absolute;
-  right: 54px;
+  right: 40px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px;
+  gap: 4px;
+  padding: 6px;
   background: var(--b3-theme-background);
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 1px 6px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--b3-theme-surface-lighter);
 }
 
 .tool-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: 90px;
 
   &:hover {
     background: var(--b3-theme-surface-lighter);
-    transform: translateX(-2px);
 
     .tool-icon {
       transform: scale(1.1);
@@ -194,14 +140,14 @@ onUnmounted(() => {
   }
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 }
 
 .tool-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,7 +157,7 @@ onUnmounted(() => {
 }
 
 .tool-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--b3-theme-on-background);
 }
@@ -219,42 +165,42 @@ onUnmounted(() => {
 /* 工具栏动画 */
 .toolbar-enter-active,
 .toolbar-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .toolbar-enter-from,
 .toolbar-leave-to {
   opacity: 0;
-  transform: translateX(20px) scale(0.9);
+  transform: translateX(12px) scale(0.95);
 }
 
 /* 移动端适配 */
 @media (max-width: 768px) {
   .floating-box-wrapper {
-    right: 12px;
+    right: 8px;
   }
 
   .floating-box-trigger {
-    width: 40px;
-    height: 40px;
-  }
-
-  .floating-toolbar {
-    right: 50px;
-  }
-
-  .tool-item {
-    padding: 6px 10px;
-    min-width: 100px;
-  }
-
-  .tool-icon {
     width: 28px;
     height: 28px;
   }
 
+  .floating-toolbar {
+    right: 36px;
+  }
+
+  .tool-item {
+    padding: 5px 8px;
+    min-width: 80px;
+  }
+
+  .tool-icon {
+    width: 20px;
+    height: 20px;
+  }
+
   .tool-label {
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 </style>
