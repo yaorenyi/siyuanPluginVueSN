@@ -2,14 +2,22 @@
   <div class="statistics-panel" :class="`theme-${currentTheme}`">
     <!-- 顶部操作栏 -->
     <div class="statistics-header">
-      <button class="refresh-btn" :title="i18n.refresh || '刷新'" @click="refreshData" :disabled="loading">
-        <svg class="icon" :class="{ rotating: loading }"><use xlink:href="#iconRefresh"></use></svg>
-      </button>
-      <button class="theme-toggle-btn" @click="toggleTheme" :title="i18n.toggleTheme || '切换主题'">
-        <span class="theme-icon">{{ currentTheme === 'default' ? '🌈' : '🐙' }}</span>
-        <span class="theme-text">{{ currentTheme === 'default' ? (i18n.defaultTheme || '默认') : (i18n.githubTheme || 'GitHub') }}</span>
-      </button>
-      <div class="last-update">{{ i18n.lastUpdate }}: {{ lastUpdateTime }}</div>
+      <div class="header-left">
+        <button class="refresh-btn" :title="i18n.refresh || '刷新'" @click="refreshData" :disabled="loading">
+          <svg class="icon" :class="{ rotating: loading }"><use xlink:href="#iconRefresh"></use></svg>
+        </button>
+        <button class="theme-toggle-btn" @click="toggleTheme" :title="i18n.toggleTheme || '切换主题'">
+          <span class="theme-icon">{{ currentTheme === 'default' ? '🌈' : '🐙' }}</span>
+          <span class="theme-text">{{ currentTheme === 'default' ? (i18n.defaultTheme || '默认') : (i18n.githubTheme || 'GitHub') }}</span>
+        </button>
+      </div>
+      <div class="header-right">
+        <div class="auto-update-info">
+          <span class="update-icon">⏱️</span>
+          <span class="update-text">{{ updateIntervalText }}</span>
+        </div>
+        <div class="last-update">{{ i18n.lastUpdate }}: {{ lastUpdateTime }}</div>
+      </div>
     </div>
 
     <!-- 加载状态 -->
@@ -199,6 +207,79 @@
             {{ i18n.noData }}
           </div>
         </div>
+
+        <!-- 趋势视图 -->
+        <div v-if="viewMode === 'trend'" class="trend-view">
+          <h3 class="section-title">{{ i18n.trendAnalysis || '趋势分析' }}</h3>
+
+          <!-- 趋势统计卡片 -->
+          <div v-if="trendStats" class="trend-stats-cards">
+            <div class="trend-stat-card">
+              <div class="trend-icon">📈</div>
+              <div class="trend-content">
+                <div class="trend-value">{{ formatNumber(trendStats.notesGrowth) }}</div>
+                <div class="trend-label">{{ i18n.notesGrowth || '笔记增长' }}</div>
+              </div>
+            </div>
+            <div class="trend-stat-card">
+              <div class="trend-icon">✍️</div>
+              <div class="trend-content">
+                <div class="trend-value">{{ formatNumber(trendStats.wordsGrowth) }}</div>
+                <div class="trend-label">{{ i18n.wordsGrowth || '字数增长' }}</div>
+              </div>
+            </div>
+            <div class="trend-stat-card">
+              <div class="trend-icon">📅</div>
+              <div class="trend-content">
+                <div class="trend-value">{{ trendStats.avgDailyCreated }}</div>
+                <div class="trend-label">{{ i18n.avgDailyCreated || '日均新增' }}</div>
+              </div>
+            </div>
+            <div class="trend-stat-card">
+              <div class="trend-icon">✏️</div>
+              <div class="trend-content">
+                <div class="trend-value">{{ trendStats.avgDailyModified }}</div>
+                <div class="trend-label">{{ i18n.avgDailyModified || '日均修改' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 历史数据列表 -->
+          <div class="historical-data-list">
+            <h4 class="subsection-title">{{ i18n.historicalData || '历史数据' }}</h4>
+            <div class="historical-items">
+              <div
+                v-for="item in historicalData"
+                :key="item.date"
+                class="historical-item"
+              >
+                <div class="historical-date">{{ item.dateLabel }}</div>
+                <div class="historical-stats">
+                  <span class="stat-item">
+                    <span class="stat-icon">📓</span>
+                    <span class="stat-value">{{ formatNumber(item.totalNotes) }}</span>
+                    <span class="stat-label">{{ i18n.totalNotes || '笔记' }}</span>
+                  </span>
+                  <span class="stat-item">
+                    <span class="stat-icon">✍️</span>
+                    <span class="stat-value">{{ formatNumber(item.totalWords) }}</span>
+                    <span class="stat-label">{{ i18n.words || '字数' }}</span>
+                  </span>
+                  <span class="stat-item">
+                    <span class="stat-icon">📅</span>
+                    <span class="stat-value">{{ item.todayCreated }}</span>
+                    <span class="stat-label">{{ i18n.created || '新增' }}</span>
+                  </span>
+                  <span class="stat-item">
+                    <span class="stat-icon">✏️</span>
+                    <span class="stat-value">{{ item.todayModified }}</span>
+                    <span class="stat-label">{{ i18n.modified || '修改' }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -217,11 +298,12 @@ interface Props {
   theme?: 'default' | 'github'
   onThemeChange?: (theme: 'default' | 'github') => void
   onRefresh?: (params: {
-    viewMode: 'day' | 'week' | 'month' | 'year'
+    viewMode: 'day' | 'week' | 'month' | 'year' | 'trend'
     dayRange?: 7 | 15 | 30 | 90 | 180 | 365
     monthYearRange?: 1 | 2 | 3
     selectedYear?: number
   }) => Promise<StatisticsData>
+  onGetHistoricalData?: (days?: number) => Promise<any[]>
 }
 
 interface StatisticsData {
@@ -256,12 +338,14 @@ const props = withDefaults(defineProps<Props>(), {
 const loading = ref(false)
 const stats = ref<StatisticsData | null>(null)
 const lastUpdateTime = ref('')
-const viewMode = ref<'day' | 'week' | 'month' | 'year'>('day')
+const viewMode = ref<'day' | 'week' | 'month' | 'year' | 'trend'>('day')
 const dayRange = ref<7 | 15 | 30 | 90 | 180 | 365>(7)
 const monthYearRange = ref<1 | 2 | 3>(1)
 const selectedYear = ref<number>(new Date().getFullYear())
 const chartData = ref<DailyWordCount[]>([])
 const currentTheme = ref<'default' | 'github'>(props.theme || 'default')
+const historicalData = ref<any[]>([])
+const updateInterval = ref<number>(60000) // 默认1分钟
 
 // 视图模式选项
 const viewModes = computed(() => [
@@ -269,6 +353,7 @@ const viewModes = computed(() => [
   { value: 'week' as const, label: props.i18n.weekView || '周', icon: '📊' },
   { value: 'month' as const, label: props.i18n.monthView || '月', icon: '📆' },
   { value: 'year' as const, label: props.i18n.yearView || '年', icon: '📈' },
+  { value: 'trend' as const, label: props.i18n.trendView || '趋势', icon: '📈' },
 ])
 
 // 日视图范围选项
@@ -306,11 +391,49 @@ const chartTitle = computed(() => {
 // 计算时段平均每日字数
 const periodAvgWords = computed(() => {
   if (!chartData.value || chartData.value.length === 0) return 0
-  
+
   const totalWords = chartData.value.reduce((sum, item) => sum + item.words, 0)
   const days = chartData.value.length
-  
+
   return days > 0 ? Math.round(totalWords / days) : 0
+})
+
+// 更新间隔显示文本
+const updateIntervalText = computed(() => {
+  const seconds = updateInterval.value / 1000
+  if (seconds < 60) {
+    return `${seconds}秒`
+  } else if (seconds === 60) {
+    return '1分钟'
+  } else {
+    const minutes = seconds / 60
+    return `${minutes}分钟`
+  }
+})
+
+// 趋势数据统计
+const trendStats = computed(() => {
+  if (historicalData.value.length === 0) return null
+
+  const totalNotes = historicalData.value[historicalData.value.length - 1]?.totalNotes || 0
+  const firstNotes = historicalData.value[0]?.totalNotes || 0
+  const notesGrowth = totalNotes - firstNotes
+
+  const totalWords = historicalData.value[historicalData.value.length - 1]?.totalWords || 0
+  const firstWords = historicalData.value[0]?.totalWords || 0
+  const wordsGrowth = totalWords - firstWords
+
+  const totalCreated = historicalData.value.reduce((sum, item) => sum + item.todayCreated, 0)
+  const totalModified = historicalData.value.reduce((sum, item) => sum + item.todayModified, 0)
+
+  return {
+    notesGrowth,
+    wordsGrowth,
+    totalCreated,
+    totalModified,
+    avgDailyCreated: Math.round(totalCreated / historicalData.value.length),
+    avgDailyModified: Math.round(totalModified / historicalData.value.length)
+  }
 })
 
 // 获取时段平均标签
@@ -350,7 +473,7 @@ watch(() => props.theme, (newTheme) => {
 // 刷新数据
 async function refreshData() {
   if (!props.onRefresh) return
-  
+
   loading.value = true
   try {
     stats.value = await props.onRefresh({
@@ -361,10 +484,26 @@ async function refreshData() {
     })
     chartData.value = stats.value.dailyStats || []
     lastUpdateTime.value = new Date().toLocaleString('zh-CN')
+
+    // 如果是趋势视图，获取历史数据
+    if (viewMode.value === 'trend') {
+      await loadHistoricalData()
+    }
   } catch (error) {
     console.error('刷新统计数据失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 加载历史数据
+async function loadHistoricalData() {
+  if (!props.onGetHistoricalData) return
+
+  try {
+    historicalData.value = await props.onGetHistoricalData(30) // 获取最近30天的数据
+  } catch (error) {
+    console.error('加载历史数据失败:', error)
   }
 }
 
@@ -482,6 +621,35 @@ defineExpose({
   border-bottom: 1px solid var(--b3-border-color);
   background: var(--b3-theme-surface);
   flex-shrink: 0;
+
+  .header-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .auto-update-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--b3-theme-on-surface);
+
+    .update-icon {
+      font-size: 12px;
+    }
+
+    .update-text {
+      font-weight: 500;
+    }
+  }
 
   .refresh-btn {
     padding: 4px 8px;
@@ -1053,6 +1221,136 @@ defineExpose({
       padding: 20px;
       color: var(--b3-theme-on-surface);
       font-size: 12px;
+    }
+  }
+}
+
+// 趋势视图样式
+.trend-view {
+  .trend-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+
+    .trend-stat-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--b3-theme-surface);
+      border: 1px solid var(--b3-border-color);
+      border-radius: 8px;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: var(--b3-theme-primary);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .trend-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+
+      .trend-content {
+        flex: 1;
+        min-width: 0;
+
+        .trend-value {
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--b3-theme-primary);
+          margin-bottom: 2px;
+        }
+
+        .trend-label {
+          font-size: 10px;
+          color: var(--b3-theme-on-surface);
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+
+  .historical-data-list {
+    margin-top: 16px;
+
+    .subsection-title {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--b3-theme-on-surface);
+    }
+
+    .historical-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--b3-theme-surface-lighter);
+        border-radius: 3px;
+
+        &:hover {
+          background: var(--b3-theme-on-surface-variant);
+        }
+      }
+
+      .historical-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: var(--b3-theme-background);
+        border-radius: 6px;
+        border-left: 3px solid var(--b3-theme-primary);
+
+        .historical-date {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--b3-theme-on-surface);
+          min-width: 50px;
+        }
+
+        .historical-stats {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+
+          .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .stat-icon {
+              font-size: 12px;
+            }
+
+            .stat-value {
+              font-size: 11px;
+              font-weight: 600;
+              color: var(--b3-theme-primary);
+            }
+
+            .stat-label {
+              font-size: 9px;
+              color: var(--b3-theme-on-surface);
+              opacity: 0.7;
+            }
+          }
+        }
+      }
     }
   }
 }

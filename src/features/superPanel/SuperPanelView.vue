@@ -409,7 +409,13 @@ const features = computed<Feature[]>(() => [
     title: props.i18n.statisticsPanel || '数据统计',
     desc: props.i18n.enableStatisticsDesc || '显示笔记数据统计和分析',
     enabled: props.settings.enableStatistics,
-    actions: []
+    actions: [
+      {
+        key: 'openStatistics',
+        label: props.i18n.openStatistics || '打开统计面板',
+        hotkey: ''
+      }
+    ]
   },
   {
     id: 'pronunciation',

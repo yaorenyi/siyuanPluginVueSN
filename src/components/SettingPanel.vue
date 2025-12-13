@@ -174,6 +174,59 @@
         </div>
         <div class="b3-label__text">{{ i18n.floatingToolbarDescription }}</div>
       </div>
+
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.enableStatistics || '数据统计' }}
+          </span>
+          <span class="fn__space"></span>
+          <input
+            type="checkbox"
+            class="b3-switch fn__flex-center"
+            v-model="localSettings.enableStatistics"
+          />
+        </div>
+        <div class="b3-label__text">{{ i18n.enableStatisticsDesc || '在右侧边栏显示数据统计面板，包括笔记数量、字数统计、趋势分析等功能' }}</div>
+      </div>
+
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.statisticsUpdateInterval || '统计自动更新间隔' }}
+          </span>
+          <span class="fn__space"></span>
+          <select
+            class="b3-select fn__flex-center"
+            v-model="localSettings.statisticsUpdateInterval"
+          >
+            <option :value="30000">30秒</option>
+            <option :value="60000">1分钟</option>
+            <option :value="300000">5分钟</option>
+            <option :value="600000">10分钟</option>
+            <option :value="1800000">30分钟</option>
+            <option :value="3600000">1小时</option>
+          </select>
+        </div>
+        <div class="b3-label__text">{{ i18n.statisticsUpdateIntervalDesc || '设置统计数据的自动收集间隔，建议设置为1分钟以上以避免频繁查询影响性能' }}</div>
+      </div>
+
+      <div class="setting-item b3-label">
+        <div class="fn__flex">
+          <span class="fn__flex-1">
+            {{ i18n.statisticsTheme || '统计面板主题' }}
+          </span>
+          <span class="fn__space"></span>
+          <select
+            class="b3-select fn__flex-center"
+            v-model="localSettings.statisticsTheme"
+          >
+            <option value="default">默认</option>
+            <option value="github">GitHub</option>
+          </select>
+        </div>
+        <div class="b3-label__text">{{ i18n.statisticsThemeDesc || '选择统计面板的显示主题风格' }}</div>
+      </div>
       </div>
     </div>
 

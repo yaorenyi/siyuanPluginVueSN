@@ -234,6 +234,14 @@ function handleFeatureAction(_plugin: Plugin, action: string) {
       }
       break
 
+    case 'openStatistics':
+      // 触发打开统计面板
+      if ((_plugin as any).settings.enableStatistics) {
+        window.dispatchEvent(new CustomEvent('openStatistics'))
+        closeSuperPanel()
+      }
+      break
+
     default:
       showMessage('功能开发中...', 2000, 'info')
   }

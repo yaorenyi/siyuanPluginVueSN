@@ -44,6 +44,9 @@ export class Statistics {
   private dayRange: 7 | 15 | 30 | 90 | 180 | 365 = 7; // 日视图的天数范围
   private monthYearRange: 1 | 2 | 3 = 1; // 月视图的年份范围
   private statisticsTheme: 'default' | 'github' = 'default'; // 统计面板主题风格
+  private updateInterval: number = 60000; // 定时更新间隔（毫秒），默认1分钟
+  private updateTimer: NodeJS.Timeout | null = null; // 定时器实例
+  private lastUpdateTime: number = 0; // 上次更新时间戳
   
   constructor(plugin: Plugin) {
     this.plugin = plugin;
@@ -55,16 +58,43 @@ export class Statistics {
    * 初始化统计模块
    */
   async init() {
-    // 加载保存的主题设置
+    // 加载保存的主题设置和更新间隔
     try {
       const settings = await this.plugin.loadData('plugin-settings');
-      if (settings && settings.statisticsTheme) {
-        this.statisticsTheme = settings.statisticsTheme;
+      if (settings) {
+        if (settings.statisticsTheme) {
+          this.statisticsTheme = settings.statisticsTheme;
+        }
+        if (settings.statisticsUpdateInterval) {
+          this.updateInterval = settings.statisticsUpdateInterval;
+        }
       }
     } catch (error) {
-      console.error('加载主题设置失败:', error);
+      console.error('加载设置失败:', error);
     }
+
+    // 启动定时任务
+    this.startUpdateTimer();
+
+    // 注册Dock
     this.registerDock();
+
+    // 监听超级面板打开统计面板事件
+    this.bindEvents();
+  }
+
+  /**
+   * 绑定事件监听
+   */
+  private bindEvents(): void {
+    window.addEventListener('openStatistics', () => {
+      console.log('收到打开统计面板事件');
+      // 触发Dock显示
+      const dockEvent = new CustomEvent('dock-click', {
+        detail: { dockId: 'statistics-dock' }
+      });
+      window.dispatchEvent(dockEvent);
+    });
   }
   
   /**
@@ -126,7 +156,7 @@ export class Statistics {
         }
       },
       onRefresh: async (params: {
-        viewMode: 'day' | 'week' | 'month' | 'year'
+        viewMode: 'day' | 'week' | 'month' | 'year' | 'trend'
         dayRange?: 7 | 15 | 30 | 90 | 180 | 365
         monthYearRange?: 1 | 2 | 3
         selectedYear?: number
@@ -138,6 +168,9 @@ export class Statistics {
         if (params.selectedYear) this.currentYear = params.selectedYear;
 
         return await this.getStatistics();
+      },
+      onGetHistoricalData: async (days?: number) => {
+        return await this.getHistoricalStatistics(days || 30);
       },
     });
     
@@ -1008,9 +1041,183 @@ export class Statistics {
   }
   
   /**
+   * 启动定时更新任务
+   */
+  private startUpdateTimer(): void {
+    // 清除现有定时器
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
+    }
+
+    console.log(`启动统计定时任务，更新间隔: ${this.updateInterval / 1000}秒`);
+
+    // 立即执行一次
+    this.collectAndStoreStatistics();
+
+    // 设置定时任务
+    this.updateTimer = setInterval(() => {
+      this.collectAndStoreStatistics();
+    }, this.updateInterval);
+  }
+
+  /**
+   * 停止定时更新任务
+   */
+  private stopUpdateTimer(): void {
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer);
+      this.updateTimer = null;
+      console.log('已停止统计定时任务');
+    }
+  }
+
+  /**
+   * 收集并存储统计数据
+   */
+  private async collectAndStoreStatistics(): Promise<void> {
+    try {
+      const now = Date.now();
+      // 避免频繁执行（间隔小于30秒）
+      if (now - this.lastUpdateTime < 30000) {
+        return;
+      }
+
+      console.log('开始收集统计数据...');
+      const stats = await this.getStatistics();
+
+      // 保存到数据库
+      const today = new Date();
+      const dateKey = this.formatDateKey(today);
+      const existingData = await this.plugin.loadData('statistics-history') || {};
+
+      // 更新当日数据
+      existingData[dateKey] = {
+        date: dateKey,
+        timestamp: now,
+        totalNotes: stats.totalNotes,
+        totalWords: stats.totalWords,
+        todayCreated: stats.todayCreated,
+        todayModified: stats.todayModified,
+        avgWordsPerDoc: stats.avgWordsPerDoc
+      };
+
+      // 只保留最近365天的数据
+      const keys = Object.keys(existingData).sort().reverse();
+      if (keys.length > 365) {
+        keys.slice(365).forEach(key => {
+          delete existingData[key];
+        });
+      }
+
+      await this.plugin.saveData('statistics-history', existingData);
+      this.lastUpdateTime = now;
+
+      console.log(`统计数据已保存: ${dateKey}`, existingData[dateKey]);
+    } catch (error) {
+      console.error('收集统计数据失败:', error);
+    }
+  }
+
+  /**
+   * 获取历史统计数据
+   */
+  async getHistoricalStatistics(days: number = 30): Promise<any[]> {
+    try {
+      const historyData = await this.plugin.loadData('statistics-history') || {};
+      const today = new Date();
+      const result = [];
+
+      // 生成日期范围
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateKey = this.formatDateKey(date);
+
+        const dayData = historyData[dateKey];
+        if (dayData) {
+          result.push({
+            date: dateKey,
+            dateLabel: `${date.getMonth() + 1}/${date.getDate()}`,
+            totalNotes: dayData.totalNotes,
+            totalWords: dayData.totalWords,
+            todayCreated: dayData.todayCreated,
+            todayModified: dayData.todayModified,
+            avgWordsPerDoc: dayData.avgWordsPerDoc
+          });
+        } else {
+          // 如果没有数据，填充0
+          result.push({
+            date: dateKey,
+            dateLabel: `${date.getMonth() + 1}/${date.getDate()}`,
+            totalNotes: 0,
+            totalWords: 0,
+            todayCreated: 0,
+            todayModified: 0,
+            avgWordsPerDoc: 0
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('获取历史统计数据失败:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 更新定时任务间隔
+   */
+  async updateUpdateInterval(interval: number): Promise<void> {
+    this.updateInterval = interval;
+    console.log(`更新定时任务间隔: ${interval / 1000}秒`);
+
+    // 保存到设置
+    try {
+      const settings = await this.plugin.loadData('plugin-settings') || {};
+      settings.statisticsUpdateInterval = interval;
+      await this.plugin.saveData('plugin-settings', settings);
+    } catch (error) {
+      console.error('保存更新间隔设置失败:', error);
+    }
+
+    // 重新启动定时器
+    this.startUpdateTimer();
+  }
+
+  /**
+   * 手动触发数据收集
+   */
+  async manualRefresh(): Promise<void> {
+    console.log('手动刷新统计数据');
+    await this.collectAndStoreStatistics();
+
+    // 如果面板已打开，刷新显示
+    if (this.vueApp) {
+      const stats = await this.getStatistics();
+      // 这里可以添加刷新Vue组件的逻辑
+      console.log('统计数据已更新:', stats);
+    }
+  }
+
+  /**
+   * 格式化日期为键值
+   */
+  private formatDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = this.padZero(date.getMonth() + 1);
+    const day = this.padZero(date.getDate());
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
    * 销毁模块
    */
   destroy() {
+    // 停止定时任务
+    this.stopUpdateTimer();
+
     // 清理 Vue 实例
     if (this.vueApp) {
       this.vueApp.unmount();
