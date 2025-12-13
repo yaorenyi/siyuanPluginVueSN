@@ -8,25 +8,25 @@
           :class="{ active: currentMode === 'word' }"
           @click="switchMode('word')"
         >
-          📖 {{ i18n.wordQuery || '单词查询' }}
+          📖 {{ props.i18n.wordQuery || '单词查询' }}
         </button>
         <button
           class="mode-tab"
           :class="{ active: currentMode === 'translate' }"
           @click="switchMode('translate')"
         >
-          🌐 {{ i18n.translation || '长文翻译' }}
+          🌐 {{ props.i18n.translation || '长文翻译' }}
         </button>
       </div>
 
       <div class="api-key-toggle">
-        <button class="settings-btn" @click="toggleHistory" :title="i18n.history || '历史记录'">
+        <button class="settings-btn" @click="togglePanel('history')" :title="props.i18n.history || '历史记录'">
           <svg class="settings-icon"><use xlink:href="#iconHistory"></use></svg>
         </button>
-        <button class="settings-btn" @click="toggleFavorites" :title="i18n.favorites || '我的收藏'">
+        <button class="settings-btn" @click="togglePanel('favorites')" :title="props.i18n.favorites || '我的收藏'">
           <IconWrapper name="star" :size="18" />
         </button>
-        <button class="settings-btn" @click="toggleAdvancedOptions" :title="i18n.advancedOptions || '高级选项'">
+        <button class="settings-btn" @click="togglePanel('advanced')" :title="props.i18n.advancedOptions || '高级选项'">
           <IconWrapper name="generalSettings" :size="18" />
         </button>
       </div>
@@ -40,7 +40,7 @@
             v-model="searchWord"
             type="text"
             class="query-input"
-            :placeholder="i18n.enterWordPlaceholder || '输入单词或词语，2秒后自动查询...'"
+            :placeholder="props.i18n.enterWordPlaceholder || '输入单词或词语，2秒后自动查询...'"
             @keyup.enter="handleQuery"
           />
           <button class="query-btn" @click="handleQuery" :disabled="isLoading">
@@ -52,26 +52,41 @@
         </div>
       </div>
 
-    <!-- 历史记录面板 -->
-    <div class="history-panel" v-if="showHistory">
+    <!-- 通用面板 -->
+    <div
+      v-if="activePanel"
+      :class="`${activePanel}-panel`"
+      class="common-panel"
+    >
       <div class="panel-header">
-        <span>🕒 {{ i18n.queryHistory || '查询历史' }} ({{ queryHistory.length }})</span>
+        <span>{{ getPanelIcon(activePanel) }} {{ getPanelTitle(activePanel) }}</span>
         <div class="panel-actions">
-          <button class="btn-clear" @click="clearHistory" v-if="queryHistory.length > 0">清除</button>
-          <button class="close-btn" @click="toggleHistory">
+          <button
+            v-if="activePanel === 'history' && queryHistory.length > 0"
+            class="btn-clear"
+            @click="clearHistory"
+          >清除</button>
+          <button
+            v-if="activePanel === 'favorites' && favorites.length > 0"
+            class="btn-clear"
+            @click="clearFavorites"
+          >清除</button>
+          <button class="close-btn" @click="togglePanel(null)">
             <svg class="close-icon"><use xlink:href="#iconClose"></use></svg>
           </button>
         </div>
       </div>
-      <div class="panel-content">
+
+      <!-- 历史记录面板内容 -->
+      <div v-if="activePanel === 'history'" class="panel-content">
         <div v-if="queryHistory.length === 0" class="empty-state">
-          <p>📑 {{ i18n.noHistory || '暂无查询历史' }}</p>
+          <p>📑 {{ props.i18n.noHistory || '暂无查询历史' }}</p>
         </div>
-        <div v-else class="history-list">
+        <div v-else class="item-list">
           <div
             v-for="item in queryHistory"
             :key="item.timestamp"
-            class="history-item"
+            class="list-item"
             @click="queryFromHistory(item)"
           >
             <div class="item-word">{{ item.word }}</div>
@@ -79,28 +94,17 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 收藏面板 -->
-    <div class="favorites-panel" v-if="showFavorites">
-      <div class="panel-header">
-        <span>⭐ {{ i18n.myFavorites || '我的收藏' }} ({{ favorites.length }})</span>
-        <div class="panel-actions">
-          <button class="btn-clear" @click="clearFavorites" v-if="favorites.length > 0">清除</button>
-          <button class="close-btn" @click="toggleFavorites">
-            <svg class="close-icon"><use xlink:href="#iconClose"></use></svg>
-          </button>
-        </div>
-      </div>
-      <div class="panel-content">
+      <!-- 收藏面板内容 -->
+      <div v-if="activePanel === 'favorites'" class="panel-content">
         <div v-if="favorites.length === 0" class="empty-state">
-          <p>📚 {{ i18n.noFavorites || '暂无收藏单词' }}</p>
+          <p>📚 {{ props.i18n.noFavorites || '暂无收藏单词' }}</p>
         </div>
-        <div v-else class="favorites-list">
+        <div v-else class="item-list">
           <div
             v-for="item in favorites"
             :key="item.timestamp"
-            class="favorite-item"
+            class="list-item"
           >
             <div class="item-content" @click="queryFromFavorite(item)">
               <div class="item-word">{{ item.word }}</div>
@@ -112,29 +116,21 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 高级选项面板 -->
-    <div class="advanced-panel" v-if="showAdvancedOptions">
-      <div class="panel-header">
-        <span>⚙️ {{ i18n.advancedOptions || '高级选项' }}</span>
-        <button class="close-btn" @click="toggleAdvancedOptions">
-          <svg class="close-icon"><use xlink:href="#iconClose"></use></svg>
-        </button>
-      </div>
-      <div class="panel-content advanced-content">
+      <!-- 高级选项面板内容 -->
+      <div v-if="activePanel === 'advanced'" class="panel-content advanced-content">
         <div class="option-group">
           <label class="option-label">
-            <span>🔊 {{ i18n.pronunciation || '发音设置' }}</span>
+            <span>🔊 {{ props.i18n.pronunciation || '发音设置' }}</span>
           </label>
           <div class="option-row">
             <label class="radio-label">
               <input type="radio" value="uk" v-model="pronunciationType" />
-              <span>🇬🇧 {{ i18n.britishPronunciation || '英式发音' }}</span>
+              <span>🇬🇧 {{ props.i18n.britishPronunciation || '英式发音' }}</span>
             </label>
             <label class="radio-label">
               <input type="radio" value="us" v-model="pronunciationType" />
-              <span>🇺🇸 {{ i18n.americanPronunciation || '美式发音' }}</span>
+              <span>🇺🇸 {{ props.i18n.americanPronunciation || '美式发音' }}</span>
             </label>
           </div>
         </div>
@@ -142,14 +138,14 @@
         <div class="option-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="autoPlayPronunciation" />
-            <span>🎵 {{ i18n.autoPlayPronunciation || '查询后自动播放发音' }}</span>
+            <span>🎵 {{ props.i18n.autoPlayPronunciation || '查询后自动播放发音' }}</span>
           </label>
         </div>
 
         <div class="option-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="showRelatedWords" />
-            <span>🔗 {{ i18n.showRelatedWords || '显示相关词推荐' }}</span>
+            <span>🔗 {{ props.i18n.showRelatedWords || '显示相关词推荐' }}</span>
           </label>
         </div>
       </div>
@@ -160,7 +156,7 @@
       <!-- 加载状态 -->
       <div v-if="isLoading" class="query-loading">
         <div class="loading-spinner-large"></div>
-        <p>{{ i18n.querying || '正在查询...' }}</p>
+        <p>{{ props.i18n.querying || '正在查询...' }}</p>
       </div>
 
       <!-- 错误提示 -->
@@ -176,27 +172,27 @@
           <div class="dropdown" :class="{ active: showCopyOptions }">
             <button class="action-btn copy-btn" @click="toggleCopyOptions">
               <svg class="action-icon"><use xlink:href="#iconCopy"></use></svg>
-              {{ i18n.copy || '复制' }}
+              {{ props.i18n.copy || '复制' }}
               <svg class="dropdown-icon"><use xlink:href="#iconDown"></use></svg>
             </button>
             <div class="dropdown-menu" v-show="showCopyOptions">
               <button class="dropdown-item" @click="copyResult('all')">
-                {{ i18n.copyAll || '复制全部' }}
+                {{ props.i18n.copyAll || '复制全部' }}
               </button>
               <button class="dropdown-item" @click="copyResult('phonetic')">
-                {{ i18n.copyPhonetic || '复制音标' }}
+                {{ props.i18n.copyPhonetic || '复制音标' }}
               </button>
               <button class="dropdown-item" @click="copyResult('meaning')">
-                {{ i18n.copyMeaning || '复制释义' }}
+                {{ props.i18n.copyMeaning || '复制释义' }}
               </button>
               <button class="dropdown-item" @click="copyResult('english')" v-if="extractContentParts.english">
-                {{ i18n.copyEnglish || '复制英文' }}
+                {{ props.i18n.copyEnglish || '复制英文' }}
               </button>
               <button class="dropdown-item" @click="copyResult('pronunciation')">
-                {{ i18n.copyPronunciation || '复制谐音' }}
+                {{ props.i18n.copyPronunciation || '复制谐音' }}
               </button>
               <button class="dropdown-item" @click="copyResult('example')">
-                {{ i18n.copyExample || '复制例句' }}
+                {{ props.i18n.copyExample || '复制例句' }}
               </button>
             </div>
           </div>
@@ -204,24 +200,24 @@
           <!-- 收藏按钮 -->
           <button class="action-btn favorite-btn" @click="toggleFavorite" :class="{ favorited: currentWordFavorited }">
             <IconWrapper :name="currentWordFavorited ? 'star' : 'starOutline'" :size="16" class="action-icon" />
-            {{ currentWordFavorited ? (i18n.unfavorite || '取消收藏') : (i18n.favorite || '收藏') }}
+            {{ currentWordFavorited ? (props.i18n.unfavorite || '取消收藏') : (props.i18n.favorite || '收藏') }}
           </button>
 
           <!-- 播放发音按钮 -->
           <button class="action-btn play-btn" @click="playPronunciation(searchWord)">
             <svg class="action-icon"><use xlink:href="#iconPlay"></use></svg>
-            {{ i18n.play || '播放' }}
+            {{ props.i18n.play || '播放' }}
           </button>
 
           <!-- 导出按钮 -->
           <button class="action-btn export-btn" @click="exportToSiyuan">
             <svg class="action-icon"><use xlink:href="#iconUpload"></use></svg>
-            {{ i18n.export || '导出' }}
+            {{ props.i18n.export || '导出' }}
           </button>
 
           <button class="action-btn clear-btn" @click="clearResult">
             <svg class="action-icon"><use xlink:href="#iconTrashcan"></use></svg>
-            {{ i18n.clear || '清除' }}
+            {{ props.i18n.clear || '清除' }}
           </button>
         </div>
       </div>
@@ -229,7 +225,7 @@
       <!-- 空状态 -->
       <div v-else class="query-empty">
         <div class="empty-icon">📚</div>
-        <p>{{ i18n.enterWordHint || '输入中英文单词或词语查询释义、音标、谐音等信息' }}</p>
+        <p>{{ props.i18n.enterWordHint || '输入中英文单词或词语查询释义、音标、谐音等信息' }}</p>
       </div>
       </div>
     </div>
@@ -239,42 +235,42 @@
       <div class="translate-container">
         <div class="translate-input-section">
           <div class="section-header">
-            <span class="section-title">{{ i18n.sourceText || '原文' }}</span>
+            <span class="section-title">{{ props.i18n.sourceText || '原文' }}</span>
             <div class="language-selector">
               <select v-model="sourceLanguage" class="language-select">
-                <option value="auto">{{ i18n.autoDetect || '自动检测' }}</option>
-                <option value="zh">{{ i18n.chinese || '中文' }}</option>
-                <option value="en">{{ i18n.english || '英文' }}</option>
-                <option value="ja">{{ i18n.japanese || '日文' }}</option>
-                <option value="ko">{{ i18n.korean || '韩文' }}</option>
-                <option value="fr">{{ i18n.french || '法文' }}</option>
-                <option value="de">{{ i18n.german || '德文' }}</option>
-                <option value="es">{{ i18n.spanish || '西班牙文' }}</option>
+                <option value="auto">{{ props.i18n.autoDetect || '自动检测' }}</option>
+                <option value="zh">{{ props.i18n.chinese || '中文' }}</option>
+                <option value="en">{{ props.i18n.english || '英文' }}</option>
+                <option value="ja">{{ props.i18n.japanese || '日文' }}</option>
+                <option value="ko">{{ props.i18n.korean || '韩文' }}</option>
+                <option value="fr">{{ props.i18n.french || '法文' }}</option>
+                <option value="de">{{ props.i18n.german || '德文' }}</option>
+                <option value="es">{{ props.i18n.spanish || '西班牙文' }}</option>
               </select>
             </div>
           </div>
           <textarea
             v-model="translateText"
             class="translate-textarea"
-            :placeholder="i18n.enterTextToTranslate || '输入要翻译的文本，2秒后自动翻译...'"
+            :placeholder="props.i18n.enterTextToTranslate || '输入要翻译的文本，2秒后自动翻译...'"
             rows="8"
           ></textarea>
           <div class="input-actions">
             <button class="action-btn-small" @click="clearTranslateInput">
               <svg class="action-icon-small"><use xlink:href="#iconTrashcan"></use></svg>
-              {{ i18n.clear || '清除' }}
+              {{ props.i18n.clear || '清除' }}
             </button>
             <button class="action-btn-small primary" @click="handleTranslate" :disabled="isTranslating">
               <div class="loading-spinner-small" v-if="isTranslating"></div>
               <svg class="action-icon-small" v-else><use xlink:href="#iconLanguage"></use></svg>
-              {{ isTranslating ? (i18n.translating || '翻译中...') : (i18n.translate || '翻译') }}
+              {{ isTranslating ? (props.i18n.translating || '翻译中...') : (props.i18n.translate || '翻译') }}
             </button>
           </div>
         </div>
 
         <div class="translate-divider">
           <div class="divider-line"></div>
-          <button class="swap-btn" @click="swapLanguages" :title="i18n.swapLanguages || '交换语言'">
+          <button class="swap-btn" @click="swapLanguages" :title="props.i18n.swapLanguages || '交换语言'">
             <svg class="swap-icon"><use xlink:href="#iconRefresh"></use></svg>
           </button>
           <div class="divider-line"></div>
@@ -282,16 +278,16 @@
 
         <div class="translate-output-section">
           <div class="section-header">
-            <span class="section-title">{{ i18n.translatedText || '译文' }}</span>
+            <span class="section-title">{{ props.i18n.translatedText || '译文' }}</span>
             <div class="language-selector">
               <select v-model="targetLanguage" class="language-select">
-                <option value="zh">{{ i18n.chinese || '中文' }}</option>
-                <option value="en">{{ i18n.english || '英文' }}</option>
-                <option value="ja">{{ i18n.japanese || '日文' }}</option>
-                <option value="ko">{{ i18n.korean || '韩文' }}</option>
-                <option value="fr">{{ i18n.french || '法文' }}</option>
-                <option value="de">{{ i18n.german || '德文' }}</option>
-                <option value="es">{{ i18n.spanish || '西班牙文' }}</option>
+                <option value="zh">{{ props.i18n.chinese || '中文' }}</option>
+                <option value="en">{{ props.i18n.english || '英文' }}</option>
+                <option value="ja">{{ props.i18n.japanese || '日文' }}</option>
+                <option value="ko">{{ props.i18n.korean || '韩文' }}</option>
+                <option value="fr">{{ props.i18n.french || '法文' }}</option>
+                <option value="de">{{ props.i18n.german || '德文' }}</option>
+                <option value="es">{{ props.i18n.spanish || '西班牙文' }}</option>
               </select>
             </div>
           </div>
@@ -300,16 +296,16 @@
           </div>
           <div class="translate-empty" v-else>
             <div class="empty-icon">🌍</div>
-            <p>{{ i18n.translationWillAppearHere || '翻译结果将显示在这里' }}</p>
+            <p>{{ props.i18n.translationWillAppearHere || '翻译结果将显示在这里' }}</p>
           </div>
           <div class="output-actions" v-if="translateResult">
             <button class="action-btn-small" @click="copyTranslation">
               <svg class="action-icon-small"><use xlink:href="#iconCopy"></use></svg>
-              {{ i18n.copy || '复制' }}
+              {{ props.i18n.copy || '复制' }}
             </button>
             <button class="action-btn-small" @click="exportTranslation">
               <svg class="action-icon-small"><use xlink:href="#iconUpload"></use></svg>
-              {{ i18n.export || '导出' }}
+              {{ props.i18n.export || '导出' }}
             </button>
           </div>
         </div>
@@ -333,14 +329,13 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// 历史记录接口
+// 接口定义
 interface HistoryItem {
   word: string;
   result: string;
   timestamp: number;
 }
 
-// 收藏项接口
 interface FavoriteItem {
   word: string;
   result: string;
@@ -348,14 +343,54 @@ interface FavoriteItem {
   note?: string;
 }
 
-// 状态
+interface PanelConfig {
+  key: 'history' | 'favorites' | 'advanced';
+  title: string;
+  icon: string;
+  data?: any;
+  maxItems?: number;
+}
+
+// 常量配置
+const PANEL_CONFIGS: Record<string, PanelConfig> = {
+  history: {
+    key: 'history',
+    title: 'queryHistory',
+    icon: 'iconHistory',
+    data: 'queryHistory',
+    maxItems: 50
+  },
+  favorites: {
+    key: 'favorites',
+    title: 'myFavorites',
+    icon: 'star',
+    data: 'favorites'
+  },
+  advanced: {
+    key: 'advanced',
+    title: 'advancedOptions',
+    icon: 'generalSettings'
+  }
+};
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  'auto': '自动检测',
+  'zh': '中文',
+  'en': '英文',
+  'ja': '日文',
+  'ko': '韩文',
+  'fr': '法文',
+  'de': '德文',
+  'es': '西班牙文'
+};
+
+// 基础状态
 const currentMode = ref<'word' | 'translate'>('word');
 const searchWord = ref('');
 const queryResult = ref('');
 const isLoading = ref(false);
 const errorMessage = ref('');
 const showCopyOptions = ref(false);
-const autoQueryTimer = ref<NodeJS.Timeout | null>(null);
 
 // 翻译模式状态
 const translateText = ref('');
@@ -363,85 +398,86 @@ const translateResult = ref('');
 const isTranslating = ref(false);
 const sourceLanguage = ref('auto');
 const targetLanguage = ref('zh');
-const autoTranslateTimer = ref<NodeJS.Timeout | null>(null);
 
-// 新增功能状态
-const showHistory = ref(false);
-const showFavorites = ref(false);
-const showAdvancedOptions = ref(false);
+// 面板状态管理
+const activePanel = ref<string | null>(null);
 const queryHistory = ref<HistoryItem[]>([]);
 const favorites = ref<FavoriteItem[]>([]);
 const currentWordFavorited = ref(false);
-const pronunciationType = ref<'uk' | 'us'>('uk'); // 英式/美式发音
-const autoPlayPronunciation = ref(false); // 自动播放发音
-const showRelatedWords = ref(true); // 显示相关词
-const maxHistoryItems = ref(50); // 历史记录最大条数
+
+// 设置状态
+const pronunciationType = ref<'uk' | 'us'>('uk');
+const autoPlayPronunciation = ref(false);
+const showRelatedWords = ref(true);
+
+// 定时器
+const autoQueryTimer = ref<NodeJS.Timeout | null>(null);
+const autoTranslateTimer = ref<NodeJS.Timeout | null>(null);
+
+// 字段类型配置
+const FIELD_MAPPINGS = [
+  { pattern: /(单词|词语)：/, class: 'word-section', label: '$1：' },
+  { pattern: /(拼音|音标)：/, class: 'phonetic-section', label: '$1：' },
+  { pattern: /(英文)：/, class: 'english-section', label: '$1：' },
+  { pattern: /(释义)：/, class: 'meaning-section', label: '$1：' },
+  { pattern: /(谐音)：/, class: 'pronunciation-section', label: '$1：' },
+  { pattern: /(发音)：/, class: 'tip-section', label: '$1：' },
+  { pattern: /(例句)：/, class: 'example-section', label: '$1：' }
+];
 
 // 格式化查询结果
 const formattedResult = computed(() => {
   if (!queryResult.value) return '';
 
-  // 简单的 Markdown 格式转换
   let html = queryResult.value;
 
-  // 转换标题 #### 为 h4
+  // 转换标题
   html = html.replace(/^#### (.+)$/gm, '<h4 class="result-title">$1</h4>');
 
-  // 转换换行为段落
+  // 转换换行为段落标记
   html = html.replace(/\n/g, '<br>');
 
-  // 为每个字段创建单独的区块，并添加特定样式类
-  html = html.replace(/<br>(单词|词语)：/g, '</div><div class="result-section word-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(拼音|音标)：/g, '</div><div class="result-section phonetic-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(英文)：/g, '</div><div class="result-section english-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(释义)：/g, '</div><div class="result-section meaning-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(谐音)：/g, '</div><div class="result-section pronunciation-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(发音)：/g, '</div><div class="result-section tip-section"><span class="result-label">$1：</span>');
-  html = html.replace(/<br>(例句)：/g, '</div><div class="result-section example-section"><span class="result-label">$1：</span>');
+  // 提取第一个字段用于设置开始div
+  const firstField = FIELD_MAPPINGS.find(m => m.pattern.test(html));
+  let sectionClass = 'result-section';
+  let labelReplacement = '';
 
-  // 为第一个字段添加开始div
-  const firstMatch = html.match(/^(单词|词语|拼音|音标|英文|释义|谐音|发音|例句)：/);
-  if (firstMatch) {
-    const fieldType = firstMatch[1];
-    let sectionClass = 'result-section';
-
-    switch(fieldType) {
-      case '单词':
-      case '词语':
-        sectionClass = 'result-section word-section';
-        break;
-      case '拼音':
-      case '音标':
-        sectionClass = 'result-section phonetic-section';
-        break;
-      case '英文':
-        sectionClass = 'result-section english-section';
-        break;
-      case '释义':
-        sectionClass = 'result-section meaning-section';
-        break;
-      case '谐音':
-        sectionClass = 'result-section pronunciation-section';
-        break;
-      case '发音':
-        sectionClass = 'result-section tip-section';
-        break;
-      case '例句':
-        sectionClass = 'result-section example-section';
-        break;
-    }
-
-    html = html.replace(/^(单词|词语|拼音|音标|英文|释义|谐音|发音|例句)：/, `<div class="${sectionClass}"><span class="result-label">$1：</span>`);
+  if (firstField) {
+    sectionClass = `result-section ${firstField.class}`;
+    labelReplacement = `<div class="${sectionClass}"><span class="result-label">${firstField.label}`;
   }
 
-  // 为整个内容添加包装
+  // 应用字段映射
+  FIELD_MAPPINGS.forEach((mapping, index) => {
+    if (index === 0 && firstField) {
+      // 第一个字段已经处理
+      return;
+    }
+    html = html.replace(mapping.pattern, `</div><div class="result-section ${mapping.class}"><span class="result-label">${mapping.label}`);
+  });
+
+  // 为第一个字段添加开始div
+  if (firstField) {
+    html = html.replace(firstField.pattern, labelReplacement);
+  }
+
+  // 包装整个内容
   html = '<div class="result-wrapper">' + html + '</div>';
 
-  // 转换加粗 **text** 为 <strong>text</strong>
+  // 处理加粗文本
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
   return html;
 });
+
+// 内容提取配置
+const CONTENT_PATTERNS = {
+  phonetic: [/音标：[^\n]+/, /拼音：[^\n]+/],
+  meaning: [/释义：[^\n]+/],
+  english: [/英文：[^\n]+/],
+  pronunciation: [/谐音：[^\n]+/],
+  example: [/例句：[\s\S]+/]
+};
 
 // 提取查询结果中的各个部分
 const extractContentParts = computed(() => {
@@ -450,43 +486,41 @@ const extractContentParts = computed(() => {
   const content = queryResult.value;
   const parts: any = {};
 
-  // 提取音标或拼音
-  const phoneticMatch = content.match(/音标：[^\n]+/) || content.match(/拼音：[^\n]+/);
-  if (phoneticMatch) parts.phonetic = phoneticMatch[0].replace(/(音标|拼音)：/, '').trim();
+  // 批量提取内容
+  Object.entries(CONTENT_PATTERNS).forEach(([key, patterns]) => {
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        const label = match[0].split('：')[0];
+        parts[key] = match[0].replace(`${label}：`, '').trim();
+        break;
+      }
+    }
+  });
 
-  // 提取释义
-  const meaningMatch = content.match(/释义：[^\n]+/);
-  if (meaningMatch) parts.meaning = meaningMatch[0].replace('释义：', '').trim();
-
-  // 提取英文翻译（仅中文查询时有）
-  const englishMatch = content.match(/英文：[^\n]+/);
-  if (englishMatch) parts.english = englishMatch[0].replace('英文：', '').trim();
-
-  // 提取谐音
-  const pronunciationMatch = content.match(/谐音：[^\n]+/);
-  if (pronunciationMatch) parts.pronunciation = pronunciationMatch[0].replace('谐音：', '').trim();
-
-  // 提取例句
-  const exampleMatch = content.match(/例句：[\s\S]+/);
-  if (exampleMatch) parts.example = exampleMatch[0].replace('例句：', '').trim();
-
-  // 提取全部内容
   parts.all = content;
-
   return parts;
 });
+
+// 验证输入
+const validateInput = (input: string, type: 'word' | 'text' = 'word') => {
+  if (!input.trim()) {
+    return type === 'word' ? '请输入单词' : '请输入文本';
+  }
+
+  if (type === 'word' && !WORD_PATTERN.test(input)) {
+    return '请输入有效的单词或词语';
+  }
+
+  return null;
+};
 
 // 处理查询
 const handleQuery = async () => {
   const word = searchWord.value.trim();
-  if (!word) {
-    errorMessage.value = props.i18n.enterWordPlease || '请输入单词';
-    return;
-  }
-
-  // 验证是否为有效的单词或词语（中英文、数字、符号、标点）
-  if (!/^[a-zA-Z0-9\s\-.,;:!?'"()（）【】《》《""''\u4e00-\u9fa5\u3000-\u303F\uFF00-\uFFEF]+$/.test(word)) {
-    errorMessage.value = props.i18n.enterValidWord || '请输入有效的单词或词语';
+  const error = validateInput(word, 'word');
+  if (error) {
+    errorMessage.value = error;
     return;
   }
 
@@ -516,6 +550,44 @@ const handleQuery = async () => {
   }
 };
 
+// 数据操作封装
+const dataOperations = {
+  // 保存数据
+  save: async (key: string, data: any) => {
+    if (props.plugin) {
+      try {
+        await props.plugin.saveData(key, data);
+      } catch (error) {
+        console.error(`Failed to save ${key}:`, error);
+      }
+    }
+  },
+
+  // 加载数据
+  load: async (key: string) => {
+    if (props.plugin) {
+      try {
+        const saved = await props.plugin.loadData(key);
+        return saved;
+      } catch (error) {
+        console.error(`Failed to load ${key}:`, error);
+        return null;
+      }
+    }
+    return null;
+  }
+};
+
+// 面板操作
+const togglePanel = (panelKey: string | null) => {
+  activePanel.value = activePanel.value === panelKey ? null : panelKey;
+};
+
+// 检查是否已收藏
+const checkIfFavorited = (word: string) => {
+  currentWordFavorited.value = favorites.value.some(item => item.word === word);
+};
+
 // 添加到历史记录
 const addToHistory = async (word: string, result: string) => {
   const newItem: HistoryItem = {
@@ -524,47 +596,27 @@ const addToHistory = async (word: string, result: string) => {
     timestamp: Date.now()
   };
 
-  // 移除重复项
-  queryHistory.value = queryHistory.value.filter(item => item.word !== word);
-  // 添加到开头
-  queryHistory.value.unshift(newItem);
-  // 限制数量
-  if (queryHistory.value.length > maxHistoryItems.value) {
-    queryHistory.value = queryHistory.value.slice(0, maxHistoryItems.value);
-  }
-  // 保存到思源数据库
-  await saveHistory();
-};
+  // 移除重复项并添加到开头
+  queryHistory.value = [
+    newItem,
+    ...queryHistory.value.filter(item => item.word !== word)
+  ].slice(0, PANEL_CONFIGS.history.maxItems);
 
-// 保存历史记录
-const saveHistory = async () => {
-  if (props.plugin) {
-    try {
-      await props.plugin.saveData('word-query-history', queryHistory.value);
-    } catch (error) {
-      console.error('Failed to save history:', error);
-    }
-  }
+  await dataOperations.save('word-query-history', queryHistory.value);
 };
 
 // 加载历史记录
 const loadHistory = async () => {
-  if (props.plugin) {
-    try {
-      const saved = await props.plugin.loadData('word-query-history');
-      if (saved) {
-        queryHistory.value = saved;
-      }
-    } catch (error) {
-      console.error('Failed to load history:', error);
-    }
+  const saved = await dataOperations.load('word-query-history');
+  if (saved) {
+    queryHistory.value = saved;
   }
 };
 
 // 清除历史记录
 const clearHistory = async () => {
   queryHistory.value = [];
-  await saveHistory();
+  await dataOperations.save('word-query-history', queryHistory.value);
   showMessage('历史记录已清除', 2000, 'info');
 };
 
@@ -573,21 +625,7 @@ const queryFromHistory = (item: HistoryItem) => {
   searchWord.value = item.word;
   queryResult.value = item.result;
   checkIfFavorited(item.word);
-  showHistory.value = false;
-};
-
-// 切换历史记录显示
-const toggleHistory = () => {
-  showHistory.value = !showHistory.value;
-  if (showHistory.value) {
-    showFavorites.value = false;
-    showAdvancedOptions.value = false;
-  }
-};
-
-// 检查是否已收藏
-const checkIfFavorited = (word: string) => {
-  currentWordFavorited.value = favorites.value.some(item => item.word === word);
+  activePanel.value = null;
 };
 
 // 切换收藏
@@ -611,38 +649,21 @@ const toggleFavorite = async () => {
     currentWordFavorited.value = true;
     showMessage('已添加到收藏', 2000, 'info');
   }
-  await saveFavorites();
-};
-
-// 保存收藏
-const saveFavorites = async () => {
-  if (props.plugin) {
-    try {
-      await props.plugin.saveData('word-query-favorites', favorites.value);
-    } catch (error) {
-      console.error('Failed to save favorites:', error);
-    }
-  }
+  await dataOperations.save('word-query-favorites', favorites.value);
 };
 
 // 加载收藏
 const loadFavorites = async () => {
-  if (props.plugin) {
-    try {
-      const saved = await props.plugin.loadData('word-query-favorites');
-      if (saved) {
-        favorites.value = saved;
-      }
-    } catch (error) {
-      console.error('Failed to load favorites:', error);
-    }
+  const saved = await dataOperations.load('word-query-favorites');
+  if (saved) {
+    favorites.value = saved;
   }
 };
 
 // 清除收藏
 const clearFavorites = async () => {
   favorites.value = [];
-  await saveFavorites();
+  await dataOperations.save('word-query-favorites', favorites.value);
   showMessage('收藏已清除', 2000, 'info');
 };
 
@@ -651,33 +672,15 @@ const queryFromFavorite = (item: FavoriteItem) => {
   searchWord.value = item.word;
   queryResult.value = item.result;
   currentWordFavorited.value = true;
-  showFavorites.value = false;
+  activePanel.value = null;
 };
 
 // 删除收藏项
 const removeFavorite = async (word: string) => {
   favorites.value = favorites.value.filter(item => item.word !== word);
-  await saveFavorites();
+  await dataOperations.save('word-query-favorites', favorites.value);
   if (searchWord.value === word) {
     currentWordFavorited.value = false;
-  }
-};
-
-// 切换收藏显示
-const toggleFavorites = () => {
-  showFavorites.value = !showFavorites.value;
-  if (showFavorites.value) {
-    showHistory.value = false;
-    showAdvancedOptions.value = false;
-  }
-};
-
-// 切换高级选项
-const toggleAdvancedOptions = () => {
-  showAdvancedOptions.value = !showAdvancedOptions.value;
-  if (showAdvancedOptions.value) {
-    showHistory.value = false;
-    showFavorites.value = false;
   }
 };
 
@@ -713,40 +716,25 @@ const exportToSiyuan = async () => {
   }
 };
 
+// 高级选项数据
+const advancedOptionsData = computed(() => ({
+  pronunciationType: pronunciationType.value,
+  autoPlayPronunciation: autoPlayPronunciation.value,
+  showRelatedWords: showRelatedWords.value
+}));
+
 // 保存高级选项
 const saveAdvancedOptions = async () => {
-  if (props.plugin) {
-    try {
-      await props.plugin.saveData('word-query-options', {
-        pronunciationType: pronunciationType.value,
-        autoPlayPronunciation: autoPlayPronunciation.value,
-        showRelatedWords: showRelatedWords.value
-      });
-    } catch (error) {
-      console.error('Failed to save advanced options:', error);
-    }
-  }
+  await dataOperations.save('word-query-options', advancedOptionsData.value);
 };
 
 // 加载高级选项
 const loadAdvancedOptions = async () => {
-  if (props.plugin) {
-    try {
-      const saved = await props.plugin.loadData('word-query-options');
-      if (saved) {
-        if (saved.pronunciationType) {
-          pronunciationType.value = saved.pronunciationType;
-        }
-        if (typeof saved.autoPlayPronunciation !== 'undefined') {
-          autoPlayPronunciation.value = saved.autoPlayPronunciation;
-        }
-        if (typeof saved.showRelatedWords !== 'undefined') {
-          showRelatedWords.value = saved.showRelatedWords;
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load advanced options:', error);
-    }
+  const saved = await dataOperations.load('word-query-options');
+  if (saved) {
+    pronunciationType.value = saved.pronunciationType || 'uk';
+    autoPlayPronunciation.value = saved.autoPlayPronunciation ?? false;
+    showRelatedWords.value = saved.showRelatedWords ?? true;
   }
 };
 
@@ -765,38 +753,46 @@ const formatTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleDateString();
 };
 
+// 自动操作配置
+const AUTO_OPERATION_DELAY = 2000;
+const WORD_PATTERN = /^[a-zA-Z0-9\s\-.,;:!?'"()（）【】《》《""''\u4e00-\u9fa5\u3000-\u303F\uFF00-\uFFEF]+$/;
+
+// 清除定时器
+const clearTimer = (timerRef: 'autoQueryTimer' | 'autoTranslateTimer') => {
+  if (autoQueryTimer.value || autoTranslateTimer.value) {
+    const timer = timerRef === 'autoQueryTimer' ? autoQueryTimer.value : autoTranslateTimer.value;
+    if (timer) {
+      clearTimeout(timer);
+      if (timerRef === 'autoQueryTimer') {
+        autoQueryTimer.value = null;
+      } else {
+        autoTranslateTimer.value = null;
+      }
+    }
+  }
+};
+
 // 自动查询函数
 const setupAutoQuery = () => {
-  // 清除之前的定时器
-  if (autoQueryTimer.value) {
-    clearTimeout(autoQueryTimer.value);
-    autoQueryTimer.value = null;
-  }
+  clearTimer('autoQueryTimer');
 
   const word = searchWord.value.trim();
-  if (word && /^[a-zA-Z0-9\s\-.,;:!?'"()（）【】《》《""''\u4e00-\u9fa5\u3000-\u303F\uFF00-\uFFEF]+$/.test(word)) {
-    // 设置2秒后自动查询
+  if (word && WORD_PATTERN.test(word)) {
     autoQueryTimer.value = setTimeout(() => {
       handleQuery();
-    }, 2000);
+    }, AUTO_OPERATION_DELAY);
   }
 };
 
 // 自动翻译函数
 const setupAutoTranslate = () => {
-  // 清除之前的定时器
-  if (autoTranslateTimer.value) {
-    clearTimeout(autoTranslateTimer.value);
-    autoTranslateTimer.value = null;
-  }
+  clearTimer('autoTranslateTimer');
 
   const text = translateText.value.trim();
-  // 检查是否有内容且不在翻译中
   if (text && !isTranslating.value) {
-    // 设置2秒后自动翻译
     autoTranslateTimer.value = setTimeout(() => {
       handleTranslate();
-    }, 2000);
+    }, AUTO_OPERATION_DELAY);
   }
 };
 
@@ -805,33 +801,39 @@ const toggleCopyOptions = () => {
   showCopyOptions.value = !showCopyOptions.value;
 };
 
+// 复制类型配置
+const COPY_TYPES = {
+  all: '全部',
+  phonetic: '音标',
+  meaning: '释义',
+  english: '英文',
+  pronunciation: '谐音',
+  example: '例句'
+};
+
 // 复制结果
 const copyResult = async (type: string = 'all') => {
   let textToCopy = '';
+  let hasContent = false;
 
   if (type === 'all') {
     textToCopy = extractContentParts.value.all || queryResult.value;
+    hasContent = !!textToCopy;
   } else {
     textToCopy = extractContentParts.value[type] || '';
+    hasContent = !!textToCopy;
+  }
 
-    if (!textToCopy) {
-      showMessage('没有找到要复制的内容', 2000, 'error');
-      return;
-    }
+  if (!hasContent) {
+    showMessage('没有找到要复制的内容', 2000, 'error');
+    return;
   }
 
   try {
     await navigator.clipboard.writeText(textToCopy);
-    const typeText = {
-      all: '全部',
-      phonetic: '音标',
-      meaning: '释义',
-      english: '英文',
-      pronunciation: '谐音',
-      example: '例句'
-    }[type] || '';
+    const typeText = COPY_TYPES[type as keyof typeof COPY_TYPES] || '';
     showMessage(`已复制${typeText}到剪贴板`, 2000, 'info');
-    showCopyOptions.value = false; // 复制后关闭下拉菜单
+    showCopyOptions.value = false;
   } catch (error) {
     console.error('Copy failed:', error);
     showMessage(props.i18n.copyFailed || '复制失败', 3000, 'error');
@@ -848,16 +850,15 @@ const clearResult = () => {
 const switchMode = (mode: 'word' | 'translate') => {
   currentMode.value = mode;
   // 关闭所有面板
-  showHistory.value = false;
-  showFavorites.value = false;
-  showAdvancedOptions.value = false;
+  activePanel.value = null;
 };
 
 // 翻译功能
 const handleTranslate = async () => {
   const text = translateText.value.trim();
-  if (!text) {
-    showMessage('请输入要翻译的文本', 2000, 'error');
+  const error = validateInput(text, 'text');
+  if (error) {
+    showMessage(error, 2000, 'error');
     return;
   }
 
@@ -884,19 +885,29 @@ const handleTranslate = async () => {
   }
 };
 
+// 获取面板图标
+const getPanelIcon = (panel: string) => {
+  const icons: Record<string, string> = {
+    history: '🕒',
+    favorites: '⭐',
+    advanced: '⚙️'
+  };
+  return icons[panel] || '';
+};
+
+// 获取面板标题
+const getPanelTitle = (panel: string) => {
+  const titles: Record<string, () => string> = {
+    history: () => `${props.i18n.queryHistory || '查询历史'} (${queryHistory.value.length})`,
+    favorites: () => `${props.i18n.myFavorites || '我的收藏'} (${favorites.value.length})`,
+    advanced: () => props.i18n.advancedOptions || '高级选项'
+  };
+  return titles[panel]?.() || '';
+};
+
 // 获取语言名称
 const getLanguageName = (code: string): string => {
-  const names: Record<string, string> = {
-    'auto': '自动检测',
-    'zh': '中文',
-    'en': '英文',
-    'ja': '日文',
-    'ko': '韩文',
-    'fr': '法文',
-    'de': '德文',
-    'es': '西班牙文'
-  };
-  return names[code] || code;
+  return LANGUAGE_NAMES[code] || code;
 };
 
 // 交换语言
@@ -923,6 +934,11 @@ const clearTranslateInput = () => {
 
 // 复制翻译结果
 const copyTranslation = async () => {
+  if (!translateResult.value) {
+    showMessage('没有可复制的内容', 2000, 'error');
+    return;
+  }
+
   try {
     await navigator.clipboard.writeText(translateResult.value);
     showMessage('已复制到剪贴板', 2000, 'info');
@@ -934,6 +950,11 @@ const copyTranslation = async () => {
 
 // 导出翻译结果
 const exportTranslation = async () => {
+  if (!translateResult.value) {
+    showMessage('没有可导出的内容', 2000, 'error');
+    return;
+  }
+
   try {
     const content = `## 翻译结果\n\n### 原文 (${getLanguageName(sourceLanguage.value)})\n${translateText.value}\n\n### 译文 (${getLanguageName(targetLanguage.value)})\n${translateResult.value}`;
     await navigator.clipboard.writeText(content);
@@ -987,7 +1008,8 @@ watch([pronunciationType, autoPlayPronunciation, showRelatedWords], async () => 
 onMounted(async () => {
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('click', handleClickOutside);
-  // 加载历史记录和收藏
+
+  // 批量加载数据
   await Promise.all([
     loadHistory(),
     loadFavorites(),
@@ -998,13 +1020,10 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
   document.removeEventListener('click', handleClickOutside);
-  // 清除定时器
-  if (autoQueryTimer.value) {
-    clearTimeout(autoQueryTimer.value);
-  }
-  if (autoTranslateTimer.value) {
-    clearTimeout(autoTranslateTimer.value);
-  }
+
+  // 清理所有定时器
+  clearTimer('autoQueryTimer');
+  clearTimer('autoTranslateTimer');
 });
 </script>
 
@@ -1516,15 +1535,19 @@ onUnmounted(() => {
 }
 
 /* 面板通用样式 */
-.history-panel,
-.favorites-panel,
-.advanced-panel {
+.common-panel {
   border-bottom: 1px solid var(--gh-border);
   background: var(--gh-bg-overlay);
   animation: slideDown 0.2s ease-out;
   max-width: 100%;
   overflow: hidden;
   max-height: 300px;
+}
+
+.history-panel,
+.favorites-panel,
+.advanced-panel {
+  /* 保持向后兼容 */
 }
 
 .panel-header {
@@ -1574,26 +1597,25 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-/* 历史记录样式 */
-.history-list {
+/* 通用列表样式 */
+.item-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.history-item {
+.list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
   background: var(--gh-bg-default);
   border-radius: var(--gh-control-border-radius);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
   border: 1px solid var(--gh-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.history-item:hover {
+.list-item:hover {
   background-color: var(--gh-bg-overlay);
   border-color: var(--gh-fg-muted);
 }
@@ -1609,29 +1631,8 @@ onUnmounted(() => {
   color: var(--gh-fg-muted);
 }
 
-/* 收藏样式 */
-.favorites-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.favorite-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: var(--gh-bg-default);
-  border-radius: var(--gh-control-border-radius);
-  border: 1px solid var(--gh-border);
-  transition: all 0.2s ease;
-}
-
-.favorite-item:hover {
-  border-color: var(--gh-fg-muted);
-}
-
-.item-content {
+/* 收藏项特殊样式 */
+.favorite-item .item-content {
   flex: 1;
   display: flex;
   justify-content: space-between;
@@ -1639,7 +1640,7 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.item-content:hover .item-word {
+.favorite-item .item-content:hover .item-word {
   color: var(--gh-primary);
 }
 
