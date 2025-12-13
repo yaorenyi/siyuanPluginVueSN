@@ -693,11 +693,6 @@ onUnmounted(() => {
   color: #fff;
 }
 
-.close-icon {
-  width: 16px;
-  height: 16px;
-}
-
 /* 搜索栏 */
 .search-bar {
   display: flex;
@@ -758,7 +753,9 @@ onUnmounted(() => {
   background: var(--b3-theme-surface-light);
 }
 
-.clear-icon {
+.close-icon,
+.clear-icon,
+.action-icon {
   width: 14px;
   height: 14px;
 }
@@ -815,7 +812,9 @@ onUnmounted(() => {
 }
 
 .results-select,
-.delay-select {
+.delay-select,
+.sort-select,
+.drive-select {
   padding: 2px 8px;
   border: 1px solid var(--b3-border-color);
   border-radius: 4px;
@@ -835,16 +834,6 @@ onUnmounted(() => {
   gap: 6px;
 }
 
-.sort-select {
-  padding: 2px 8px;
-  border: 1px solid var(--b3-border-color);
-  border-radius: 4px;
-  background: var(--b3-theme-background);
-  color: var(--b3-theme-on-background);
-  font-size: 13px;
-  cursor: pointer;
-}
-
 .ascending-label {
   display: flex;
   align-items: center;
@@ -856,16 +845,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.drive-select {
-  padding: 2px 8px;
-  border: 1px solid var(--b3-border-color);
-  border-radius: 4px;
-  background: var(--b3-theme-background);
-  color: var(--b3-theme-on-background);
-  font-size: 13px;
-  cursor: pointer;
 }
 
 .refresh-drives-btn {
@@ -1096,11 +1075,6 @@ onUnmounted(() => {
   color: #fff;
 }
 
-.action-icon {
-  width: 14px;
-  height: 14px;
-}
-
 /* 底部 */
 .dialog-footer {
   display: flex;
@@ -1143,18 +1117,15 @@ onUnmounted(() => {
 
 /* 动画 */
 .fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
+.fade-leave-active,
+.scale-enter-active,
+.scale-leave-active {
+  transition: all 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.scale-enter-active,
-.scale-leave-active {
-  transition: all 0.2s ease;
 }
 
 .scale-enter-from,
