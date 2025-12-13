@@ -187,6 +187,7 @@ defineExpose({
 </script>
 
 <style scoped>
+/* === 基础样式 === */
 .general-actions {
   padding: 16px;
   box-sizing: border-box;
@@ -200,7 +201,7 @@ defineExpose({
   max-width: 100%;
 }
 
-/* 区域容器 */
+/* === 区域容器 === */
 .action-section,
 .info-section {
   border: 2px solid var(--b3-theme-outline);
@@ -239,7 +240,7 @@ defineExpose({
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* 操作按钮网格 */
+/* === 网格布局 === */
 .action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -247,7 +248,6 @@ defineExpose({
   padding: 16px;
 }
 
-/* 信息网格 */
 .info-grid {
   display: flex;
   flex-direction: column;
@@ -255,6 +255,7 @@ defineExpose({
   padding: 16px;
 }
 
+/* === 信息项 === */
 .info-item {
   display: flex;
   justify-content: space-between;
@@ -265,20 +266,23 @@ defineExpose({
   border-left: 3px solid var(--b3-theme-primary);
 }
 
-.info-label {
+.info-label,
+.info-value {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.info-label {
   color: var(--b3-theme-on-surface-variant);
+  font-weight: 600;
 }
 
 .info-value {
-  font-size: 13px;
   color: var(--b3-theme-on-surface);
-  font-weight: 500;
   font-family: 'Courier New', monospace;
 }
 
-/* 操作按钮样式 */
+/* === 操作按钮 === */
 .action-btn {
   display: flex;
   align-items: center;
@@ -311,44 +315,16 @@ defineExpose({
   cursor: not-allowed;
 }
 
-/* 按钮箭头 */
-.btn-arrow {
-  font-size: 16px;
-  color: var(--b3-theme-on-surface-variant);
-  transition: all 0.3s ease;
-  opacity: 0.6;
+.action-btn:hover:not(:disabled) .btn-title {
+  color: var(--b3-theme-on-primary);
 }
 
-.action-btn:hover .btn-arrow {
-  transform: translateX(4px);
-  opacity: 1;
-  color: var(--b3-theme-primary);
+.action-btn:hover:not(:disabled) .btn-desc {
+  color: var(--b3-theme-on-primary);
+  opacity: 0.9;
 }
 
-/* 不同类型的按钮样式 */
-.refresh-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--b3-theme-primary-container), var(--b3-theme-secondary-container));
-}
-
-.workspace-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg,
-    rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1),
-    rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.15)
-  );
-}
-
-.close-tabs-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg,
-    var(--b3-theme-surface-variant),
-    var(--b3-theme-outline)
-  );
-}
-
-.cache-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--b3-theme-error-container), var(--b3-theme-error));
-}
-
-/* 按钮图标 */
+/* === 按钮图标 === */
 .btn-icon {
   font-size: 24px;
   flex-shrink: 0;
@@ -369,7 +345,7 @@ defineExpose({
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 按钮内容 */
+/* === 按钮内容 === */
 .btn-content {
   display: flex;
   flex-direction: column;
@@ -397,81 +373,21 @@ defineExpose({
   overflow: hidden;
 }
 
-/* 按钮悬停时的文字效果 */
-.action-btn:hover:not(:disabled) .btn-title {
-  color: var(--b3-theme-on-primary);
+/* === 按钮箭头 === */
+.btn-arrow {
+  font-size: 16px;
+  color: var(--b3-theme-on-surface-variant);
+  transition: all 0.3s ease;
+  opacity: 0.6;
 }
 
-.action-btn:hover:not(:disabled) .btn-desc {
-  color: var(--b3-theme-on-primary);
-  opacity: 0.9;
+.action-btn:hover .btn-arrow {
+  transform: translateX(4px);
+  opacity: 1;
+  color: var(--b3-theme-primary);
 }
 
-/* 响应式设计 */
-@media (max-width: 480px) {
-  .general-actions {
-    padding: 12px;
-  }
-
-  .action-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .action-btn {
-    padding: 14px;
-  }
-
-  .btn-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 20px;
-  }
-
-  .btn-title {
-    font-size: 13px;
-  }
-
-  .btn-desc {
-    font-size: 11px;
-  }
-
-  .section-header {
-    padding: 12px 16px;
-  }
-}
-
-@media (max-width: 320px) {
-  .general-actions {
-    padding: 8px;
-  }
-
-  .settings-container {
-    gap: 16px;
-  }
-
-  .section-header h4 {
-    font-size: 14px;
-  }
-
-  .action-btn {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .btn-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 18px;
-  }
-
-  .btn-arrow {
-    font-size: 14px;
-  }
-}
-
-/* 动画效果 */
+/* === 动画效果 === */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -483,15 +399,6 @@ defineExpose({
   }
 }
 
-.action-section {
-  animation: slideIn 0.3s ease-out;
-}
-
-.action-section:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-/* 按钮进入动画 */
 @keyframes btnSlideIn {
   from {
     opacity: 0;
@@ -501,6 +408,26 @@ defineExpose({
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.action-section {
+  animation: slideIn 0.3s ease-out;
+}
+
+.action-section:nth-child(2) {
+  animation-delay: 0.1s;
 }
 
 .action-btn {
@@ -519,25 +446,12 @@ defineExpose({
   animation-delay: 0.15s;
 }
 
-/* 渐变背景动画 */
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 .action-btn:hover {
   background-size: 200% 200%;
   animation: gradientShift 1.5s ease infinite;
 }
 
-/* 滚动条样式 */
+/* === 滚动条样式 === */
 .general-actions::-webkit-scrollbar {
   width: 6px;
 }
@@ -557,7 +471,7 @@ defineExpose({
   background: var(--b3-theme-primary);
 }
 
-/* ========== 紧凑模式样式 ========== */
+/* === 紧凑模式 === */
 .general-actions.compact-mode {
   padding: 12px 8px;
 }
@@ -650,20 +564,46 @@ defineExpose({
   border-radius: 6px;
 }
 
-.general-actions.compact-mode .info-label {
-  font-size: 11px;
-}
-
+.general-actions.compact-mode .info-label,
 .general-actions.compact-mode .info-value {
   font-size: 11px;
 }
 
-/* 紧凑模式响应式设计 */
+/* === 响应式设计 === */
 @media (max-width: 480px) {
   .general-actions {
     padding: 12px;
   }
 
+  .action-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .action-btn {
+    padding: 14px;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .btn-title {
+    font-size: 13px;
+  }
+
+  .btn-desc {
+    font-size: 11px;
+  }
+
+  .section-header {
+    padding: 12px 16px;
+  }
+
+  /* 紧凑模式响应式 */
   .general-actions.compact-mode {
     padding: 10px 6px;
   }
@@ -695,6 +635,34 @@ defineExpose({
 }
 
 @media (max-width: 320px) {
+  .general-actions {
+    padding: 8px;
+  }
+
+  .settings-container {
+    gap: 16px;
+  }
+
+  .section-header h4 {
+    font-size: 14px;
+  }
+
+  .action-btn {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+
+  .btn-arrow {
+    font-size: 14px;
+  }
+
+  /* 紧凑模式超小屏幕 */
   .general-actions.compact-mode {
     padding: 8px 4px;
   }
@@ -732,17 +700,11 @@ defineExpose({
 
   .general-actions.compact-mode .info-item {
     padding: 6px;
-    font-size: 10px;
   }
 
-  .general-actions.compact-mode .info-label {
-    font-size: 10px;
-  }
-
+  .general-actions.compact-mode .info-label,
   .general-actions.compact-mode .info-value {
     font-size: 10px;
   }
 }
-
-
 </style>

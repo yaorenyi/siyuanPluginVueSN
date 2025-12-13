@@ -293,6 +293,7 @@ defineExpose({
 </script>
 
 <style scoped>
+/* === 基础样式 === */
 .font-settings {
   padding: 16px;
   box-sizing: border-box;
@@ -305,7 +306,7 @@ defineExpose({
   max-width: 100%;
 }
 
-/* 设置行样式 */
+/* === 设置行 === */
 .setting-row {
   display: flex;
   width: 100%;
@@ -315,7 +316,7 @@ defineExpose({
   flex-direction: column;
 }
 
-/* 数值设置区域 */
+/* === 数值设置区域 === */
 .numeric-settings {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -323,7 +324,7 @@ defineExpose({
   width: 100%;
 }
 
-/* 设置项样式 */
+/* === 设置项 === */
 .setting-item {
   display: flex;
   flex-direction: column;
@@ -348,7 +349,28 @@ defineExpose({
   opacity: 0.8;
 }
 
-/* 字体输入容器 */
+/* === 表单控件基础样式 === */
+.font-input,
+.font-select,
+.weight-select,
+.number-input {
+  background: var(--b3-theme-surface);
+  color: var(--b3-theme-on-surface);
+  border: 2px solid var(--b3-theme-outline);
+  transition: all 0.2s ease;
+}
+
+.font-input:focus,
+.font-select:focus,
+.weight-select:focus,
+.number-input:focus {
+  outline: none;
+  border-color: var(--b3-theme-primary);
+  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
+  background: var(--b3-theme-surface-variant);
+}
+
+/* === 字体输入 === */
 .font-input-container {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -359,42 +381,21 @@ defineExpose({
 
 .font-input {
   padding: 8px 12px;
-  border: 2px solid var(--b3-theme-outline);
   border-radius: 8px;
-  background: var(--b3-theme-surface);
-  color: var(--b3-theme-on-surface);
   font-size: 13px;
-  transition: all 0.2s ease;
   width: 100%;
   box-sizing: border-box;
-}
-
-.font-input:focus {
-  outline: none;
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
-  background: var(--b3-theme-surface-variant);
 }
 
 .font-select {
   min-width: 120px;
   padding: 8px 12px;
-  border: 2px solid var(--b3-theme-outline);
   border-radius: 8px;
-  background: var(--b3-theme-surface);
-  color: var(--b3-theme-on-surface);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.font-select:focus {
-  outline: none;
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
-}
-
-/* 范围控制 */
+/* === 范围控制 === */
 .range-control {
   display: flex;
   flex-direction: column;
@@ -405,20 +406,10 @@ defineExpose({
 .number-input {
   width: 70px;
   padding: 6px 10px;
-  border: 2px solid var(--b3-theme-outline);
   border-radius: 6px;
-  background: var(--b3-theme-surface);
-  color: var(--b3-theme-on-surface);
   font-size: 13px;
   text-align: center;
   font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.number-input:focus {
-  outline: none;
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
 }
 
 .slider-container {
@@ -443,7 +434,8 @@ defineExpose({
   appearance: none;
 }
 
-.range-slider::-webkit-slider-thumb {
+.range-slider::-webkit-slider-thumb,
+.range-slider::-moz-range-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 18px;
@@ -461,17 +453,6 @@ defineExpose({
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
-.range-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--b3-theme-primary);
-  cursor: pointer;
-  border: 3px solid var(--b3-theme-background);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
 .slider-labels {
   display: flex;
   justify-content: space-between;
@@ -480,26 +461,16 @@ defineExpose({
   font-weight: 500;
 }
 
-/* 字体粗细选择 */
+/* === 字体粗细选择 === */
 .weight-select {
   padding: 8px 12px;
-  border: 2px solid var(--b3-theme-outline);
   border-radius: 8px;
-  background: var(--b3-theme-surface);
-  color: var(--b3-theme-on-surface);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
   width: 100%;
 }
 
-.weight-select:focus {
-  outline: none;
-  border-color: var(--b3-theme-primary);
-  box-shadow: 0 0 0 3px rgba(var(--b3-theme-primary-rgb), 0.1);
-}
-
-/* 预览区域 */
+/* === 预览区域 === */
 .preview-section {
   border: 2px solid var(--b3-theme-outline);
   border-radius: 12px;
@@ -598,7 +569,7 @@ defineExpose({
   border: 1px solid var(--b3-theme-outline);
 }
 
-/* 响应式设计 */
+/* === 响应式设计 === */
 @media (max-width: 400px) {
   .font-settings {
     padding: 12px;
@@ -617,8 +588,6 @@ defineExpose({
   .font-select {
     min-width: 100%;
   }
-
-
 
   .preview-info {
     flex-direction: column;
@@ -645,18 +614,15 @@ defineExpose({
     font-size: 12px;
     padding: 6px 10px;
   }
-
-
 }
 
-/* 超小屏幕优化 */
 @media (max-width: 280px) {
-  .preview-content {
+  .preview-content,
+  .preview-box {
     padding: 12px;
   }
 
   .preview-box {
-    padding: 12px;
     min-height: 60px;
   }
 }
