@@ -7,8 +7,8 @@ import * as api from '@/api'
 
 // 防抖定时器
 let updateTimer: any = null
-// 记录已处理的文档，避免重复处理
-const processedDocs = new Set<string>()
+// 缓存文档层级数据，避免重复查询
+const docHierarchyCache = new Map<string, { parent: Block | null; children: Block[]; timestamp: number }>()
 
 /**
  * 注册文档层级导航功能
@@ -40,12 +40,20 @@ function escapeSqlString(str: string): string {
 }
 
 /**
- * 一次性查询父文档和子文档（性能优化）
+ * 一次性查询父文档和子文档（性能优化 + 缓存）
  */
 async function getDocHierarchy(currentDoc: Block): Promise<{ parent: Block | null; children: Block[] }> {
   try {
     if (!currentDoc.hpath || !currentDoc.box) {
       return { parent: null, children: [] }
+    }
+
+    // 检查缓存（60秒内有效）
+    const cacheKey = `${currentDoc.box}:${currentDoc.id}`
+    const cached = docHierarchyCache.get(cacheKey)
+    const now = Date.now()
+    if (cached && (now - cached.timestamp) < 60000) {
+      return { parent: cached.parent, children: cached.children }
     }
 
     // 提取父路径
@@ -85,6 +93,19 @@ async function getDocHierarchy(currentDoc: Block): Promise<{ parent: Block | nul
       }
     })
 
+    // 缓存结果
+    docHierarchyCache.set(cacheKey, { parent, children, timestamp: now })
+
+    // 清理过期缓存（保留最近 20 个）
+    if (docHierarchyCache.size > 20) {
+      const entries = Array.from(docHierarchyCache.entries())
+      entries.sort((a, b) => b[1].timestamp - a[1].timestamp)
+      docHierarchyCache.clear()
+      entries.slice(0, 20).forEach(([key, value]) => {
+        docHierarchyCache.set(key, value)
+      })
+    }
+
     return { parent, children }
   } catch (error) {
     console.error('获取文档层级失败:', error)
@@ -118,30 +139,19 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
     const docId = protyle?.block?.rootID
     if (!docId) return
 
-    // 如果这个文档刚处理过，跳过
-    if (processedDocs.has(docId)) {
-      return
-    }
-
-    // 标记为已处理
-    processedDocs.add(docId)
-
-    // 清理已处理文档集合（避免内存泄漏）
-    setTimeout(() => {
-      processedDocs.delete(docId)
-    }, 1000)
-
-    // 获取当前文档信息（先获取数据，避免过早删除旧导航）
+    // 获取当前文档信息
     const currentDoc = await api.getBlockByID(docId)
     if (!currentDoc || !currentDoc.box || !currentDoc.hpath) {
       return
     }
 
-    // 获取文档层级信息（一次性查询，性能优化）
+    // 获取文档层级信息（使用缓存优化）
     const { parent: parentDoc, children: childDocs } = await getDocHierarchy(currentDoc)
 
-    // 如果既没有父文档也没有子文档，不显示导航
+    // 如果既没有父文档也没有子文档，移除导航并返回
     if (!parentDoc && childDocs.length === 0) {
+      const existingNav = protyle.element?.querySelector('.doc-navigation-container')
+      existingNav?.remove()
       return
     }
 
@@ -205,22 +215,24 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
     navHTML += '</div>'
     navContainer.innerHTML = navHTML
 
-    // 添加点击事件
-    navContainer.querySelectorAll('.doc-nav-link').forEach(link => {
-      link.addEventListener('click', (e) => {
+    // 使用事件委托优化事件监听（减少内存占用）
+    navContainer.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement
+
+      // 处理导航链接点击
+      const link = target.closest('.doc-nav-link')
+      if (link) {
         e.preventDefault()
-        const targetDocId = (e.target as HTMLElement).getAttribute('data-doc-id')
+        const targetDocId = link.getAttribute('data-doc-id')
         if (targetDocId) {
-          // 打开目标文档
           window.open(`siyuan://blocks/${targetDocId}`)
         }
-      })
-    })
+        return
+      }
 
-    // 添加展开按钮点击事件
-    const expandBtn = navContainer.querySelector('.doc-nav-expand')
-    if (expandBtn) {
-      expandBtn.addEventListener('click', (e) => {
+      // 处理展开按钮点击
+      const expandBtn = target.closest('.doc-nav-expand')
+      if (expandBtn) {
         e.preventDefault()
         const childrenList = navContainer.querySelector('.doc-nav-children-list')
         const hiddenLinks = navContainer.querySelectorAll('.doc-nav-link-hidden')
@@ -240,8 +252,8 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
           expandBtn.innerHTML = `<svg class="expand-icon"><use xlink:href="#iconContract"></use></svg>收起`
           expandBtn.setAttribute('title', '收起')
         }
-      })
-    }
+      }
+    })
 
     // 插入到编辑器顶部标题下方（先插入新导航，再移除旧导航，避免跳闪）
     const protyleTitle = protyle.element?.querySelector('.protyle-title')
