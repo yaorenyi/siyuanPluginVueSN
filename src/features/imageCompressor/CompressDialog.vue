@@ -238,7 +238,8 @@ const onCancel = () => {
   border-radius: 3px;
   outline: none;
 
-  &::-webkit-slider-thumb {
+  &::-webkit-slider-thumb,
+  &::-moz-range-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
@@ -249,11 +250,6 @@ const onCancel = () => {
   }
 
   &::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--b3-theme-primary);
-    cursor: pointer;
     border: none;
   }
 }

@@ -711,7 +711,8 @@ const onClose = () => {
     white-space: nowrap;
   }
 
-  .filter-select {
+  .filter-select,
+  .page-size-select {
     padding: 4px 8px;
     border: 1px solid var(--b3-border-color);
     border-radius: 4px;
@@ -719,11 +720,14 @@ const onClose = () => {
     color: var(--b3-theme-on-background);
     font-size: 12px;
     cursor: pointer;
-    min-width: 90px;
 
     &:hover {
       border-color: var(--b3-theme-primary);
     }
+  }
+
+  .filter-select {
+    min-width: 90px;
 
     &:focus {
       outline: none;
@@ -747,20 +751,19 @@ const onClose = () => {
     padding: 0 8px;
     font-weight: 500;
   }
+}
 
-  .page-size-select {
-    padding: 4px 8px;
-    border: 1px solid var(--b3-border-color);
-    border-radius: 4px;
-    background: var(--b3-theme-background);
-    color: var(--b3-theme-on-background);
-    font-size: 12px;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--b3-theme-primary);
-    }
+.btn,
+.icon-btn {
+  .icon {
+    width: 16px;
+    height: 16px;
   }
+}
+
+.icon-btn .icon {
+  width: 20px;
+  height: 20px;
 }
 
 .btn {
@@ -774,11 +777,6 @@ const onClose = () => {
   cursor: pointer;
   transition: all 0.2s;
   border: none;
-
-  .icon {
-    width: 16px;
-    height: 16px;
-  }
 
   &:disabled {
     opacity: 0.5;
@@ -1175,26 +1173,6 @@ const onClose = () => {
       font-size: 12px;
       color: var(--b3-theme-on-surface-light);
       opacity: 0.8;
-    }
-  }
-
-  .icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    color: var(--b3-theme-on-background);
-    opacity: 0.6;
-    border-radius: 4px;
-
-    &:hover {
-      opacity: 1;
-      background: var(--b3-theme-surface-lighter);
-    }
-
-    .icon {
-      width: 20px;
-      height: 20px;
     }
   }
 }
