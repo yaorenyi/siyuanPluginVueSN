@@ -100,7 +100,7 @@ src/
 - 集中式设置接口：`PluginSettings`
 - 独立设置：字体、列表、标题、代码块
 - 默认值与保存的配置合并
-- 通过 Siyuan 的 `plugin.loadData()` / `plugin.saveData()` 持久化存储
+- 通过 Siyuan 的 `plugin.loadData()` / `plugin.saveData()` 持久化存储（避免使用localStorage）
 - API参考：docs/思源笔记 API 使用.md
 - 快捷键：实现遵循 ctrl+alt+？
 
