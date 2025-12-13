@@ -131,23 +131,7 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
       processedDocs.delete(docId)
     }, 1000)
 
-    // 移除所有旧的导航UI（防止重复）
-    const allOldNavs = document.querySelectorAll('.doc-navigation-container')
-    allOldNavs.forEach(nav => {
-      const navDocId = nav.getAttribute('data-doc-id')
-      // 只移除属于当前文档的导航
-      if (navDocId === docId) {
-        nav.remove()
-      }
-    })
-
-    // 再次确认当前 protyle 中没有导航
-    const oldNav = protyle.element?.querySelector('.doc-navigation-container')
-    if (oldNav) {
-      oldNav.remove()
-    }
-
-    // 获取当前文档信息
+    // 获取当前文档信息（先获取数据，避免过早删除旧导航）
     const currentDoc = await api.getBlockByID(docId)
     if (!currentDoc || !currentDoc.box || !currentDoc.hpath) {
       return
@@ -259,15 +243,18 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
       })
     }
 
-    // 插入到编辑器顶部标题下方
+    // 插入到编辑器顶部标题下方（先插入新导航，再移除旧导航，避免跳闪）
     const protyleTitle = protyle.element?.querySelector('.protyle-title')
     if (protyleTitle) {
       // 检查标题下方是否已有导航
       const nextElement = protyleTitle.nextElementSibling
       if (nextElement?.classList.contains('doc-navigation-container')) {
+        // 先插入新导航，再移除旧导航（避免视觉跳闪）
+        protyleTitle.after(navContainer)
         nextElement.remove()
+      } else {
+        protyleTitle.after(navContainer)
       }
-      protyleTitle.after(navContainer)
     } else {
       // 如果没有找到标题，插入到 protyle-wysiwyg 前面
       const wysiwyg = protyle.element?.querySelector('.protyle-wysiwyg')
@@ -275,9 +262,12 @@ async function updateDocNavigation(plugin: Plugin, protyle: any) {
         // 检查 wysiwyg 前是否已有导航
         const prevElement = wysiwyg.previousElementSibling
         if (prevElement?.classList.contains('doc-navigation-container')) {
+          // 先插入新导航，再移除旧导航（避免视觉跳闪）
+          wysiwyg.before(navContainer)
           prevElement.remove()
+        } else {
+          wysiwyg.before(navContainer)
         }
-        wysiwyg.before(navContainer)
       }
     }
 
@@ -319,7 +309,7 @@ function injectNavigationStyles() {
       font-size: 13px;
       line-height: 1.5;
       max-width: 95%;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       flex-wrap: wrap;
     }
 
@@ -365,7 +355,7 @@ function injectNavigationStyles() {
       color: var(--b3-theme-primary);
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       padding: 2px 7px;
       border-radius: 5px;
       white-space: nowrap;
@@ -432,7 +422,7 @@ function injectNavigationStyles() {
       cursor: pointer;
       font-size: 11px;
       font-weight: 600;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-style 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: inline-flex;
       align-items: center;
       gap: 3px;
