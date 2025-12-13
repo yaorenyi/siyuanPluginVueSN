@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import IconWrapper from '@/components/IconWrapper.vue'
 
 interface Props {
@@ -116,7 +116,6 @@ const password = ref('')
 const confirmPassword = ref('')
 const oldPassword = ref('')
 const firstInput = ref<HTMLInputElement>()
-const secondInput = ref<HTMLInputElement>()
 
 const isLockMode = computed(() => props.mode === 'lock')
 const isUpdateMode = computed(() => props.mode === 'update')
