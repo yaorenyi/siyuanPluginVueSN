@@ -45,11 +45,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { showMessage } from 'siyuan'
 
 interface Props {
   i18n?: any
+  plugin?: any
 }
 
 interface Emits {
@@ -57,7 +58,8 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  i18n: () => ({})
+  i18n: () => ({}),
+  plugin: null
 })
 
 const emit = defineEmits<Emits>()
@@ -86,11 +88,15 @@ function save() {
     interfaceScale: interfaceScale.value,
     showSidebar: showSidebar.value
   }
-  try {
-    localStorage.setItem('appearance-settings', JSON.stringify(settings))
-    showMessage(props.i18n.settingsSaved || '已保存', 3000, 'info')
-  } catch (error) {
-    showMessage(props.i18n.saveFailed || '保存失败', 3000, 'error')
+  if (props.plugin) {
+    try {
+      props.plugin.saveData('appearance-settings', settings)
+      showMessage(props.i18n.settingsSaved || '已保存', 3000, 'info')
+    } catch (error) {
+      showMessage(props.i18n.saveFailed || '保存失败', 3000, 'error')
+    }
+  } else {
+    showMessage('插件实例不可用', 3000, 'error')
   }
 }
 
@@ -98,31 +104,38 @@ function reset() {
   themeMode.value = DEFAULT_SETTINGS.themeMode
   interfaceScale.value = DEFAULT_SETTINGS.interfaceScale
   showSidebar.value = DEFAULT_SETTINGS.showSidebar
-  
-  try {
-    localStorage.removeItem('appearance-settings')
-    showMessage(props.i18n.settingsReset || '已重置', 3000, 'info')
-  } catch (error) {
-    console.error('重置失败:', error)
+
+  if (props.plugin) {
+    try {
+      props.plugin.saveData('appearance-settings', DEFAULT_SETTINGS)
+      showMessage(props.i18n.settingsReset || '已重置', 3000, 'info')
+    } catch (error) {
+      console.error('重置失败:', error)
+    }
+  } else {
+    showMessage('插件实例不可用', 3000, 'error')
   }
 }
 
 // 加载设置
-function loadSettings() {
-  try {
-    const saved = localStorage.getItem('appearance-settings')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      themeMode.value = parsed.themeMode || DEFAULT_SETTINGS.themeMode
-      interfaceScale.value = parsed.interfaceScale || DEFAULT_SETTINGS.interfaceScale
-      showSidebar.value = parsed.showSidebar !== undefined ? parsed.showSidebar : DEFAULT_SETTINGS.showSidebar
+async function loadSettings() {
+  if (props.plugin) {
+    try {
+      const saved = await props.plugin.loadData('appearance-settings')
+      if (saved) {
+        themeMode.value = saved.themeMode || DEFAULT_SETTINGS.themeMode
+        interfaceScale.value = saved.interfaceScale || DEFAULT_SETTINGS.interfaceScale
+        showSidebar.value = saved.showSidebar !== undefined ? saved.showSidebar : DEFAULT_SETTINGS.showSidebar
+      }
+    } catch (error) {
+      console.error('加载设置失败:', error)
     }
-  } catch (error) {
-    console.error('加载设置失败:', error)
   }
 }
 
-loadSettings()
+onMounted(() => {
+  loadSettings()
+})
 </script>
 
 <style scoped>
