@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { showMessage } from 'siyuan'
 
 interface Props {
   i18n?: any
@@ -67,12 +68,11 @@ async function handleToggleChange() {
       console.log('高亮设置已保存:', enableHighlight.value)
 
       // 显示提示消息
-      if (typeof window !== 'undefined' && window.siyuan?.showMessage) {
-        window.siyuan.showMessage(
-          enableHighlight.value ? '双击高亮功能已启用' : '双击高亮功能已禁用',
-          'info'
-        )
-      }
+      showMessage(
+        enableHighlight.value ? '双击高亮功能已启用' : '双击高亮功能已禁用',
+        2000,
+        'info'
+      )
     } catch (error) {
       console.error('保存高亮设置失败:', error)
     }
