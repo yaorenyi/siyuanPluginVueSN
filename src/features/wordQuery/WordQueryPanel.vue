@@ -533,8 +533,10 @@ const handleQuery = async () => {
       queryResult.value = result;
       // 添加到历史记录
       await addToHistory(word, result);
-      // 检查是否已收藏
-      checkIfFavorited(word);
+      // 延迟检查收藏状态，确保数据已加载
+      setTimeout(() => {
+        checkIfFavorited(word);
+      }, 50);
       // 自动播放发音
       if (autoPlayPronunciation.value) {
         playPronunciation(word);
@@ -556,10 +558,15 @@ const dataOperations = {
   save: async (key: string, data: any) => {
     if (props.plugin) {
       try {
+        console.log(`[WordQuery] Saving ${key}:`, data);
         await props.plugin.saveData(key, data);
+        console.log(`[WordQuery] Successfully saved ${key}`);
       } catch (error) {
         console.error(`Failed to save ${key}:`, error);
+        throw error; // 重新抛出错误以便上层处理
       }
+    } else {
+      console.warn(`[WordQuery] No plugin instance available for saving ${key}`);
     }
   },
 
@@ -567,14 +574,18 @@ const dataOperations = {
   load: async (key: string) => {
     if (props.plugin) {
       try {
+        console.log(`[WordQuery] Loading ${key}...`);
         const saved = await props.plugin.loadData(key);
+        console.log(`[WordQuery] Loaded ${key}:`, saved);
         return saved;
       } catch (error) {
         console.error(`Failed to load ${key}:`, error);
         return null;
       }
+    } else {
+      console.warn(`[WordQuery] No plugin instance available for loading ${key}`);
+      return null;
     }
-    return null;
   }
 };
 
@@ -608,16 +619,23 @@ const addToHistory = async (word: string, result: string) => {
 // 加载历史记录
 const loadHistory = async () => {
   const saved = await dataOperations.load('word-query-history');
-  if (saved) {
+  // 确保数据是数组，否则使用默认值
+  if (saved && Array.isArray(saved)) {
     queryHistory.value = saved;
+  } else {
+    queryHistory.value = [];
   }
 };
 
 // 清除历史记录
 const clearHistory = async () => {
   queryHistory.value = [];
-  await dataOperations.save('word-query-history', queryHistory.value);
-  showMessage('历史记录已清除', 2000, 'info');
+  try {
+    await dataOperations.save('word-query-history', queryHistory.value);
+    showMessage('历史记录已清除', 2000, 'info');
+  } catch (error) {
+    showMessage('清除历史记录失败', 2000, 'error');
+  }
 };
 
 // 从历史记录查询
@@ -631,40 +649,60 @@ const queryFromHistory = (item: HistoryItem) => {
 // 切换收藏
 const toggleFavorite = async () => {
   const word = searchWord.value.trim();
-  if (!word || !queryResult.value) return;
-
-  if (currentWordFavorited.value) {
-    // 取消收藏
-    favorites.value = favorites.value.filter(item => item.word !== word);
-    currentWordFavorited.value = false;
-    showMessage('已取消收藏', 2000, 'info');
-  } else {
-    // 添加收藏
-    const newItem: FavoriteItem = {
-      word,
-      result: queryResult.value,
-      timestamp: Date.now()
-    };
-    favorites.value.unshift(newItem);
-    currentWordFavorited.value = true;
-    showMessage('已添加到收藏', 2000, 'info');
+  if (!word || !queryResult.value) {
+    showMessage('请先查询单词', 2000, 'info');
+    return;
   }
-  await dataOperations.save('word-query-favorites', favorites.value);
+
+  try {
+    if (currentWordFavorited.value) {
+      // 取消收藏
+      favorites.value = favorites.value.filter(item => item.word !== word);
+      currentWordFavorited.value = false;
+      showMessage('已取消收藏', 2000, 'info');
+    } else {
+      // 添加收藏
+      const newItem: FavoriteItem = {
+        word,
+        result: queryResult.value,
+        timestamp: Date.now()
+      };
+      favorites.value.unshift(newItem);
+      currentWordFavorited.value = true;
+      showMessage('已添加到收藏', 2000, 'info');
+    }
+    // 立即保存数据
+    await dataOperations.save('word-query-favorites', favorites.value);
+    console.log('[WordQuery] Favorites updated:', favorites.value);
+  } catch (error) {
+    console.error('[WordQuery] Failed to toggle favorite:', error);
+    showMessage('保存收藏失败', 2000, 'error');
+  }
 };
 
 // 加载收藏
 const loadFavorites = async () => {
   const saved = await dataOperations.load('word-query-favorites');
-  if (saved) {
+  // 确保数据是数组，否则使用默认值
+  if (saved && Array.isArray(saved)) {
     favorites.value = saved;
+    console.log('[WordQuery] Loaded favorites:', favorites.value);
+  } else {
+    favorites.value = [];
+    console.log('[WordQuery] No favorites found, initialized empty array');
   }
 };
 
 // 清除收藏
 const clearFavorites = async () => {
   favorites.value = [];
-  await dataOperations.save('word-query-favorites', favorites.value);
-  showMessage('收藏已清除', 2000, 'info');
+  try {
+    await dataOperations.save('word-query-favorites', favorites.value);
+    showMessage('收藏已清除', 2000, 'info');
+  } catch (error) {
+    console.error('[WordQuery] Failed to clear favorites:', error);
+    showMessage('清除收藏失败', 2000, 'error');
+  }
 };
 
 // 从收藏查询
@@ -678,9 +716,15 @@ const queryFromFavorite = (item: FavoriteItem) => {
 // 删除收藏项
 const removeFavorite = async (word: string) => {
   favorites.value = favorites.value.filter(item => item.word !== word);
-  await dataOperations.save('word-query-favorites', favorites.value);
-  if (searchWord.value === word) {
-    currentWordFavorited.value = false;
+  try {
+    await dataOperations.save('word-query-favorites', favorites.value);
+    if (searchWord.value === word) {
+      currentWordFavorited.value = false;
+    }
+    showMessage('已删除', 2000, 'info');
+  } catch (error) {
+    console.error('[WordQuery] Failed to remove favorite:', error);
+    showMessage('删除失败', 2000, 'error');
   }
 };
 
@@ -725,16 +769,32 @@ const advancedOptionsData = computed(() => ({
 
 // 保存高级选项
 const saveAdvancedOptions = async () => {
-  await dataOperations.save('word-query-options', advancedOptionsData.value);
+  try {
+    await dataOperations.save('word-query-options', advancedOptionsData.value);
+    console.log('[WordQuery] Advanced options saved:', advancedOptionsData.value);
+  } catch (error) {
+    console.error('[WordQuery] Failed to save advanced options:', error);
+  }
 };
 
 // 加载高级选项
 const loadAdvancedOptions = async () => {
   const saved = await dataOperations.load('word-query-options');
-  if (saved) {
+  if (saved && typeof saved === 'object') {
     pronunciationType.value = saved.pronunciationType || 'uk';
     autoPlayPronunciation.value = saved.autoPlayPronunciation ?? false;
     showRelatedWords.value = saved.showRelatedWords ?? true;
+    console.log('[WordQuery] Loaded advanced options:', {
+      pronunciationType: pronunciationType.value,
+      autoPlayPronunciation: autoPlayPronunciation.value,
+      showRelatedWords: showRelatedWords.value
+    });
+  } else {
+    // 使用默认值
+    pronunciationType.value = 'uk';
+    autoPlayPronunciation.value = false;
+    showRelatedWords.value = true;
+    console.log('[WordQuery] No advanced options found, using defaults');
   }
 };
 
@@ -1006,15 +1066,21 @@ watch([pronunciationType, autoPlayPronunciation, showRelatedWords], async () => 
 });
 
 onMounted(async () => {
+  console.log('[WordQuery] Component mounted, initializing...');
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('click', handleClickOutside);
 
   // 批量加载数据
-  await Promise.all([
-    loadHistory(),
-    loadFavorites(),
-    loadAdvancedOptions()
-  ]);
+  try {
+    await Promise.all([
+      loadHistory(),
+      loadFavorites(),
+      loadAdvancedOptions()
+    ]);
+    console.log('[WordQuery] All data loaded successfully');
+  } catch (error) {
+    console.error('[WordQuery] Failed to load data:', error);
+  }
 });
 
 onUnmounted(() => {
@@ -1024,6 +1090,24 @@ onUnmounted(() => {
   // 清理所有定时器
   clearTimer('autoQueryTimer');
   clearTimer('autoTranslateTimer');
+  console.log('[WordQuery] Component unmounted');
+});
+
+// 强制刷新当前单词的收藏状态
+const refreshFavoriteStatus = () => {
+  const word = searchWord.value.trim();
+  if (word) {
+    checkIfFavorited(word);
+  }
+};
+
+// 监听搜索词变化，刷新收藏状态
+watch(searchWord, () => {
+  setupAutoQuery();
+  // 延迟检查收藏状态，确保数据已加载
+  setTimeout(() => {
+    refreshFavoriteStatus();
+  }, 100);
 });
 </script>
 
