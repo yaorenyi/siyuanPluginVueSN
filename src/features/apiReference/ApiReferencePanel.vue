@@ -26,10 +26,10 @@
         <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16">
           <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="currentColor"/>
         </svg>
-        <input 
+        <input
           v-model="searchQuery"
-          type="text" 
-          class="search-input" 
+          type="text"
+          class="search-input"
           :placeholder="i18n.apiReference?.searchPlaceholder || '搜索API文档...'"
           @keydown.esc="searchQuery = ''"
         />
@@ -54,8 +54,8 @@
           <span class="provider-icon">{{ provider.icon }}</span>
           <span class="provider-name">{{ provider.name }}</span>
           <span class="provider-version" v-if="provider.version">v{{ provider.version }}</span>
-          <button 
-            class="remove-provider-btn" 
+          <button
+            class="remove-provider-btn"
             @click.stop="removeProvider(provider.id)"
             :title="i18n.apiReference?.deleteProvider || '删除此API文档'"
           >
@@ -89,8 +89,8 @@
           <h3>{{ i18n.apiReference?.tableOfContents || '目录' }}</h3>
         </div>
         <nav class="toc-nav">
-          <TocTree 
-            :items="tocItems" 
+          <TocTree
+            :items="tocItems"
             :activeSlug="activeHeading"
             @navigate="scrollToHeading"
           />
@@ -99,8 +99,8 @@
 
       <!-- Markdown 内容渲染 -->
       <div class="markdown-content-wrapper" ref="contentRef">
-        <div 
-          class="markdown-content" 
+        <div
+          class="markdown-content"
           v-html="renderedMarkdown"
           @click="handleContentClick"
         ></div>
@@ -117,26 +117,26 @@
         <div class="dialog-content">
           <div class="form-group">
             <label>{{ i18n.apiReference?.providerName || 'API名称' }}:</label>
-            <input 
-              v-model="newProvider.name" 
-              type="text" 
+            <input
+              v-model="newProvider.name"
+              type="text"
               :placeholder="i18n.apiReference?.providerNamePlaceholder || '例如: OpenAI API'"
               class="form-input"
             />
           </div>
           <div class="form-group">
             <label>{{ i18n.apiReference?.providerIcon || '图标' }}:</label>
-            <input 
-              v-model="newProvider.icon" 
-              type="text" 
+            <input
+              v-model="newProvider.icon"
+              type="text"
               :placeholder="i18n.apiReference?.providerIconPlaceholder || '例如: 🤖'"
               class="form-input"
             />
           </div>
           <div class="form-group">
             <label>{{ i18n.apiReference?.markdownContent || 'Markdown内容' }}:</label>
-            <textarea 
-              v-model="newProvider.content" 
+            <textarea
+              v-model="newProvider.content"
               :placeholder="i18n.apiReference?.markdownPlaceholder || '请输入Markdown格式的API文档内容...'"
               class="form-textarea"
               rows="10"
@@ -255,13 +255,13 @@ const searchQuery = ref('')
 const renderedMarkdown = computed(() => {
   if (!selectedProvider.value) return ''
   let content = selectedProvider.value.description || ''
-  
+
   // 如果有搜索关键词，高亮显示
   if (searchQuery.value.trim()) {
     const regex = new RegExp(`(${searchQuery.value.trim()})`, 'gi')
     content = content.replace(regex, '<mark>$1</mark>')
   }
-  
+
   return renderMarkdown(content)
 })
 
@@ -271,8 +271,8 @@ const canAddProvider = computed(() => newProvider.value.name.trim() && newProvid
 const filteredProviders = computed(() => {
   if (!searchQuery.value.trim()) return providers.value
   const query = searchQuery.value.toLowerCase()
-  return providers.value.filter(p => 
-    p.name.toLowerCase().includes(query) || 
+  return providers.value.filter(p =>
+    p.name.toLowerCase().includes(query) ||
     p.description.toLowerCase().includes(query)
   )
 })
@@ -280,10 +280,10 @@ const filteredProviders = computed(() => {
 // 生命周期
 onMounted(async () => {
   console.log('API参考面板已挂载')
-  
+
   // 强制注入关键样式
   injectCriticalStyles()
-  
+
   await initializeDefaultProviders(props.plugin)
   const storedProviders = await storage.getProviders()
   providers.value = storedProviders
@@ -297,7 +297,7 @@ onMounted(async () => {
 function injectCriticalStyles() {
   const styleId = 'api-reference-critical-styles'
   if (document.getElementById(styleId)) return
-  
+
   const style = document.createElement('style')
   style.id = styleId
   style.textContent = `
@@ -307,22 +307,22 @@ function injectCriticalStyles() {
       flex-shrink: 0 !important;
       transition: all 0.2s ease !important;
     }
-    
+
     .api-reference-panel .toc-text {
       flex: 1 !important;
       line-height: 1.4 !important;
     }
-    
+
     .api-reference-panel .toc-list {
       list-style: none !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    
+
     .api-reference-panel .toc-item {
       margin: 0 !important;
     }
-    
+
     .api-reference-panel .toc-children {
       list-style: none !important;
       padding: 0 !important;
@@ -350,7 +350,7 @@ watch(selectedProvider, (newProvider) => {
 async function selectProvider(providerId: string) {
   const provider = providers.value.find(p => p.id === providerId)
   if (!provider) return
-  
+
   const content = await storage.getMarkdownContent(providerId)
   if (content) provider.description = content
   selectedProvider.value = provider
@@ -358,7 +358,7 @@ async function selectProvider(providerId: string) {
 
 async function addProvider() {
   if (!canAddProvider.value) return
-  
+
   const providerId = newProvider.value.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-') + '-' + Date.now()
   const provider: ApiProvider = {
     id: providerId,
@@ -371,11 +371,11 @@ async function addProvider() {
     authType: 'none',
     categories: []
   }
-  
+
   const updatedProviders = [...providers.value, provider]
   await storage.saveProviders(updatedProviders)
   await storage.saveMarkdownContent(providerId, newProvider.value.content)
-  
+
   providers.value = updatedProviders
   selectedProvider.value = provider
   hideAddProviderDialog()
@@ -383,10 +383,10 @@ async function addProvider() {
 
 async function removeProvider(providerId: string) {
   if (!confirm(props.i18n.apiReference?.confirmDelete || '确定要删除此API文档吗？')) return
-  
+
   await storage.removeProvider(providerId)
   providers.value = providers.value.filter(p => p.id !== providerId)
-  
+
   if (selectedProvider.value?.id === providerId) {
     selectedProvider.value = providers.value.length > 0 ? providers.value[0] : undefined
   }
@@ -463,5 +463,5 @@ function handleClose() {
 </script>
 
 <style lang="scss">
-@import "./index.scss";
+@use "./index.scss";
 </style>
