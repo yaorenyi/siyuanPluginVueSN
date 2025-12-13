@@ -86,21 +86,27 @@ const handleToolClick = (tool: FloatingTool) => {
 
 .floating-box-trigger {
   position: relative;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--b3-theme-primary);
+  color: var(--b3-theme-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.35);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 
   &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.45);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background: var(--b3-theme-primary-light);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 
@@ -110,56 +116,60 @@ const handleToolClick = (tool: FloatingTool) => {
 
 .floating-toolbar {
   position: absolute;
-  right: 40px;
+  right: 44px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 6px;
+  gap: 2px;
+  padding: 8px;
   background: var(--b3-theme-background);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 1px 6px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--b3-theme-surface-lighter);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--b3-border-color);
+  backdrop-filter: blur(10px);
 }
 
 .tool-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 6px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 90px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
 
   &:hover {
-    background: var(--b3-theme-surface-lighter);
+    background: var(--b3-list-hover);
 
     .tool-icon {
-      transform: scale(1.1);
+      transform: scale(1.08) rotate(5deg);
     }
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
+    background: var(--b3-list-hover);
   }
 }
 
 .tool-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .tool-label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--b3-theme-on-background);
+  white-space: nowrap;
 }
 
 /* 工具栏动画 */
@@ -181,22 +191,22 @@ const handleToolClick = (tool: FloatingTool) => {
   }
 
   .floating-box-trigger {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
   .floating-toolbar {
-    right: 36px;
+    right: 40px;
   }
 
   .tool-item {
-    padding: 5px 8px;
-    min-width: 80px;
+    padding: 6px 10px;
+    min-width: 85px;
   }
 
   .tool-icon {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 
   .tool-label {
