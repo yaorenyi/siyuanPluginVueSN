@@ -170,26 +170,7 @@ export class Statistics {
         if (params.monthYearRange) this.monthYearRange = params.monthYearRange;
         if (params.selectedYear) this.currentYear = params.selectedYear;
 
-        // 快照模式不需要获取统计数据，返回空数据
-        if (params.viewMode === 'snapshot') {
-          return {
-            totalNotes: 0,
-            totalWords: 0,
-            totalBlocks: 0,
-            totalAssets: 0,
-            totalTags: 0,
-            totalBacklinks: 0,
-            todayCreated: 0,
-            todayModified: 0,
-            avgWordsPerDoc: 0,
-            dailyStats: [],
-            currentPeriod: '',
-            periodTotalWords: 0,
-            topTags: [],
-            recentDocs: [],
-          };
-        }
-
+        // 快照模式也需要获取统计数据以显示顶部卡片
         return await this.getStatistics();
       },
       onGetHistoricalData: async (days?: number) => {

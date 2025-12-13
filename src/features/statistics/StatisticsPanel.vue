@@ -249,7 +249,7 @@
             <h4 class="subsection-title">{{ i18n.historicalData || '历史数据' }}</h4>
             <div class="historical-items">
               <div
-                v-for="item in historicalData"
+                v-for="(item, index) in historicalData"
                 :key="item.date"
                 class="historical-item"
               >
@@ -274,6 +274,28 @@
                     <span class="stat-icon">✏️</span>
                     <span class="stat-value">{{ item.todayModified }}</span>
                     <span class="stat-label">{{ i18n.modified || '修改' }}</span>
+                  </span>
+                </div>
+                <!-- 显示与上一天的字数变化 -->
+                <div v-if="index < historicalData.length - 1" class="historical-diff">
+                  <span class="diff-label">变化：</span>
+                  <span 
+                    class="diff-value"
+                    :class="{
+                      'positive': item.totalWords - historicalData[index + 1].totalWords > 0,
+                      'negative': item.totalWords - historicalData[index + 1].totalWords < 0
+                    }"
+                  >
+                    {{ item.totalWords - historicalData[index + 1].totalWords > 0 ? '+' : '' }}{{ formatNumber(item.totalWords - historicalData[index + 1].totalWords) }} 字
+                  </span>
+                  <span 
+                    class="diff-value"
+                    :class="{
+                      'positive': item.totalNotes - historicalData[index + 1].totalNotes > 0,
+                      'negative': item.totalNotes - historicalData[index + 1].totalNotes < 0
+                    }"
+                  >
+                    {{ item.totalNotes - historicalData[index + 1].totalNotes > 0 ? '+' : '' }}{{ item.totalNotes - historicalData[index + 1].totalNotes }} 笔记
                   </span>
                 </div>
               </div>
@@ -1475,6 +1497,39 @@ defineExpose({
               font-size: 9px;
               color: var(--b3-theme-on-surface);
               opacity: 0.7;
+            }
+          }
+        }
+
+        .historical-diff {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 6px;
+          padding: 4px 8px;
+          background: var(--b3-theme-background);
+          border-radius: 4px;
+          font-size: 10px;
+
+          .diff-label {
+            font-weight: 600;
+            color: var(--b3-theme-on-surface);
+            opacity: 0.8;
+          }
+
+          .diff-value {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+
+            &.positive {
+              background: rgba(26, 127, 55, 0.1);
+              color: #1a7f37;
+            }
+
+            &.negative {
+              background: rgba(207, 34, 46, 0.1);
+              color: #cf222e;
             }
           }
         }
