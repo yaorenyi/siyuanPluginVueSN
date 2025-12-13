@@ -4,7 +4,6 @@
  */
 import { Plugin, showMessage } from 'siyuan';
 import { createApp, h } from 'vue';
-import { marked } from 'marked';
 // @ts-ignore
 import AIContentGeneratorPanel from './AIContentGeneratorPanel.vue';
 

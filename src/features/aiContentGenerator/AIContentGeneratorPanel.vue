@@ -655,7 +655,6 @@ const userInput = ref('');
 const generatedContent = ref('');
 const isGenerating = ref(false);
 const errorMessage = ref('');
-const showRaw = ref(false);
 const showSettings = ref(false);
 const abortController = ref<AbortController | null>(null);
 
@@ -669,13 +668,12 @@ const showInputSection = ref(true);
 const editMode = ref(false);
 const editTargetDoc = ref<{ id: string; title: string; content: string } | null>(null);
 const originalContent = ref(''); // 文档原始内容
-const hasContentChanged = ref(false);
 const isApplying = ref(false);
 const isUndoing = ref(false);
 const isInsertingSubDoc = ref(false); // 插入子文档状态
 
 // 自定义输入对话框状态
-const showDialogInput = ref<HTMLInputElement | null>(null);
+const dialogInput = ref<HTMLInputElement | null>(null);
 const showDialog = ref(false);
 const inputDialogTitle = ref('');
 const inputDialogPlaceholder = ref('');
@@ -799,10 +797,10 @@ const customPrompt = (title: string, defaultValue: string = '', placeholder: str
 
     // 在下一个tick中聚焦输入框
     nextTick(() => {
-      if (showDialogInput.value) {
-        showDialogInput.value.focus();
+      if (dialogInput.value) {
+        dialogInput.value.focus();
         // 选中全部文本
-        showDialogInput.value.select();
+        dialogInput.value.select();
       }
     });
   });
@@ -911,12 +909,6 @@ const clearEditState = () => {
 };
 
 
-
-// 停止打字机效果
-const stopTypewriter = () => {
-  // 流式输出时不需要清理
-};
-
 // 停止生成
 const handleStop = () => {
   if (abortController.value) {
@@ -947,7 +939,6 @@ const handleGenerate = async () => {
   errorMessage.value = '';
   generatedContent.value = '';
   displayedContent.value = '';
-  stopTypewriter();
 
   try {
     // 根据用户是否选择提示词来决定是否使用系统提示词
@@ -1379,8 +1370,6 @@ const clearContent = () => {
   generatedContent.value = '';
   displayedContent.value = '';
   errorMessage.value = '';
-  showRaw.value = false;
-  stopTypewriter();
 
   // 移动端：清除后显示输入区域
   if (isMobile.value) {
@@ -1804,7 +1793,6 @@ ${editTargetDoc.value.content}`,
 
     await props.onGenerate(options);
 
-    hasContentChanged.value = true;
     aiSuggestions.value = null; // 应用后清除建议
     showMessage('✓ 已应用优化建议', 2000, 'info');
   } catch (error) {
