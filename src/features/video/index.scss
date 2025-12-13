@@ -25,10 +25,12 @@
   overflow: hidden;
   
   // 按钮图标样式
-  .btn .icon,
-  .icon-btn .icon {
-    width: 14px;
-    height: 14px;
+  .btn,
+  .icon-btn {
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
   }
   
   .video-header {
@@ -492,19 +494,6 @@
   }
 }
 
-// 响应式调整播放器大小
-@media (max-width: 900px) {
-  .video-player-container {
-    .video-js {
-      width: 100% !important;
-      height: auto !important;
-      aspect-ratio: 16 / 9;
-    }
-  }
-}
-
-
-
 // 响应式调整
 @media (max-width: 768px) {
   .video-manager {
@@ -660,16 +649,16 @@
       height: auto !important;
       aspect-ratio: 16 / 9;
     }
-    
+
     .video-details {
       h4 {
         font-size: 14px;
       }
-      
+
       .video-meta {
         font-size: 12px;
         flex-wrap: wrap;
-        
+
         .video-category {
           font-size: 11px;
         }
