@@ -7,7 +7,7 @@
           <span class="title-icon">☰</span>
           {{ i18n.unorderedListSettings || '无序列表设置' }}
         </h4>
-        
+
         <!-- 启用自定义样式 -->
         <div class="setting-row">
           <div class="setting-item">
@@ -190,7 +190,7 @@
           <span class="title-icon">🔢</span>
           {{ i18n.orderedListSettings || '有序列表设置' }}
         </h4>
-        
+
         <!-- 启用自定义样式 -->
         <div class="setting-row">
           <div class="setting-item">
@@ -238,7 +238,7 @@
           <span class="title-icon">🎯</span>
           {{ i18n.applicationScope || '应用范围' }}
         </h4>
-        
+
         <div class="scope-options">
           <label class="scope-option">
             <input
@@ -248,7 +248,7 @@
             />
             <span>{{ i18n.listBlocks || '列表块' }}</span>
           </label>
-          
+
           <label class="scope-option">
             <input
               v-model="settings.applyToEmbedBlocks"
@@ -257,7 +257,7 @@
             />
             <span>{{ i18n.embedBlocks || '嵌入块' }}</span>
           </label>
-          
+
           <label class="scope-option">
             <input
               v-model="settings.applyToFloatWindows"
@@ -273,7 +273,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { reactive, onMounted } from 'vue'
 import type { ListSettings as IListSettings } from '@/config/settings'
 import { loadListSettingsFromDB, saveListSettingsToDB } from '@/config/settings'
 
@@ -318,7 +318,7 @@ onMounted(async () => {
     console.warn('插件实例不可用，使用默认设置')
     return
   }
-  
+
   try {
     console.log('尝试从数据库加载列表设置...')
     const loadedSettings = await loadListSettingsFromDB(props.plugin)
@@ -350,7 +350,7 @@ const generateCSS = (): string => {
   // 无序列表样式
   if (settings.enableCustomUnorderedList) {
     const selectors = []
-    
+
     if (settings.applyToListBlocks) {
       selectors.push('[data-subtype="u"]')
     }
@@ -363,7 +363,7 @@ const generateCSS = (): string => {
 
     selectors.forEach(selector => {
       css += `
-/* ${selector === '[data-subtype="u"]' ? '无序列表块' : 
+/* ${selector === '[data-subtype="u"]' ? '无序列表块' :
         selector === '[class="protyle-wysiwyg__embed"]' ? '嵌入块' : '浮窗'} */
 ${selector}>.li[data-subtype="u"]>.protyle-action svg {
     color: transparent;
@@ -408,9 +408,9 @@ const handleSettingsChange = async () => {
     ...settings,
     css: generateCSS()
   }
-  
+
   emit('change', settingsWithCSS)
-  
+
   // 自动保存到数据库
   if (props.plugin) {
     try {
@@ -663,17 +663,17 @@ input:checked + .slider:before {
   .list-settings {
     padding: 12px;
   }
-  
+
   .setting-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .setting-label {
     min-width: auto;
   }
-  
+
   .symbol-selector,
   .format-selector,
   .range-control {

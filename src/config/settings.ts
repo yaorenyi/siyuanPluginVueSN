@@ -170,79 +170,10 @@ export async function saveSettings(plugin: Plugin, settings: PluginSettings): Pr
   }
 }
 
-/**
- * 加载字体设置
- */
-export function loadFontSettings(): FontSettings {
-  try {
-    const saved = localStorage.getItem('general-font-settings')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      return { ...DEFAULT_FONT_SETTINGS, ...parsed }
-    }
-  } catch (error) {
-    console.error('加载字体设置失败:', error)
-  }
-  return { ...DEFAULT_FONT_SETTINGS }
-}
 
-/**
- * 保存字体设置
- */
-export function saveFontSettings(settings: FontSettings): boolean {
-  try {
-    localStorage.setItem('general-font-settings', JSON.stringify(settings))
-    console.log('字体设置已保存:', settings)
-    return true
-  } catch (error) {
-    console.error('保存字体设置失败:', error)
-    return false
-  }
-}
 
-/**
- * 重置字体设置
- */
-export function resetFontSettings(): boolean {
-  try {
-    localStorage.removeItem('general-font-settings')
-    console.log('字体设置已重置')
-    return true
-  } catch (error) {
-    console.error('重置字体设置失败:', error)
-    return false
-  }
-}
 
-/**
- * 加载列表设置
- */
-export function loadListSettings(): ListSettings {
-  try {
-    const saved = localStorage.getItem('general-list-settings')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      return { ...DEFAULT_LIST_SETTINGS, ...parsed }
-    }
-  } catch (error) {
-    console.error('加载列表设置失败:', error)
-  }
-  return { ...DEFAULT_LIST_SETTINGS }
-}
 
-/**
- * 保存列表设置
- */
-export function saveListSettings(settings: ListSettings): boolean {
-  try {
-    localStorage.setItem('general-list-settings', JSON.stringify(settings))
-    console.log('列表设置已保存:', settings)
-    return true
-  } catch (error) {
-    console.error('保存列表设置失败:', error)
-    return false
-  }
-}
 
 /**
  * 重置列表设置

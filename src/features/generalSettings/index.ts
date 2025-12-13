@@ -448,57 +448,7 @@ export class GeneralSettings {
     }
   }
 
-  /**
-   * 重置字体设置
-   */
-  public resetFontSettings() {
-    try {
-      localStorage.removeItem('general-font-settings');
 
-      // 重置CSS变量
-      const root = document.documentElement;
-      root.style.removeProperty('--general-font-family');
-      root.style.removeProperty('--general-font-size');
-      root.style.removeProperty('--general-font-weight');
-      root.style.removeProperty('--general-line-height');
-
-      // 重置思源元素样式
-      this.resetSiyuanElementStyles();
-
-      showMessage(this.plugin.i18n.settingsReset || '设置已重置', 3000, 'info');
-    } catch (error) {
-      console.error('重置字体设置失败:', error);
-    }
-  }
-
-  /**
-   * 重置思源元素样式
-   */
-  private resetSiyuanElementStyles() {
-    const properties = ['font-family', 'font-size', 'font-weight', 'line-height'];
-    const selectorList = [
-      '.protyle-content',
-      '.protyle-wysiwyg',
-      '.b3-typography',
-      '.render-node',
-      '[data-node-id]',
-      '.protyle-title',
-      '.card-item__text'
-    ];
-
-    try {
-      selectorList.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach((el: any) => {
-          properties.forEach(prop => {
-            el.style.removeProperty(prop);
-          });
-        });
-      });
-    } catch (error) {
-      console.error('重置思源元素样式失败:', error);
-    }
-  }
 
   /**
    * 观察内容变化，确保样式持续应用
