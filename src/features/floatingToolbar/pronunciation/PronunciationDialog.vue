@@ -29,11 +29,11 @@
               v-model="inputWord"
               class="word-input"
               placeholder="输入中文或英文..."
-              @keyup.enter="manualGenerate"
+              @keyup.enter="generatePronunciation"
             />
             <button
               class="btn-generate-small"
-              @click="manualGenerate"
+              @click="generatePronunciation"
               :disabled="!inputWord || isGenerating"
               :title="isGenerating ? '生成中...' : '生成谐音'"
             >
@@ -264,53 +264,6 @@ async function generatePronunciation() {
 
 
 
-// 旧的生成函数保留用于手动触发
-async function manualGenerate() {
-  if (!inputWord.value) {
-    showMessage('请输入内容', 3000, 'error')
-    return
-  }
-
-  isGenerating.value = true
-  generatedResult.value = ''
-
-  try {
-    const prompt = buildPrompt(inputWord.value)
-    const config = getApiConfig()
-
-    let result = ''
-
-    switch (config.provider) {
-      case 'tongyi':
-        result = await callTongyiAPI(prompt, config)
-        break
-      case 'openai':
-        result = await callOpenAIAPI(prompt, config)
-        break
-      case 'deepseek':
-        result = await callDeepSeekAPI(prompt, config)
-        break
-      case 'custom':
-        result = await callCustomAPI(prompt, config)
-        break
-      default:
-        throw new Error(`不支持的API供应商: ${config.provider}`)
-    }
-
-    if (result) {
-      generatedResult.value = result
-      showMessage('✓ 谐音记忆已生成', 2000, 'info')
-    } else {
-      showMessage('生成失败，请重试', 3000, 'error')
-    }
-  } catch (error) {
-    console.error('Pronunciation generation error:', error)
-    const errorMsg = (error as Error).message || '未知错误'
-    showMessage('🚫 生成失败: ' + errorMsg, 5000, 'error')
-  } finally {
-    isGenerating.value = false
-  }
-}
 
 // 调用通义千问API
 async function callTongyiAPI(prompt: string, config: any): Promise<string> {
@@ -678,35 +631,6 @@ function closeDialog() {
 }
 
 
-.action-section {
-  display: flex;
-  justify-content: center;
-}
-
-.btn-generate {
-  padding: 8px 16px;
-  border: 1px solid var(--b3-theme-primary);
-  border-radius: 3px;
-  background: var(--b3-theme-primary);
-  color: var(--b3-theme-on-primary);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
 
 .result-section {
   display: flex;
