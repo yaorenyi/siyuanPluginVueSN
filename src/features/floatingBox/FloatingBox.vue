@@ -66,13 +66,13 @@ const handleToolClick = (tool: FloatingTool) => {
 <style scoped lang="scss">
 .floating-box-wrapper {
   position: fixed;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   transition: opacity 0.3s ease;
 
   &.collapsed {
@@ -86,8 +86,8 @@ const handleToolClick = (tool: FloatingTool) => {
 
 .floating-box-trigger {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--b3-theme-primary);
   color: var(--b3-theme-on-primary);
@@ -95,7 +95,7 @@ const handleToolClick = (tool: FloatingTool) => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
 
@@ -116,14 +116,14 @@ const handleToolClick = (tool: FloatingTool) => {
 
 .floating-toolbar {
   position: absolute;
-  right: 44px;
+  right: 36px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px;
+  padding: 6px;
   background: var(--b3-theme-background);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--b3-border-color);
   backdrop-filter: blur(10px);
 }
@@ -131,12 +131,12 @@ const handleToolClick = (tool: FloatingTool) => {
 .tool-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 100px;
+  min-width: 80px;
 
   &:hover {
     background: var(--b3-list-hover);
@@ -153,20 +153,20 @@ const handleToolClick = (tool: FloatingTool) => {
 }
 
 .tool-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .tool-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--b3-theme-on-background);
   white-space: nowrap;
@@ -187,30 +187,30 @@ const handleToolClick = (tool: FloatingTool) => {
 /* 移动端适配 */
 @media (max-width: 768px) {
   .floating-box-wrapper {
-    right: 8px;
+    right: 6px;
   }
 
   .floating-box-trigger {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
   }
 
   .floating-toolbar {
-    right: 40px;
+    right: 32px;
   }
 
   .tool-item {
-    padding: 6px 10px;
-    min-width: 85px;
+    padding: 4px 8px;
+    min-width: 70px;
   }
 
   .tool-icon {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
   .tool-label {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 </style>
