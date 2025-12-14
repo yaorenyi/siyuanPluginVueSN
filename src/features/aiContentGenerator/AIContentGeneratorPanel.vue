@@ -813,6 +813,21 @@ const removeFrontmatter = (content: string): string => {
   return content.replace(frontmatterRegex, '').trim();
 };
 
+/**
+ * 移除Markdown内容中的标题
+ * @param content 原始内容
+ * @returns 移除标题后的内容
+ */
+const removeHeadings = (content: string): string => {
+  // 移除第一行（通常是对应标题）
+  const lines = content.split('\n');
+  if (lines.length <= 1) {
+    return '';
+  }
+  // 移除第一行后返回剩余内容
+  return lines.slice(1).join('\n').trim();
+};
+
 
 // 渲染Markdown (使用marked库进行标准渲染，支持代码高亮)
 const renderedDisplayedMarkdown = computed(() => {
@@ -1315,8 +1330,9 @@ const insertContentToDocument = async (docId: string) => {
       timestamp: Date.now()
     };
 
-    // 转换为思源兼容的 Markdown 格式
-    const siyuanContent = convertToSiyuanMarkdown(generatedContent.value);
+    // 移除标题并转换为思源兼容的 Markdown 格式
+    const contentWithoutHeadings = removeHeadings(generatedContent.value);
+    const siyuanContent = convertToSiyuanMarkdown(contentWithoutHeadings);
 
     // 使用updateBlock API更新文档内容
     await api.updateBlock('markdown', siyuanContent, docId);
@@ -1442,8 +1458,9 @@ const applyEdit = async () => {
       timestamp: Date.now()
     };
 
-    // 转换为思源兼容的 Markdown 格式
-    const siyuanContent = convertToSiyuanMarkdown(generatedContent.value);
+    // 移除标题并转换为思源兼容的 Markdown 格式
+    const contentWithoutHeadings = removeHeadings(generatedContent.value);
+    const siyuanContent = convertToSiyuanMarkdown(contentWithoutHeadings);
 
     // 使用updateBlock API更新文档内容
     await api.updateBlock('markdown', siyuanContent, editTargetDoc.value.id);
@@ -1688,8 +1705,9 @@ const insertSubDocument = async () => {
   isInsertingSubDoc.value = true;
 
   try {
-    // 转换为思源兼容的 Markdown 格式
-    const siyuanContent = convertToSiyuanMarkdown(generatedContent.value);
+    // 移除标题并转换为思源兼容的 Markdown 格式
+    const contentWithoutHeadings = removeHeadings(generatedContent.value);
+    const siyuanContent = convertToSiyuanMarkdown(contentWithoutHeadings);
 
     // 获取父文档信息
     const parentDoc = await api.getBlockByID(editTargetDoc.value.id);
