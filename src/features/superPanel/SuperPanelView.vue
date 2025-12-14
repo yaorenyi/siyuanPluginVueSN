@@ -127,6 +127,18 @@
 
       <!-- 内容区 -->
       <div class="super-panel-content">
+        <!-- 全部开关按钮组 -->
+        <div class="toggle-all-buttons">
+          <button class="toggle-all-btn enable-all" @click="handleToggleAll(true)" :title="i18n.enableAll || '全部开启'">
+            <IconWrapper name="success" :size="16" />
+            <span>{{ i18n.enableAll || '全部开启' }}</span>
+          </button>
+          <button class="toggle-all-btn disable-all" @click="handleToggleAll(false)" :title="i18n.disableAll || '全部关闭'">
+            <IconWrapper name="close" :size="16" />
+            <span>{{ i18n.disableAll || '全部关闭' }}</span>
+          </button>
+        </div>
+
         <FeatureCard
           v-for="feature in features"
           :key="feature.id"
@@ -157,6 +169,7 @@ interface Emits {
   (e: 'close'): void
   (e: 'action', action: string): void
   (e: 'toggleFeature', featureId: string, enabled: boolean): void
+  (e: 'toggleAllFeatures', enabled: boolean): void
   (e: 'refresh'): Promise<void>
   (e: 'updateAiSettings', settings: { provider: string; model: string; apiKey: string; customEndpoint: string }): Promise<void>
 }
@@ -513,6 +526,10 @@ const handleFeatureAction = (action: string) => {
 const handleFeatureToggle = (featureId: string, enabled: boolean) => {
   emit('toggleFeature', featureId, enabled)
 }
+
+const handleToggleAll = (enabled: boolean) => {
+  emit('toggleAllFeatures', enabled)
+}
 </script>
 
 <style scoped lang="scss">
@@ -666,6 +683,62 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
 
     &:hover {
       background: var(--b3-theme-on-surface);
+    }
+  }
+}
+
+/* 全部开关按钮组 */
+.toggle-all-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--b3-theme-surface);
+  border-radius: 8px;
+  border: 1px solid var(--b3-theme-surface-lighter);
+}
+
+.toggle-all-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+
+  &.enable-all {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+    &:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &.disable-all {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
+    &:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }
@@ -834,6 +907,16 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
     gap: 8px;
   }
 
+  .toggle-all-buttons {
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .toggle-all-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
   .ai-settings-header {
     padding: 10px 12px;
     font-size: 13px;
@@ -898,6 +981,17 @@ const handleFeatureToggle = (featureId: string, enabled: boolean) => {
 
   .super-panel-content {
     padding: 8px;
+    gap: 6px;
+  }
+
+  .toggle-all-buttons {
+    gap: 6px;
+    padding: 4px;
+  }
+
+  .toggle-all-btn {
+    padding: 6px 10px;
+    font-size: 11px;
     gap: 6px;
   }
 

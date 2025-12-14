@@ -81,6 +81,9 @@ function openSuperPanel(plugin: Plugin) {
     onToggleFeature: async (featureId: string, enabled: boolean) => {
       await handleFeatureToggle(plugin, featureId, enabled)
     },
+    onToggleAllFeatures: async (enabled: boolean) => {
+      await handleToggleAllFeatures(plugin, enabled)
+    },
     onRefresh: async () => {
       await handleRefresh(plugin)
     },
@@ -182,6 +185,57 @@ async function handleFeatureToggle(plugin: Plugin, featureId: string, enabled: b
     } else {
       showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
     }
+  }
+}
+
+/**
+ * 处理全部功能开关切换
+ */
+async function handleToggleAllFeatures(plugin: Plugin, enabled: boolean) {
+  const pluginSample = plugin as any
+
+  // 所有功能的设置键
+  const allFeatureSettings = [
+    'enableTableOfContents',
+    'enableImageCompressor',
+    'enableDocNavigation',
+    'enablePageLock',
+    'enableWordQuery',
+    'enableGeneralSettings',
+    'enableQRCode',
+    'enableUnitConverter',
+    'enableShortcuts',
+    'enableDiskBrowser',
+    'enableCodeImageGenerator',
+    'enableAIContentGenerator',
+    'enableStatistics',
+    'enablePronunciation',
+    'enableEncryption',
+    'enableVideo',
+    'enableEverythingSearch',
+    'enableSystemMonitor',
+    'enableApiReference',
+    'enableFloatingToolbar',
+    'enableFloatingBox'
+  ]
+
+  // 构建新设置对象
+  const newSettings = { ...pluginSample.settings }
+  allFeatureSettings.forEach(key => {
+    newSettings[key] = enabled
+  })
+
+  const success = await pluginSample.updateSettings(newSettings)
+  if (success) {
+    showMessage(
+      enabled
+        ? (plugin.i18n as any).superPanel?.allFeaturesEnabled || '所有功能已开启，请重启插件生效'
+        : (plugin.i18n as any).superPanel?.allFeaturesDisabled || '所有功能已关闭，请重启插件生效',
+      3000,
+      'info'
+    )
+  } else {
+    showMessage((plugin.i18n as any).saveFailed || '保存失败', 3000, 'error')
   }
 }
 
