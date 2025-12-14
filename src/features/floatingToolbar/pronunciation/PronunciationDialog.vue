@@ -18,7 +18,12 @@
       <div class="dialog-body">
         <!-- 输入单词 -->
         <div class="input-section">
-          <label class="input-label">输入内容</label>
+          <label class="input-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+            </svg>
+            输入内容
+          </label>
           <div class="input-wrapper">
             <input
               v-model="inputWord"
@@ -42,7 +47,13 @@
         <!-- 结果展示 -->
         <div class="result-section" v-if="generatedResult">
           <div class="result-header">
-            <label class="result-label">谐音记忆</label>
+            <label class="result-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+            谐音记忆
+          </label>
             <button class="btn-copy-result" @click="copyResult" :disabled="!generatedResult" title="复制结果">
               <svg class="btn-icon"><use xlink:href="#iconCopy"></use></svg>
             </button>
@@ -53,8 +64,8 @@
         <!-- 空状态 -->
         <div class="empty-state" v-else-if="!isGenerating">
           <div class="empty-icon">
-            <svg viewBox="0 0 24 24" width="48" height="48">
-              <path fill="currentColor" d="M12.87,15.07L10.33,12.56L13.06,11.14C13.06,11.14 13.11,10.89 13.11,10.67C13.11,9.82 12.53,9.12 11.72,9.03C11.5,9 10.89,9 10.5,9.12C9.5,9.37 8.69,10.21 8.69,11.25C8.69,11.45 8.75,11.64 8.84,11.81L7.15,12.94C6.91,12.5 6.77,12 6.77,11.5C6.77,9.57 8.3,8 10.23,8C11.77,8 13.08,9 13.5,10.37C13.75,11.17 13.75,12 13.5,12.81C13.39,13.16 13.19,13.5 12.87,13.73L12.87,15.07M12,20C8.13,20 5,16.87 5,13C5,10.36 6.5,7.95 8.77,6.77L8.77,5.5C8.77,4.12 9.89,3 11.27,3C12.65,3 13.77,4.12 13.77,5.5L13.77,6.77C16.04,7.95 17.54,10.36 17.54,13C17.54,16.87 14.41,20 10.54,20H12M10,1L9,8L11,8L10,1M15,1L14,8L16,8L15,1M2,11L3,13L5,13L4,11L2,11Z"/>
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
           </div>
           <p class="empty-text">输入单词或短语以生成谐音记忆</p>
@@ -62,7 +73,12 @@
 
         <!-- 加载状态 -->
         <div class="loading-state" v-if="isGenerating">
-          <div class="spinner"></div>
+          <div class="spinner-container">
+            <div class="spinner"></div>
+            <svg class="spinner-icon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+          </div>
           <p class="loading-text">正在生成谐音记忆...</p>
         </div>
       </div>
@@ -552,56 +568,62 @@ function closeDialog() {
 
 .pronunciation-dialog {
   background: var(--b3-theme-background);
-  border-radius: 6px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 500px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid var(--b3-theme-surface-lighter);
 }
 
 .dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--b3-theme-surface);
-  background: var(--b3-theme-surface);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--b3-theme-surface-lighter);
+  background: linear-gradient(to right, var(--b3-theme-primary), var(--b3-theme-primary-light));
   flex-shrink: 0;
 }
 
 .dialog-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--b3-theme-on-background);
+  color: var(--b3-theme-on-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .dialog-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--b3-theme-primary);
+  width: 22px;
+  height: 22px;
+  color: var(--b3-theme-on-primary);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .close-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  color: var(--b3-theme-on-surface-variant);
+  color: var(--b3-theme-on-primary);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
 
   &:hover {
-    background: var(--b3-theme-surface-lighter);
-    color: var(--b3-theme-on-background);
+    background: rgba(255, 255, 255, 0.3);
+    color: var(--b3-theme-on-primary);
+    transform: scale(1.1);
   }
 }
 
@@ -613,40 +635,45 @@ function closeDialog() {
 .dialog-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
 .input-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .input-label,
 .result-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--b3-theme-on-surface);
+  color: var(--b3-theme-primary);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .word-input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid var(--b3-theme-surface-lighter);
-  border-radius: 3px;
+  padding: 12px 14px;
+  border: 2px solid var(--b3-theme-surface-lighter);
+  border-radius: 8px;
   background: var(--b3-theme-background);
   color: var(--b3-theme-on-background);
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 
   &:focus {
     border-color: var(--b3-theme-primary);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(66, 133, 244, 0.2);
   }
 }
 
@@ -684,23 +711,29 @@ function closeDialog() {
 .result-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px;
+  gap: 12px;
+  padding: 16px;
   background: var(--b3-theme-surface);
-  border-radius: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--b3-theme-surface-lighter);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .result-content {
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.7;
   color: var(--b3-theme-on-background);
   white-space: pre-wrap;
   word-break: break-word;
+  padding: 8px 0;
 
   :deep(h4) {
-    margin: 0 0 8px 0;
-    font-size: 14px;
+    margin: 0 0 12px 0;
+    font-size: 18px;
     color: var(--b3-theme-primary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--b3-theme-surface-lighter);
+    padding-bottom: 8px;
   }
 
   :deep(strong) {
@@ -711,9 +744,9 @@ function closeDialog() {
 
 .dialog-footer {
   display: flex;
-  gap: 6px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--b3-theme-surface);
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--b3-theme-surface-lighter);
   background: var(--b3-theme-surface);
   flex-shrink: 0;
 }
@@ -721,30 +754,35 @@ function closeDialog() {
 .btn-copy,
 .btn-close {
   flex: 1;
-  padding: 7px 10px;
-  border: 1px solid var(--b3-theme-outline);
-  border-radius: 3px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
   background: var(--b3-theme-background);
   color: var(--b3-theme-on-background);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--b3-theme-outline);
 
   &:hover:not(:disabled) {
-    background: var(--b3-theme-primary);
+    background: linear-gradient(to right, var(--b3-theme-primary), var(--b3-theme-primary-light));
     color: var(--b3-theme-on-primary);
     border-color: var(--b3-theme-primary);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -754,13 +792,9 @@ function closeDialog() {
 }
 
 .btn-close {
-  background: var(--b3-theme-primary);
+  background: linear-gradient(to right, var(--b3-theme-primary), var(--b3-theme-primary-light));
   color: var(--b3-theme-on-primary);
   border-color: var(--b3-theme-primary);
-
-  &:hover {
-    opacity: 0.9;
-  }
 }
 
 .dialog-body::-webkit-scrollbar {
@@ -783,31 +817,35 @@ function closeDialog() {
 /* 新增的样式 */
 .input-wrapper {
   display: flex;
-  gap: 6px;
+  gap: 10px;
 }
 
 .btn-generate-small {
-  padding: 0 12px;
-  border: 1px solid var(--b3-theme-primary);
-  border-radius: 3px;
-  background: var(--b3-theme-primary);
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(to right, var(--b3-theme-primary), var(--b3-theme-primary-light));
   color: var(--b3-theme-on-primary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(66, 133, 244, 0.3);
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -818,26 +856,31 @@ function closeDialog() {
 }
 
 .btn-copy-result {
-  padding: 4px;
+  padding: 6px;
   border: 1px solid var(--b3-theme-outline);
-  border-radius: 3px;
+  border-radius: 6px;
   background: var(--b3-theme-background);
   color: var(--b3-theme-on-background);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   &:hover:not(:disabled) {
     background: var(--b3-theme-primary);
     color: var(--b3-theme-on-primary);
     border-color: var(--b3-theme-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -846,19 +889,27 @@ function closeDialog() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 12px;
+  padding: 32px 20px;
   text-align: center;
   color: var(--b3-theme-on-surface-variant);
+  background: var(--b3-theme-surface);
+  border-radius: 8px;
+  border: 1px dashed var(--b3-theme-surface-lighter);
 }
 
 .empty-icon {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   color: var(--b3-theme-primary-lighter);
+  width: 48px;
+  height: 48px;
+  opacity: 0.7;
 }
 
 .empty-text {
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
+  color: var(--b3-theme-on-surface);
+  line-height: 1.5;
 }
 
 .loading-state {
@@ -866,18 +917,36 @@ function closeDialog() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 12px;
+  padding: 32px 20px;
   text-align: center;
+  background: var(--b3-theme-surface);
+  border-radius: 8px;
+}
+
+.spinner-container {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 16px;
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--b3-theme-surface-lighter);
-  border-top: 2px solid var(--b3-theme-primary);
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--b3-theme-surface-lighter);
+  border-top: 3px solid var(--b3-theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
+}
+
+.spinner-icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  animation: spin 1s linear infinite;
+  color: var(--b3-theme-primary);
 }
 
 @keyframes spin {
@@ -886,8 +955,9 @@ function closeDialog() {
 }
 
 .loading-text {
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
   color: var(--b3-theme-on-surface);
+  font-weight: 500;
 }
 </style>
