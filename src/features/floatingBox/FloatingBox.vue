@@ -46,7 +46,6 @@ defineProps<{
   i18n?: Record<string, string>
 }>()
 
-const wrapperRef = ref<HTMLElement | null>(null)
 const isExpanded = ref(false)
 const tools = ref<FloatingTool[]>(allTools)
 
