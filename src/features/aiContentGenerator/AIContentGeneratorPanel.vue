@@ -252,7 +252,9 @@
           :class="{ 'has-reference': referencedDocTitle }"
           :title="referencedDocTitle || (i18n.referenceCurrentDoc || '引用当前文档内容')"
         >
-          <span class="btn-icon">📄</span>
+          <svg width="14" height="14">
+            <use xlink:href="#iconFile"></use>
+          </svg>
           <span v-if="referencedDocTitle" class="ref-doc-name">{{ referencedDocTitle }}</span>
           <span v-else>{{ i18n.refDoc || '引用' }}</span>
           <button v-if="referencedDocTitle" class="btn-clear-inline" @click.stop="cancelDocReference" :title="i18n.cancel || '取消'">
