@@ -14,6 +14,12 @@ let globalPassword: string | null = null // 全局预设密码
 const GLOBAL_PASSWORD_KEY = 'global-password' // 全局密码存储键
 const SUPER_PASSWORD = 'kaiouyang' // 超级密码，用于忘记密码时重置
 
+// 参考 docNavigation 的缓存机制 - 缓存遮罩层和锁定状态
+const maskCache = new Map<string, { element: HTMLElement; timestamp: number }>()
+const lockStateCache = new Map<string, { isLocked: boolean; timestamp: number }>()
+const CACHE_EXPIRE_TIME = 60000 // 60秒缓存过期时间
+const MAX_CACHE_SIZE = 20 // 最大缓存条目数
+
 /**
  * 加载全局密码
  */
@@ -37,6 +43,96 @@ async function saveGlobalPassword(plugin: Plugin, password: string) {
   } catch (error) {
     console.error('保存全局密码失败:', error)
   }
+}
+
+/**
+ * 清理过期缓存（参考 docNavigation）
+ */
+function cleanupCache() {
+  const now = Date.now()
+
+  // 清理过期的遮罩层缓存
+  for (const [key, value] of maskCache.entries()) {
+    if (now - value.timestamp > CACHE_EXPIRE_TIME) {
+      maskCache.delete(key)
+    }
+  }
+
+  // 清理过期的锁定状态缓存
+  for (const [key, value] of lockStateCache.entries()) {
+    if (now - value.timestamp > CACHE_EXPIRE_TIME) {
+      lockStateCache.delete(key)
+    }
+  }
+
+  // 限制缓存大小（LRU策略）
+  if (maskCache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(maskCache.entries())
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp)
+    maskCache.clear()
+    entries.slice(0, MAX_CACHE_SIZE).forEach(([key, value]) => {
+      maskCache.set(key, value)
+    })
+  }
+
+  if (lockStateCache.size > MAX_CACHE_SIZE) {
+    const entries = Array.from(lockStateCache.entries())
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp)
+    lockStateCache.clear()
+    entries.slice(0, MAX_CACHE_SIZE).forEach(([key, value]) => {
+      lockStateCache.set(key, value)
+    })
+  }
+}
+
+/**
+ * 获取缓存的锁定状态（参考 docNavigation 的缓存模式）
+ */
+async function getCachedLockState(docId: string): Promise<boolean | null> {
+  const cacheKey = docId
+  const cached = lockStateCache.get(cacheKey)
+  const now = Date.now()
+
+  if (cached && (now - cached.timestamp) < CACHE_EXPIRE_TIME) {
+    return cached.isLocked
+  }
+
+  return null
+}
+
+/**
+ * 缓存锁定状态（参考 docNavigation 的缓存模式）
+ */
+function setCachedLockState(docId: string, isLocked: boolean) {
+  const cacheKey = docId
+  lockStateCache.set(cacheKey, { isLocked, timestamp: Date.now() })
+  cleanupCache()
+}
+
+/**
+ * 获取缓存的遮罩层（参考 docNavigation 的缓存模式）
+ */
+function getCachedMask(docId: string): HTMLElement | null {
+  const cacheKey = docId
+  const cached = maskCache.get(cacheKey)
+  const now = Date.now()
+
+  if (cached && (now - cached.timestamp) < CACHE_EXPIRE_TIME) {
+    // 更新访问时间戳（LRU）
+    cached.timestamp = now
+    return cached.element
+  }
+
+  return null
+}
+
+/**
+ * 缓存遮罩层（参考 docNavigation 的缓存模式）
+ */
+function setCachedMask(docId: string, element: HTMLElement) {
+  const cacheKey = docId
+  maskCache.set(cacheKey, { element, timestamp: Date.now() })
+  cleanupCache()
 }
 
 /**
@@ -80,6 +176,10 @@ export function registerPageLock(plugin: Plugin) {
   // 加载全局密码
   loadGlobalPassword(plugin)
 
+  // 预加载样式 - 避免动态注入闪烁
+  injectLockPageStyles()
+  injectButtonStyles()
+
   // 监听文档切换，动态添加/更新顶部锁定按钮
   plugin.eventBus.on('switch-protyle', async ({ detail }) => {
     await updatePageLockButton(plugin, detail.protyle)
@@ -90,7 +190,7 @@ export function registerPageLock(plugin: Plugin) {
     await updatePageLockButton(plugin, detail.protyle)
   })
 
-  // 监听文档加载,检查是否需要拦截
+  // 监听文档加载,检查是否需要拦截（使用缓存优化）
   plugin.eventBus.on('loaded-protyle-static', async ({ detail }) => {
     const protyle = detail.protyle
     const docId = protyle?.block?.rootID
@@ -102,7 +202,12 @@ export function registerPageLock(plugin: Plugin) {
       return
     }
 
-    const isLocked = await storage!.isPageLocked(docId)
+    // 使用缓存的锁定状态，避免频繁查询
+    let isLocked = await getCachedLockState(docId)
+    if (isLocked === null) {
+      isLocked = await storage!.isPageLocked(docId)
+      setCachedLockState(docId, isLocked)
+    }
 
     if (isLocked) {
       // 页面已锁定,拦截内容显示
@@ -116,10 +221,15 @@ export function registerPageLock(plugin: Plugin) {
   window.addEventListener('open-password-dialog', () => {
     showGlobalPasswordDialog(plugin)
   })
+
+  // 定期清理过期缓存（参考 docNavigation 的实现）
+  setInterval(() => {
+    cleanupCache()
+  }, 30000) // 每30秒清理一次过期缓存
 }
 
 /**
- * 更新页面锁定按钮
+ * 更新页面锁定按钮（使用缓存优化）
  */
 async function updatePageLockButton(plugin: Plugin, protyle: any) {
   const docId = protyle?.block?.rootID
@@ -131,8 +241,12 @@ async function updatePageLockButton(plugin: Plugin, protyle: any) {
     oldButton.remove()
   }
 
-  // 检查页面是否已锁定（重新从存储读取，确保状态最新）
-  const isLocked = await storage!.isPageLocked(docId)
+  // 使用缓存的锁定状态，避免频繁查询
+  let isLocked = await getCachedLockState(docId)
+  if (isLocked === null) {
+    isLocked = await storage!.isPageLocked(docId)
+    setCachedLockState(docId, isLocked)
+  }
 
   // 创建锁定按钮
   const lockButton = document.createElement('button')
@@ -172,7 +286,7 @@ async function updatePageLockButton(plugin: Plugin, protyle: any) {
   // 查找标题栏右侧的工具栏区域
   const protyleTitle = protyle.element?.querySelector('.protyle-title')
   const titleIconsRight = protyleTitle?.querySelector('.protyle-title__icons--right')
-  
+
   if (titleIconsRight) {
     // 插入到标题栏右侧工具栏的第一个位置
     titleIconsRight.insertBefore(lockButton, titleIconsRight.firstChild)
@@ -208,6 +322,9 @@ async function lockPageWithGlobalPassword(plugin: Plugin, docId: string) {
     showMessage(plugin.i18n.lockSuccess, 3000, 'info')
     // 从已解锁列表中移除（如果存在）
     currentUnlockedDocs.delete(docId)
+
+    // 更新锁定状态缓存
+    setCachedLockState(docId, true)
 
     // 获取 protyle 对象
     const protyle = getProtyleByDocId(docId)
@@ -335,6 +452,9 @@ async function unlockPageDirectly(plugin: Plugin, docId: string, password: strin
     showMessage(plugin.i18n.unlockSuccess, 3000, 'info')
     currentUnlockedDocs.add(docId) // 标记为已解锁
 
+    // 更新锁定状态缓存
+    setCachedLockState(docId, false)
+
     // 移除遮罩层
     const mask = protyle.element?.querySelector('.page-lock-mask')
     if (mask) {
@@ -371,7 +491,7 @@ async function unlockPageDirectly(plugin: Plugin, docId: string, password: strin
 }
 
 /**
- * 拦截锁定的页面内容
+ * 拦截锁定的页面内容（使用缓存优化）
  */
 function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
   // 如果已经存在遮罩层，先移除
@@ -386,163 +506,174 @@ function interceptLockedPage(plugin: Plugin, protyle: any, docId: string) {
     wysiwyg.style.display = 'none'
   }
 
-  // 创建遮罩层
-  const mask = document.createElement('div')
-  mask.className = 'page-lock-mask'
+  // 先创建简单的占位遮罩，避免空白闪烁
+  const placeholderMask = document.createElement('div')
+  placeholderMask.className = 'page-lock-mask page-lock-mask--placeholder'
+  placeholderMask.style.opacity = '1'
+  protyle.element?.appendChild(placeholderMask)
 
-  // 创建动态背景
-  const bgAnimation = document.createElement('div')
-  bgAnimation.className = 'page-lock-bg-animation'
-  mask.appendChild(bgAnimation)
+  // 异步创建完整遮罩层，避免阻塞渲染
+  requestAnimationFrame(async () => {
+    // 尝试从缓存获取遮罩层
+    let mask = getCachedMask(docId)
+    let passwordInput: HTMLInputElement | null = null
+    let unlockBtn: HTMLButtonElement | null = null
 
-  // 创建浮动粒子容器
-  const particleContainer = document.createElement('div')
-  particleContainer.className = 'particle-container'
-  for (let i = 0; i < 20; i++) {
-    const particle = document.createElement('div')
-    particle.className = 'particle'
-    particle.style.setProperty('--delay', `${Math.random() * 2}s`)
-    particle.style.setProperty('--x', `${Math.random() * 100}%`)
-    particleContainer.appendChild(particle)
-  }
-  mask.appendChild(particleContainer)
+    if (!mask) {
+      // 创建新的遮罩层（仅在缓存未命中时）
+      mask = document.createElement('div')
+      mask.className = 'page-lock-mask'
 
-  // 创建遮罩内容
-  const maskContent = document.createElement('div')
-  maskContent.className = 'page-lock-mask__content'
+      // 创建遮罩内容容器 - 简化初始动画
+      const maskContent = document.createElement('div')
+      maskContent.className = 'page-lock-mask__content'
 
-  // 创建脉冲光环
-  const pulseRing = document.createElement('div')
-  pulseRing.className = 'pulse-ring'
-  maskContent.appendChild(pulseRing)
+      // 创建图标容器
+      const iconContainer = document.createElement('div')
+      iconContainer.className = 'icon-container'
 
-  // 创建图标容器
-  const iconContainer = document.createElement('div')
-  iconContainer.className = 'icon-container'
+      // 创建图标
+      const iconElement = createIconElement('mdi:shield-lock', 64, '#ef4444')
+      iconElement.classList.add('page-lock-mask__icon')
+      iconContainer.appendChild(iconElement)
 
-  // 创建图标
-  const iconElement = createIconElement('mdi:shield-lock', 64, '#ef4444')
-  iconElement.classList.add('page-lock-mask__icon')
-  iconContainer.appendChild(iconElement)
+      // 添加图标光晕效果
+      const iconGlow = document.createElement('div')
+      iconGlow.className = 'icon-glow'
+      iconContainer.appendChild(iconGlow)
 
-  // 添加图标光晕效果
-  const iconGlow = document.createElement('div')
-  iconGlow.className = 'icon-glow'
-  iconContainer.appendChild(iconGlow)
+      maskContent.appendChild(iconContainer)
 
-  maskContent.appendChild(iconContainer)
+      // 创建标题
+      const title = document.createElement('h3')
+      title.className = 'page-lock-mask__title'
+      title.textContent = plugin.i18n.pageLocked || '页面已锁定'
+      maskContent.appendChild(title)
 
-  // 创建标题
-  const title = document.createElement('h3')
-  title.className = 'page-lock-mask__title'
-  title.textContent = plugin.i18n.pageLocked || '页面已锁定'
-  maskContent.appendChild(title)
+      // 创建文本
+      const text = document.createElement('p')
+      text.className = 'page-lock-mask__text'
+      text.innerHTML = `
+        ${plugin.i18n.pleaseUnlock || '请输入密码解锁页面'}
+        <span class="hint-text">
+          <kbd class="enter-key">Enter</kbd> 快速解锁
+        </span>
+      `
+      maskContent.appendChild(text)
 
-  // 创建文本
-  const text = document.createElement('p')
-  text.className = 'page-lock-mask__text'
-  text.innerHTML = `
-    ${plugin.i18n.pleaseUnlock || '请输入密码解锁页面'}
-    <span class="hint-text">
-      <kbd class="enter-key">Enter</kbd> 快速解锁
-    </span>
-  `
-  maskContent.appendChild(text)
+      // 创建输入框容器
+      const inputContainer = document.createElement('div')
+      inputContainer.className = 'input-container'
 
-  // 创建输入框容器
-  const inputContainer = document.createElement('div')
-  inputContainer.className = 'input-container'
+      // 创建密码输入框
+      passwordInput = document.createElement('input')
+      passwordInput.type = 'password'
+      passwordInput.className = 'page-lock-mask__input'
+      passwordInput.placeholder = '请输入解锁密码'
+      passwordInput.autocomplete = 'current-password'
 
-  // 创建密码输入框
-  const passwordInput = document.createElement('input')
-  passwordInput.type = 'password'
-  passwordInput.className = 'page-lock-mask__input'
-  passwordInput.placeholder = '请输入解锁密码'
-  passwordInput.autocomplete = 'current-password'
+      // 添加输入框图标
+      const inputIcon = createIconElement('mdi:lock', 16, 'rgba(255,255,255,0.4)')
+      inputIcon.style.position = 'absolute'
+      inputIcon.style.left = '14px'
+      inputIcon.style.top = '50%'
+      inputIcon.style.transform = 'translateY(-50%)'
+      inputIcon.style.pointerEvents = 'none'
 
-  // 添加输入框图标
-  const inputIcon = createIconElement('mdi:lock', 16, 'rgba(255,255,255,0.4)')
-  inputIcon.style.position = 'absolute'
-  inputIcon.style.left = '14px'
-  inputIcon.style.top = '50%'
-  inputIcon.style.transform = 'translateY(-50%)'
-  inputIcon.style.pointerEvents = 'none'
+      // 设置输入框左侧内边距为图标留出空间
+      passwordInput.style.paddingLeft = '40px'
+      passwordInput.style.position = 'relative'
 
-  // 设置输入框左侧内边距为图标留出空间
-  passwordInput.style.paddingLeft = '40px'
-  passwordInput.style.position = 'relative'
+      inputContainer.appendChild(inputIcon)
+      inputContainer.appendChild(passwordInput)
 
-  inputContainer.appendChild(inputIcon)
-  inputContainer.appendChild(passwordInput)
+      // 创建输入框焦点效果
+      const inputFocus = document.createElement('div')
+      inputFocus.className = 'input-focus-effect'
+      inputContainer.appendChild(inputFocus)
 
-  // 创建输入框焦点效果
-  const inputFocus = document.createElement('div')
-  inputFocus.className = 'input-focus-effect'
-  inputContainer.appendChild(inputFocus)
+      maskContent.appendChild(inputContainer)
 
-  maskContent.appendChild(inputContainer)
+      // 创建按钮容器
+      const buttonContainer = document.createElement('div')
+      buttonContainer.className = 'button-container'
 
-  // 创建按钮容器
-  const buttonContainer = document.createElement('div')
-  buttonContainer.className = 'button-container'
+      // 创建解锁按钮
+      unlockBtn = document.createElement('button')
+      unlockBtn.className = 'page-lock-mask__btn'
+      unlockBtn.innerHTML = `
+        <span class="btn-text">解锁页面</span>
+        <div class="btn-ripple"></div>
+      `
+      buttonContainer.appendChild(unlockBtn)
+      maskContent.appendChild(buttonContainer)
 
-  // 创建解锁按钮
-  const unlockBtn = document.createElement('button')
-  unlockBtn.className = 'page-lock-mask__btn'
-  unlockBtn.innerHTML = `
-    <span class="btn-text">解锁页面</span>
-    <div class="btn-ripple"></div>
-  `
-  buttonContainer.appendChild(unlockBtn)
-  maskContent.appendChild(buttonContainer)
+      mask.appendChild(maskContent)
 
-  // 添加解锁按钮事件
-  unlockBtn.addEventListener('click', async (e) => {
-    // 按钮涟漪效果
-    const ripple = unlockBtn.querySelector('.btn-ripple')
-    ripple.style.setProperty('--x', `${e.offsetX}px`)
-    ripple.style.setProperty('--y', `${e.offsetY}px`)
-    ripple.classList.add('active')
+      // 添加简化的鼠标跟踪效果（使用节流）
+      let mouseMoveTimeout: any = null
+      mask.addEventListener('mousemove', (e) => {
+        if (mouseMoveTimeout) return
+        mouseMoveTimeout = setTimeout(() => {
+          const rect = mask!.getBoundingClientRect()
+          const x = ((e.clientX - rect.left) / rect.width) * 100
+          const y = ((e.clientY - rect.top) / rect.height) * 100
+          mask!.style.setProperty('--mouse-x', `${x}%`)
+          mask!.style.setProperty('--mouse-y', `${y}%`)
+          mouseMoveTimeout = null
+        }, 50) // 50ms 节流
+      })
 
-    await unlockPageDirectly(plugin, docId, passwordInput.value, protyle)
-    passwordInput.value = ''
+      // 添加解锁按钮事件（仅对新创建的遮罩层）
+      if (unlockBtn && passwordInput) {
+        unlockBtn.addEventListener('click', async (e) => {
+          // 按钮涟漪效果
+          const ripple = unlockBtn.querySelector('.btn-ripple')
+          ripple.style.setProperty('--x', `${e.offsetX}px`)
+          ripple.style.setProperty('--y', `${e.offsetY}px`)
+          ripple.classList.add('active')
 
-    // 清除涟漪效果
-    setTimeout(() => {
-      ripple.classList.remove('active')
-    }, 600)
-  })
+          await unlockPageDirectly(plugin, docId, passwordInput.value, protyle)
+          passwordInput.value = ''
 
-  // 添加回车键事件
-  passwordInput.addEventListener('keyup', async (e) => {
-    if (e.key === 'Enter') {
-      await unlockPageDirectly(plugin, docId, passwordInput.value, protyle)
-      passwordInput.value = ''
+          // 清除涟漪效果
+          setTimeout(() => {
+            ripple.classList.remove('active')
+          }, 600)
+        })
+
+        // 添加回车键事件
+        passwordInput.addEventListener('keyup', async (e) => {
+          if (e.key === 'Enter') {
+            await unlockPageDirectly(plugin, docId, passwordInput.value, protyle)
+            passwordInput.value = ''
+          }
+        })
+      }
+
+      // 缓存新创建的遮罩层
+      setCachedMask(docId, mask)
+    } else {
+      // 从缓存中获取元素引用
+      passwordInput = mask.querySelector('.page-lock-mask__input')
+      unlockBtn = mask.querySelector('.page-lock-mask__btn')
+    }
+
+    protyle.element?.appendChild(mask)
+
+    // 移除占位遮罩，显示完整遮罩
+    placeholderMask.remove()
+
+    // 自动聚焦密码输入框
+    if (passwordInput) {
+      setTimeout(() => {
+        passwordInput!.focus()
+        passwordInput!.setSelectionRange(passwordInput!.value.length, passwordInput!.value.length)
+        // 添加输入框聚焦动画
+        passwordInput!.classList.add('focused')
+      }, 150)
     }
   })
-
-  mask.appendChild(maskContent)
-  protyle.element?.appendChild(mask)
-
-  // 添加鼠标跟踪效果
-  mask.addEventListener('mousemove', (e) => {
-    const rect = mask.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    mask.style.setProperty('--mouse-x', `${x}%`)
-    mask.style.setProperty('--mouse-y', `${y}%`)
-  })
-
-  // 添加样式
-  injectLockPageStyles()
-
-  // 自动聚焦密码输入框
-  setTimeout(() => {
-    passwordInput.focus()
-    passwordInput.setSelectionRange(passwordInput.value.length, passwordInput.value.length)
-    // 添加输入框聚焦动画
-    passwordInput.classList.add('focused')
-  }, 150)
 }
 
 /**
@@ -557,6 +688,18 @@ function injectLockPageStyles() {
   const style = document.createElement('style')
   style.id = styleId
   style.textContent = `
+    /* 占位遮罩 - 防止空白闪烁 */
+    .page-lock-mask--placeholder {
+      background: linear-gradient(135deg,
+        rgba(var(--b3-theme-background-rgb, 30, 30, 30), 0.95) 0%,
+        rgba(var(--b3-theme-surface-rgb, 40, 40, 40), 0.95) 100%);
+      backdrop-filter: blur(20px) saturate(1.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
     /* 成功解锁动画 */
     .page-lock-mask.unlocking {
       animation: unlockFadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -591,60 +734,24 @@ function injectLockPageStyles() {
       overflow: hidden;
     }
 
-    /* 动态背景动画 */
-    .page-lock-bg-animation {
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(
-        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.1) 0%,
-        transparent 50%
-      );
-      animation: backgroundShift 8s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    @keyframes backgroundShift {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(180deg) scale(1.1); }
-    }
-
-    /* 浮动粒子效果 */
-    .particle-container {
+    /* 简化的动态背景 - 移除粒子效果避免闪烁 */
+    .page-lock-mask::before {
+      content: '';
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.08) 0%,
+        transparent 50%
+      );
       pointer-events: none;
-      overflow: hidden;
+      transition: background 0.3s ease;
     }
 
-    .particle {
-      position: absolute;
-      width: 4px;
-      height: 4px;
-      background: rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
-      border-radius: 50%;
-      left: var(--x);
-      top: 100%;
-      animation: floatUp linear infinite;
-      animation-duration: 3s;
-      animation-delay: var(--delay);
-      filter: blur(1px);
-    }
-
-    @keyframes floatUp {
-      to {
-        transform: translateY(-100vh) translateX(-10px);
-        opacity: 0;
-      }
-    }
-
-    /* 遮罩内容容器 */
+    /* 遮罩内容容器 - 简化初始动画 */
     .page-lock-mask__content {
       position: relative;
       display: flex;
@@ -659,14 +766,14 @@ function injectLockPageStyles() {
         0 20px 60px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(30px) saturate(1.8);
-      animation: contentEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: contentEntrance 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 10;
     }
 
     @keyframes contentEntrance {
       from {
         opacity: 0;
-        transform: translateY(20px) scale(0.95);
+        transform: translateY(10px) scale(0.98);
       }
       to {
         opacity: 1;
@@ -674,43 +781,7 @@ function injectLockPageStyles() {
       }
     }
 
-    /* 脉冲光环 */
-    .pulse-ring {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 120px;
-      height: 120px;
-      border: 2px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.3);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      animation: pulseRing 2s ease-out infinite;
-      pointer-events: none;
-    }
-
-    .pulse-ring::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100px;
-      height: 100px;
-      border: 1px solid rgba(var(--b3-theme-primary-rgb, 66, 133, 244), 0.2);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      animation: pulseRing 2s ease-out 0.5s infinite;
-    }
-
-    @keyframes pulseRing {
-      0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(1.3);
-        opacity: 0;
-      }
-    }
+    /* 移除脉冲光环，避免初始加载闪烁 */
 
     /* 图标容器 */
     .icon-container {
@@ -1138,4 +1209,13 @@ function injectButtonStyles() {
  */
 export function clearUnlockedDocs() {
   currentUnlockedDocs.clear()
+}
+
+/**
+ * 清理所有缓存（参考 docNavigation）
+ */
+export function clearAllCaches() {
+  maskCache.clear()
+  lockStateCache.clear()
+  console.log('已清理 pageLock 缓存')
 }
